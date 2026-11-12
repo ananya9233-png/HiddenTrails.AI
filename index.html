@@ -1,51 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HiddenTrails.AI | Explore the Smart Way</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HiddenTrails.AI · Travel the trails guidebooks forgot</title>
+  <meta name="description" content="AI travel planner for India: day-by-day itineraries, GPS + AI verified photo challenges at landmarks, and points you can trade for travel perks." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.25rem; }
+    .topnav { position: sticky; top: 0; z-index: 50; transition: background .3s, box-shadow .3s; }
+    .topnav.scrolled { background: rgba(245,240,230,.9); backdrop-filter: blur(10px); box-shadow: 0 1px 0 var(--line); }
+    .navlink { font-weight: 600; font-size: .92rem; color: var(--ink-2); position: relative; }
+    .navlink::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -4px; height: 2px; background: var(--clay); transition: right .25s var(--ease); }
+    .navlink:hover { color: var(--ink); } .navlink:hover::after { right: 0; }
+
+    .hero-title { font-size: clamp(2.6rem, 1.6rem + 4.4vw, 5.2rem); line-height: .98; font-weight: 600; letter-spacing: -.025em; }
+    .underline-scribble { position: relative; white-space: nowrap; }
+    .underline-scribble svg { position: absolute; left: -2%; bottom: -.18em; width: 104%; height: .4em; }
+    .underline-scribble path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: draw 1.2s .6s var(--ease) forwards; }
+    @keyframes draw { to { stroke-dashoffset: 0; } }
+
+    .collage { position: relative; height: 520px; }
+    .pc { position: absolute; background: #fff; padding: .6rem .6rem 2.2rem; border-radius: 6px; box-shadow: var(--shadow); width: 250px; transition: transform .5s var(--spring); }
+    .pc img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 3px; }
+    .pc .cap { position: absolute; bottom: .55rem; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-style: italic; font-size: .95rem; color: var(--ink-2); }
+    .pc-1 { left: 4%; top: 40px; transform: rotate(-7deg); }
+    .pc-2 { left: 34%; top: 0; transform: rotate(4deg); z-index: 2; }
+    .pc-3 { right: 0; top: 150px; transform: rotate(-2deg); }
+    .collage:hover .pc-1 { transform: rotate(-10deg) translate(-12px, 6px); }
+    .collage:hover .pc-2 { transform: rotate(2deg) translateY(-10px); }
+    .collage:hover .pc-3 { transform: rotate(2deg) translate(12px, 6px); }
+    .float-card { position: absolute; z-index: 3; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: .9rem 1rem; }
+    .verified { left: 26%; bottom: 40px; display: flex; align-items: center; gap: .7rem; }
+    .verified .seal { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--moss); color: #fff; font-size: 1.1rem; }
+    .daycard { right: 6%; top: -6px; width: 220px; }
+    @media (max-width: 1023px) { .collage { height: 440px; transform: scale(.85); transform-origin: top center; } }
+    @media (max-width: 640px) { .collage { display: none; } }
+
+    .marquee { overflow: hidden; border-block: 1px solid var(--line); background: var(--card); }
+    .marquee-track { display: flex; gap: 3rem; width: max-content; padding: 1rem 0; animation: marquee 40s linear infinite; }
+    .marquee:hover .marquee-track { animation-play-state: paused; }
+    .marquee-track span { font-family: var(--font-display); font-size: 1.35rem; font-style: italic; color: var(--ink-2); white-space: nowrap; display: inline-flex; align-items: center; gap: 3rem; }
+    .marquee-track span::after { content: "✦"; font-style: normal; color: var(--clay); font-size: .9rem; }
+    @keyframes marquee { to { transform: translateX(-50%); } }
+
+    .step-num { font-family: var(--font-display); font-size: 3.4rem; font-weight: 600; line-height: 1; color: var(--clay); opacity: .9; }
+    .steps { position: relative; }
+    .steps::before { content: ""; position: absolute; top: 2rem; left: 8%; right: 8%; height: 2px;
+      background-image: linear-gradient(90deg, var(--line-2) 50%, transparent 50%); background-size: 14px 2px; }
+    @media (max-width: 767px) { .steps::before { display: none; } }
+
+    .check-row { display: flex; align-items: center; gap: .8rem; padding: .85rem 0; border-bottom: 1px dashed var(--line); }
+    .check-row:last-child { border-bottom: 0; }
+    .check-row .ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
+    .bar { height: 8px; border-radius: 99px; background: var(--paper-2); overflow: hidden; }
+    .bar span { display: block; height: 100%; width: 0; background: var(--moss); border-radius: inherit; transition: width 1.4s var(--ease); }
+    .in .bar span { width: var(--w); }
+
+    .cta-band { background: var(--moss-deep); color: #f5f0e6; border-radius: var(--radius-lg); position: relative; overflow: hidden; }
+    .cta-band::after { content: ""; position: absolute; right: -80px; bottom: -120px; width: 380px; height: 380px; border-radius: 50%; border: 2px dashed rgba(245,240,230,.14); }
+  </style>
 </head>
-<body class="m-0 p-0 font-sans">
-    
-    <nav class="absolute top-0 w-full flex items-center justify-between px-10 py-5 z-50">
-    
-    <div class="w-24 hidden md:block"></div> 
 
-    <h1 class="text-3xl font-extrabold text-white tracking-tight">
-        HiddenTrails.AI
-    </h1>
+<body>
+  <!-- Nav -->
+  <header class="topnav" id="topnav">
+    <div class="wrap flex items-center justify-between py-4">
+      <a href="index.html" class="brand !p-0"><span class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
+      <nav class="hidden md:flex items-center gap-8">
+        <a href="#how" class="navlink">How it works</a>
+        <a href="#challenges" class="navlink">Photo challenges</a>
+        <a href="#rewards" class="navlink">Rewards</a>
+      </nav>
+      <div class="flex items-center gap-2" id="navActions">
+        <a href="auth.html" class="btn btn-ghost">Log in</a>
+        <a href="signup.html" class="btn btn-primary">Start free</a>
+      </div>
+    </div>
+  </header>
 
-    <a href="auth.html" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-bold transition duration-300 shadow-md">
-        Login
-    </a>
-</nav>
-<header 
-  class="h-[100vh] flex items-center justify-center text-center bg-cover bg-center relative"
-  style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');"
->
+  <!-- Hero -->
+  <section class="wrap grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center pt-10 pb-16 md:pt-16 md:pb-24">
+    <div class="stagger" id="heroText">
+      <span class="eyebrow">AI travel planner · made for India</span>
+      <h1 class="font-display hero-title mt-5">
+        Travel the trails the
+        <span class="underline-scribble italic-accent">guidebooks
+          <svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 14 C 60 4, 120 18, 180 9 S 270 6, 298 12" fill="none" stroke="#e0a33a" stroke-width="5" stroke-linecap="round"/></svg>
+        </span>
+        forgot.
+      </h1>
+      <p class="text-lg ink-2 mt-6 max-w-xl">Get a day-by-day plan in seconds, chase real landmarks with photo challenges, and earn points every time you actually show up.</p>
+      <div class="flex flex-wrap gap-3 mt-8">
+        <a href="signup.html" class="btn btn-clay btn-lg" id="heroCta">Plan my first trip <i class="fa-solid fa-arrow-right"></i></a>
+        <a href="#how" class="btn btn-lg"><i class="fa-regular fa-circle-play"></i> See how it works</a>
+      </div>
+      <div class="flex flex-wrap gap-x-8 gap-y-3 mt-10 text-sm ink-2">
+        <span><i class="fa-solid fa-route mr-2" style="color:var(--moss)"></i>Itineraries in ~10 s</span>
+        <span><i class="fa-solid fa-location-crosshairs mr-2" style="color:var(--clay)"></i>GPS + AI photo checks</span>
+        <span><i class="fa-solid fa-seedling mr-2" style="color:var(--moss)"></i>Eco-first suggestions</span>
+      </div>
+    </div>
 
-  <!-- overlay -->
-  <div class="absolute inset-0 bg-black/60"></div>
+    <div class="collage" aria-hidden="true">
+      <div class="float-card daycard float">
+        <p class="eyebrow !text-[.62rem]">Day 2 · Jaipur</p>
+        <p class="font-display font-semibold mt-1 leading-tight">Pink city, slow mornings</p>
+        <p class="text-xs muted mt-2"><i class="fa-solid fa-sun mr-1" style="color:var(--sun)"></i>Sunrise at Nahargarh, kachori at Rawat's</p>
+      </div>
+      <figure class="pc pc-1"><img src="https://images.unsplash.com/photo-1650530777057-3a7dbc24bf6c?q=80&w=600&auto=format&fit=crop" alt=""><figcaption class="cap">Hawa Mahal</figcaption></figure>
+      <figure class="pc pc-2"><img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80" alt=""><figcaption class="cap">Taj Mahal, 6 am</figcaption></figure>
+      <figure class="pc pc-3"><img src="https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=600&q=80" alt=""><figcaption class="cap">Golden Temple</figcaption></figure>
+      <div class="float-card verified">
+        <span class="seal"><i class="fa-solid fa-check"></i></span>
+        <div>
+          <p class="font-semibold text-sm leading-tight">Photo verified</p>
+          <p class="text-xs muted">You were there · <b style="color:var(--moss)">+150 pts</b></p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-  <div class="px-6 relative z-10">
-    <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight text-white">
-      Explore Travel the <br><span class="text-green-400">Smart Way</span>
-    </h1>
-    <p class="text-lg md:text-xl text-gray-200 mb-10 max-w-3xl mx-auto font-medium">
-      AI-powered eco travel planner that helps you discover hidden gems and earn rewards.
-    </p>
-    <a href="auth.html" class="bg-green-600 hover:bg-green-700 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all transform hover:scale-105 inline-block shadow-lg">
-      Get Started
-    </a>
+  <!-- Marquee -->
+  <div class="marquee" aria-hidden="true">
+    <div class="marquee-track">
+      <span>Ziro Valley</span><span>Hampi</span><span>Majuli</span><span>Spiti</span><span>Gokarna</span><span>Chettinad</span><span>Gurez</span><span>Dzükou Valley</span><span>Mawlynnong</span><span>Bhitarkanika</span>
+      <span>Ziro Valley</span><span>Hampi</span><span>Majuli</span><span>Spiti</span><span>Gokarna</span><span>Chettinad</span><span>Gurez</span><span>Dzükou Valley</span><span>Mawlynnong</span><span>Bhitarkanika</span>
+    </div>
   </div>
 
-</header>
+  <!-- How it works -->
+  <section id="how" class="wrap py-20 md:py-28">
+    <div class="max-w-2xl reveal">
+      <span class="eyebrow">How it works</span>
+      <h2 class="h1 mt-3">Three steps from <span class="italic-accent">“where?”</span> to “I was there.”</h2>
+    </div>
+    <div class="steps grid md:grid-cols-3 gap-6 mt-14">
+      <div class="card card-pad card-hover reveal relative">
+        <span class="step-num">01</span>
+        <h3 class="h3 mt-4">Tell us the vibe</h3>
+        <p class="ink-2 mt-2 text-sm">Destination, dates, budget, and whether you want temples or treks. That's it.</p>
+      </div>
+      <div class="card card-pad card-hover reveal relative" style="transition-delay:.1s">
+        <span class="step-num">02</span>
+        <h3 class="h3 mt-4">Get a real plan</h3>
+        <p class="ink-2 mt-2 text-sm">Morning, afternoon and evening for every day, with real places, food, costs and directions.</p>
+      </div>
+      <div class="card card-pad card-hover reveal relative" style="transition-delay:.2s">
+        <span class="step-num">03</span>
+        <h3 class="h3 mt-4">Go, snap, earn</h3>
+        <p class="ink-2 mt-2 text-sm">Landmarks on your plan become photo challenges. Snap them live and your points add up.</p>
+      </div>
+    </div>
+  </section>
 
-    
+  <!-- Challenges feature -->
+  <section id="challenges" class="wrap pb-20 md:pb-28 grid lg:grid-cols-2 gap-12 items-center">
+    <div class="reveal">
+      <span class="eyebrow">Photo challenges</span>
+      <h2 class="h1 mt-3">No screenshots. <br><span class="italic-accent">You have to be there.</span></h2>
+      <p class="ink-2 mt-5 text-lg max-w-lg">Every photo goes through two checks. GPS confirms you're within 150 m of the landmark, with no teleporting allowed. A vision model then confirms it's the right place and a live shot, not a download.</p>
+      <a href="signup.html" class="btn btn-primary btn-lg mt-8">Try a challenge <i class="fa-solid fa-camera"></i></a>
+    </div>
+    <div class="card p-6 md:p-8 reveal paper-edge" id="verifyDemo">
+      <div class="flex items-center justify-between mb-2">
+        <p class="font-display text-xl font-semibold">Verification report</p>
+        <span class="tag tag-moss"><i class="fa-solid fa-circle-check"></i> Passed</span>
+      </div>
+      <p class="text-sm muted mb-4">Gateway of India · Mumbai</p>
+      <div class="check-row">
+        <span class="ico" style="background:var(--sky-soft);color:var(--sky)"><i class="fa-solid fa-location-dot"></i></span>
+        <div class="flex-1"><p class="font-semibold text-sm">Within range</p><p class="text-xs muted">38 m from the landmark</p></div>
+        <i class="fa-solid fa-check" style="color:var(--moss)"></i>
+      </div>
+      <div class="check-row">
+        <span class="ico" style="background:var(--clay-soft);color:var(--clay)"><i class="fa-solid fa-landmark"></i></span>
+        <div class="flex-1"><p class="font-semibold text-sm">Landmark match</p><div class="bar mt-2"><span style="--w:92%"></span></div></div>
+        <b class="text-sm">92%</b>
+      </div>
+      <div class="check-row">
+        <span class="ico" style="background:var(--sun-soft);color:#a26d12"><i class="fa-solid fa-camera"></i></span>
+        <div class="flex-1"><p class="font-semibold text-sm">Live photo</p><div class="bar mt-2"><span style="--w:81%;background:var(--sun)"></span></div></div>
+        <b class="text-sm">81%</b>
+      </div>
+      <div class="check-row">
+        <span class="ico" style="background:var(--moss-soft);color:var(--moss)"><i class="fa-solid fa-gauge-high"></i></span>
+        <div class="flex-1"><p class="font-semibold text-sm">No GPS spoofing</p><p class="text-xs muted">Speed & teleport checks clean</p></div>
+        <i class="fa-solid fa-check" style="color:var(--moss)"></i>
+      </div>
+    </div>
+  </section>
 
-    
+  <!-- Rewards teaser -->
+  <section id="rewards" class="wrap pb-20 md:pb-28">
+    <div class="text-center max-w-2xl mx-auto reveal">
+      <span class="eyebrow">Rewards</span>
+      <h2 class="h1 mt-3">Points that turn into <span class="italic-accent">perks</span>.</h2>
+      <p class="ink-2 mt-4">Level up from Rookie to Legend, collect passport stamps, and trade points for discounts on stays, trains and food.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto">
+      <article class="ticket reveal"><div class="ticket-body"><p class="font-semibold">🏕️ Hostels partner</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--plum)">50% OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">500</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
+      <article class="ticket reveal" style="transition-delay:.1s"><div class="ticket-body"><p class="font-semibold">🚂 Rail bookings</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--sky)">₹400 OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">350</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
+      <article class="ticket reveal" style="transition-delay:.2s"><div class="ticket-body"><p class="font-semibold">🍔 Food delivery</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--clay)">15% OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">120</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
+    </div>
+  </section>
 
+  <!-- CTA -->
+  <section class="wrap pb-16">
+    <div class="cta-band p-10 md:p-16 reveal">
+      <div class="relative z-10 max-w-2xl">
+        <h2 class="font-display font-semibold leading-tight" style="color:#fff;font-size:clamp(2rem, 1.4rem + 2.4vw, 3.2rem)">Your next favourite place<br>isn't on the main road.</h2>
+        <p class="mt-4 text-lg" style="opacity:.8">Make a free account and plan a trip in under a minute.</p>
+        <a href="signup.html" class="btn btn-clay btn-lg mt-8" id="ctaBottom">Get started, it's free <i class="fa-solid fa-arrow-right"></i></a>
+      </div>
+    </div>
+  </section>
 
+  <footer class="wrap py-10 flex flex-wrap items-center justify-between gap-4 text-sm muted border-t" style="border-color:var(--line)">
+    <a href="index.html" class="brand !p-0"><span class="brand-mark !w-8 !h-8"><i class="fa-solid fa-mountain-sun text-sm"></i></span><span class="brand-name !text-base">HiddenTrails<em>.ai</em></span></a>
+    <p>Take only photos, leave only footprints. © <span id="year"></span> HiddenTrails.AI</p>
+  </footer>
+
+<script type="module">
+  import { auth } from "./js/app.js";
+  import { revealOnScroll, stagger } from "./js/ui.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+  stagger(document.getElementById("heroText"));
+  revealOnScroll();
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  const nav = document.getElementById("topnav");
+  const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 10);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Signed-in visitors go straight to the app
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return;
+    document.getElementById("navActions").innerHTML = `<a href="dashboard.html" class="btn btn-primary">Open my journal <i class="fa-solid fa-arrow-right"></i></a>`;
+    ["heroCta", "ctaBottom"].forEach((id) => { document.getElementById(id).href = "plantrips.html"; });
+  });
+</script>
 </body>
 </html>

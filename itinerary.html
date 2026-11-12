@@ -2,124 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Your Itinerary | HiddenTrails.AI</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your itinerary · HiddenTrails.AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
   <style>
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-    }
+    .hero { position: relative; height: clamp(280px, 42vw, 420px); border-radius: var(--radius-lg); overflow: hidden; background: var(--ink); }
+    .hero img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scale(1.04); transition: transform 8s linear, opacity .6s; }
+    .hero:hover img { transform: scale(1.1); }
+    .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to top, rgba(20,28,25,.88) 0%, rgba(20,28,25,.35) 45%, rgba(20,28,25,.05) 100%); }
+    .hero-content { position: absolute; inset: auto 0 0 0; z-index: 2; padding: clamp(1.25rem, 3vw, 2.5rem); color: #fff; }
+    .hero .tag { background: rgba(255,255,255,.16); color: #fff; backdrop-filter: blur(4px); }
 
-    .glass-sidebar {
-      background: #f8fafc;
-      border-right: 1px solid #e2e8f0;
-    }
+    .day-nav { position: sticky; top: 0; z-index: 20; padding: .75rem 0; background: linear-gradient(var(--paper) 75%, transparent); }
+    @media (max-width: 1023px) { .day-nav { top: 62px; } }
+    .day-nav .chip { flex: none; }
 
-    .glass-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.4s ease;
-    }
-    .glass-card:hover {
-      background: #f1f5f9;
-      border-color: rgba(16, 185, 129, 0.3);
-      transform: translateY(-4px);
-    }
-
-    .hero-overlay {
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.1));
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    .day-card .frame { height: 240px; }
+    .day-card .slot-text { color: var(--ink-2); }
+    .budget-meter { height: 14px; border-radius: 99px; background: var(--paper-2); overflow: hidden; position: relative; }
+    .budget-meter span { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: inherit; transition: width 1.2s var(--ease); background: linear-gradient(90deg, var(--moss-2), var(--moss)); }
   </style>
 </head>
 
-<body class="font-sans text-gray-800">
+<body>
+<div class="shell">
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
 
-<nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <a href="dashboard.html" class="flex items-center gap-2">
-    <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <span class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</span>
-  </a>
-  <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-500 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-500 transition">Saved</a>
-    <a href="#" data-logout class="bg-red-500/20 text-red-500 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
+  <div class="min-w-0">
+    <header id="mobileBar" class="mobile-bar"></header>
+
+    <main class="main">
+      <div class="container-narrow">
+
+        <a href="saved.html" class="btn btn-ghost btn-sm mb-4 -ml-2"><i class="fa-solid fa-arrow-left"></i> My journeys</a>
+
+        <!-- Hero -->
+        <section id="heroSection" class="hero mb-6">
+          <img id="heroImage" alt="" />
+          <div class="hero-content">
+            <div class="flex flex-wrap gap-2 mb-3" id="heroTags"></div>
+            <h1 id="tripTitle" class="font-display text-3xl md:text-5xl font-semibold leading-tight" style="color:#fff">Loading your trail…</h1>
+            <p id="budgetInfo" class="mt-2 text-sm md:text-base" style="color:rgba(255,255,255,.8)"></p>
+          </div>
+        </section>
+
+        <!-- Budget + actions -->
+        <section class="card card-pad mb-6 reveal" id="budgetCard" hidden>
+          <div class="flex flex-wrap items-center justify-between gap-4">
+            <div class="flex-1 min-w-[220px]">
+              <div class="flex justify-between text-sm mb-2">
+                <span class="font-semibold">Estimated spend</span>
+                <span><b id="estAmount">₹0</b> <span class="muted">of <span id="budgetAmount">₹0</span></span></span>
+              </div>
+              <div class="budget-meter"><span id="budgetBar"></span></div>
+              <p class="text-xs muted mt-2" id="budgetNote"></p>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+              <a href="photo-challenge.html" class="btn"><i class="fa-solid fa-camera-retro" style="color:var(--clay)"></i> Challenges</a>
+              <button id="regenBtn" class="btn btn-clay"><i class="fa-solid fa-rotate"></i> Regenerate</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Day navigator -->
+        <nav class="day-nav" id="dayNavWrap" hidden>
+          <div class="flex gap-2 overflow-x-auto pb-1" id="dayNav"></div>
+        </nav>
+
+        <!-- Days -->
+        <div id="daysContainer" class="trail mt-4">
+          <div class="skeleton h-96 mb-6"></div>
+          <div class="skeleton h-96"></div>
+        </div>
+
+      </div>
+    </main>
   </div>
-</nav>
-
-<div class="flex min-h-[calc(100vh-72px)]">
-
-  <aside class="w-72 glass-sidebar p-8 space-y-3">
-    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-house"></i> Dashboard</a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-map-location-dot"></i> Plan Trip</a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-600 rounded-2xl font-bold border border-green-500/30"><i class="fa-solid fa-bookmark"></i> Saved Trips</a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-camera-retro"></i> Photo Challenge</a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gift"></i> Rewards</a>
-    <a href="upload-gem.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gem"></i> Upload Gem</a>
-  </aside>
-
-  <main class="flex-1 p-12 overflow-y-auto">
-    <div class="max-w-4xl mx-auto space-y-8">
-
-      <!-- Hero Section -->
-      <div id="heroSection" class="relative h-80 rounded-3xl overflow-hidden glass-card">
-        <img id="heroImage" class="w-full h-full object-cover" alt="Destination">
-        <div class="absolute inset-0 hero-overlay flex flex-col justify-end p-10">
-          <h1 id="tripTitle" class="text-4xl font-black mb-2 text-white"></h1>
-          <p id="budgetInfo" class="text-gray-300 font-medium"></p>
-        </div>
-      </div>
-
-      
-
-      <!-- Days Container -->
-      <div id="daysContainer" class="space-y-8">
-        <div class="text-center p-20">
-          <i class="fa-solid fa-spinner fa-spin text-4xl text-green-400 mb-4"></i>
-          <p class="text-gray-400">Loading your itinerary...</p>
-        </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-center gap-4 mt-8">
-        <button id="regenBtn"
-          class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-amber-900/30">
-          <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Regenerate AI
-        </button>
-
-        <a href="saved.html"
-           class="bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105">
-          <i class="fa-solid fa-bookmark mr-2"></i> Saved Trips
-        </a>
-      </div>
-
-    </div>
-  </main>
-
 </div>
 
 <script type="module">
-import { api, db, requireUser, wireLogout, escapeHtml, FALLBACK_IMAGE } from "./js/app.js";
+import { api, db, requireUser, escapeHtml, FALLBACK_IMAGE } from "./js/app.js";
+import { mountShell, toast, confirmDialog, confetti, revealOnScroll, smoothImage, busy } from "./js/ui.js";
 import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-wireLogout();
+const shell = mountShell("saved.html");
+const params = new URLSearchParams(window.location.search);
+const id = params.get("id");
 
-const id = new URLSearchParams(window.location.search).get("id");
+const $ = (x) => document.getElementById(x);
+const heroImage = $("heroImage");
+const daysContainer = $("daysContainer");
+const regenBtn = $("regenBtn");
+const inr = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
 
-const heroImage = document.getElementById("heroImage");
-const tripTitle = document.getElementById("tripTitle");
-const budgetInfo = document.getElementById("budgetInfo");
-const daysContainer = document.getElementById("daysContainer");
-const regenBtn = document.getElementById("regenBtn");
-
-heroImage.addEventListener("error", () => { heroImage.src = FALLBACK_IMAGE; }, { once: true });
+smoothImage(heroImage, FALLBACK_IMAGE);
 
 let trip;
 
@@ -159,96 +140,118 @@ async function getDestinationImage(query) {
   }
 }
 
+const SLOTS = [
+  { key: "morning",   label: "Morning",   icon: "fa-sun",       color: "#b07a12" },
+  { key: "afternoon", label: "Afternoon", icon: "fa-cloud-sun", color: "var(--sky)" },
+  { key: "evening",   label: "Evening",   icon: "fa-moon",      color: "var(--plum)" },
+];
+
 function renderDay(day, imageUrl) {
   const landmark = extractLandmark(day);
   const mapQuery = landmark ? `${landmark}, ${trip.destination}` : `${day.title || ""}, ${trip.destination}`;
   const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
-  const evening = day.evening && day.evening !== "N/A" ? day.evening : "Wrap up the day with a relaxed local dinner nearby.";
+  if (!day.evening || day.evening === "N/A") day.evening = "Wrap up the day with a relaxed local dinner nearby.";
 
-  const card = document.createElement("div");
-  card.className = "glass-card p-8";
-  card.innerHTML = `
-    <h2 class="text-2xl font-black mb-4 text-gray-800">
-      <span class="text-green-500">Day ${escapeHtml(day.day)}:</span> ${escapeHtml(day.title)}
-    </h2>
-
-    <img src="${escapeHtml(imageUrl || FALLBACK_IMAGE)}" alt="${escapeHtml(landmark || trip.destination)}"
-         class="rounded-2xl mb-6 w-full h-72 object-cover border border-gray-200">
-
-    <div class="space-y-5 text-gray-600 leading-relaxed">
-      <div class="flex gap-4">
-        <div class="w-1 bg-amber-500 rounded-full flex-shrink-0"></div>
-        <div>
-          <span class="text-[10px] uppercase tracking-widest text-amber-500 font-bold">Morning</span>
-          <p class="mt-1">${escapeHtml(day.morning)}</p>
+  const stop = document.createElement("article");
+  stop.className = "trail-stop reveal";
+  stop.id = `day-${day.day}`;
+  stop.innerHTML = `
+    <span class="trail-marker">${escapeHtml(day.day)}</span>
+    <div class="card day-card overflow-hidden card-hover">
+      <div class="frame">
+        <img src="${escapeHtml(imageUrl || FALLBACK_IMAGE)}" alt="${escapeHtml(landmark || trip.destination)}">
+        ${landmark ? `<span class="tag absolute left-3 bottom-3" style="background:rgba(255,253,248,.92)"><i class="fa-solid fa-location-dot" style="color:var(--clay)"></i>${escapeHtml(landmark)}</span>` : ""}
+      </div>
+      <div class="p-5 md:p-6">
+        <p class="eyebrow">Day ${escapeHtml(day.day)}</p>
+        <h2 class="h2 mt-1 mb-3">${escapeHtml(day.title)}</h2>
+        ${SLOTS.map((s) => `
+          <div class="slot">
+            <span class="slot-time" style="color:${s.color}"><i class="fa-solid ${s.icon}"></i>${s.label}</span>
+            <p class="slot-text m-0">${escapeHtml(day[s.key])}</p>
+          </div>`).join("")}
+        <hr class="dotted-divider">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="m-0"><span class="muted text-sm">Est. for the day</span> <b class="font-display text-xl ml-1" style="color:var(--moss)">${inr(day.estimated_cost)}</b></p>
+          <a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener" class="btn btn-sm"><i class="fa-solid fa-map-location-dot" style="color:var(--sky)"></i> Directions</a>
         </div>
       </div>
-      <div class="flex gap-4">
-        <div class="w-1 bg-blue-500 rounded-full flex-shrink-0"></div>
-        <div>
-          <span class="text-[10px] uppercase tracking-widest text-blue-500 font-bold">Afternoon</span>
-          <p class="mt-1">${escapeHtml(day.afternoon)}</p>
-        </div>
-      </div>
-      <div class="flex gap-4">
-        <div class="w-1 bg-purple-500 rounded-full flex-shrink-0"></div>
-        <div>
-          <span class="text-[10px] uppercase tracking-widest text-purple-500 font-bold">Evening</span>
-          <p class="mt-1">${escapeHtml(evening)}</p>
-        </div>
-      </div>
-    </div>
+    </div>`;
+  smoothImage(stop.querySelector("img"), FALLBACK_IMAGE);
+  return stop;
+}
 
-    <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
-      <span class="text-green-500 font-black text-lg">₹${escapeHtml(day.estimated_cost)}</span>
-      <div class="flex items-center gap-3">
-        <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Estimated Cost</span>
-        <a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener"
-           class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition shadow-sm">
-          <i class="fa-solid fa-location-dot"></i> Open in Maps
-        </a>
-      </div>
-    </div>
-  `;
-  const img = card.querySelector("img");
-  img.addEventListener("error", () => { img.src = FALLBACK_IMAGE; }, { once: true });
-  return card;
+function renderBudget(days) {
+  const est = Number(trip.total_estimated_cost) || days.reduce((s, d) => s + (Number(d.estimated_cost) || 0), 0);
+  const budget = Number(trip.budget) || 0;
+  const pct = budget ? Math.min(100, (est / budget) * 100) : 0;
+  $("estAmount").textContent = inr(est);
+  $("budgetAmount").textContent = inr(budget);
+  $("budgetNote").textContent = budget >= est
+    ? `About ${inr(budget - est)} left for souvenirs and surprises.`
+    : `Plan runs ${inr(est - budget)} over budget — try regenerating.`;
+  $("budgetCard").hidden = false;
+  setTimeout(() => { $("budgetBar").style.width = pct + "%"; }, 50);
+}
+
+function renderDayNav(days) {
+  const nav = $("dayNav");
+  nav.innerHTML = days.map((d) => `<a href="#day-${d.day}" class="chip">Day ${escapeHtml(d.day)}</a>`).join("");
+  $("dayNavWrap").hidden = false;
+
+  // Highlight the day currently on screen
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      nav.querySelectorAll(".chip").forEach((c) => c.classList.toggle("is-active", c.getAttribute("href") === `#${en.target.id}`));
+    });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll(".trail-stop").forEach((s) => io.observe(s));
 }
 
 async function loadTrip() {
   try {
     if (!id) {
-      daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">No trip ID provided.</p>`;
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🗺️</div><p class="font-display text-xl">No trip selected.</p></div>`;
       return;
     }
 
     const snap = await getDoc(doc(db, "trips", id));
     if (!snap.exists()) {
-      daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">Trip not found.</p>`;
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p class="font-display text-xl">Trip not found.</p><a href="saved.html" class="btn btn-primary mt-4">Back to journeys</a></div>`;
       return;
     }
 
     trip = snap.data();
     const days = Array.isArray(trip.days) ? trip.days : [];
     const updates = {};
+    document.title = `${trip.destination} · HiddenTrails.AI`;
 
-    // Hero image (cached on the trip so Saved Trips can reuse it)
+    // Hero
     if (!trip.hero_image) {
       const hero = await getDestinationImage(trip.destination);
       if (hero) { trip.hero_image = hero; updates.hero_image = hero; }
     }
     heroImage.src = trip.hero_image || FALLBACK_IMAGE;
-
     const style = trip.trip_style ?? trip.preference ?? "Custom";
-    tripTitle.textContent = `${trip.destination} – ${days.length} Day ${style} Trip`;
-    budgetInfo.textContent = `Budget: ₹${trip.budget} | Estimated: ₹${trip.total_estimated_cost}`;
+    $("tripTitle").textContent = trip.destination;
+    $("budgetInfo").textContent = trip.arrivalDate
+      ? `${new Date(trip.arrivalDate + "T00:00").toDateString().slice(4, 10)} → ${new Date(trip.returnDate + "T00:00").toDateString().slice(4, 10)}`
+      : `A ${days.length}-day plan`;
+    $("heroTags").innerHTML = `
+      <span class="tag"><i class="fa-regular fa-calendar"></i>${days.length} days</span>
+      <span class="tag"><i class="fa-solid fa-compass"></i>${escapeHtml(style)}</span>
+      <span class="tag"><i class="fa-solid fa-wallet"></i>${inr(trip.budget)}</span>`;
 
     if (days.length === 0) {
-      daysContainer.innerHTML = `<p class="text-center text-gray-400 p-10">This trip has no days yet — try Regenerate.</p>`;
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🌫️</div><p class="font-display text-xl">This trip has no days yet.</p><p class="muted">Try regenerating it.</p></div>`;
+      $("budgetCard").hidden = false;
       return;
     }
 
-    // Fetch missing day images in parallel; reuse ones already cached on the trip
+    renderBudget(days);
+
+    // Day images: reuse cached ones, fetch missing in parallel
     let imagesChanged = false;
     const images = await Promise.all(days.map(async (day) => {
       if (day.image) return day.image;
@@ -263,39 +266,49 @@ async function loadTrip() {
 
     daysContainer.innerHTML = "";
     days.forEach((day, i) => daysContainer.appendChild(renderDay(day, images[i])));
+    renderDayNav(days);
+    revealOnScroll();
 
     if (imagesChanged) updates.days = days;
     if (Object.keys(updates).length) {
       updateDoc(doc(db, "trips", id), updates).catch((e) => console.warn("Could not cache images:", e.message));
     }
+
+    if (params.get("new") === "1") {
+      history.replaceState(null, "", `itinerary.html?id=${encodeURIComponent(id)}`);
+      confetti({ count: 90 });
+      toast("Your trail is ready. Photo challenges for it were added too!", "success", 5000);
+    }
   } catch (err) {
     console.error("LoadTrip Error:", err);
-    daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">Something went wrong loading this trip.</p>`;
+    daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">⚠️</div><p class="font-display text-xl">Something went wrong loading this trip.</p></div>`;
   }
 }
 
-await requireUser();
+const user = await requireUser();
+shell.setUser(user);
 loadTrip();
 
-// Regenerate Button
 regenBtn.addEventListener("click", async () => {
   if (!trip) return;
-  if (!confirm("Regenerate itinerary? This will replace the current one.")) return;
+  const ok = await confirmDialog({
+    title: "Regenerate this trip?",
+    body: "The AI will write a fresh plan and replace the current one.",
+    confirmText: "Regenerate",
+    icon: "fa-rotate",
+  });
+  if (!ok) return;
 
-  regenBtn.disabled = true;
-  regenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Regenerating...`;
-
+  const restore = busy(regenBtn, "Regenerating…");
   try {
     await api("/regenerate-itinerary", { method: "POST", body: { tripId: id } });
     location.reload();
   } catch (err) {
     console.error("Regenerate error:", err);
-    alert(err.status ? err.message : "Failed to regenerate. Check if backend is running.");
-    regenBtn.disabled = false;
-    regenBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Regenerate AI`;
+    toast(err.status ? err.message : "Couldn't regenerate. Is the backend running?", "error");
+    restore();
   }
 });
 </script>
-
 </body>
 </html>

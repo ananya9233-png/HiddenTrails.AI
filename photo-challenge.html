@@ -1,544 +1,581 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Photo Challenge 📸 | HiddenTrails.AI</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-    <style>
-      body { background: #ffffff; min-height: 100vh; }
-      .glass-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 24px; transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-      .glass-card:hover { background: #f1f5f9; border-color: rgba(74,222,128,0.4); transform: translateY(-6px); box-shadow: 0 12px 24px rgba(0,0,0,0.08); }
-      .glass-sidebar { background: #f8fafc; border-right: 1px solid #e2e8f0; }
-      .challenge-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; transition: all 0.35s ease; cursor: pointer; overflow: hidden; }
-      .challenge-card:hover { border-color: rgba(74,222,128,0.5); transform: translateY(-6px) scale(1.02); box-shadow: 0 12px 30px rgba(74,222,128,0.1); }
-      .challenge-card img { transition: transform 0.5s ease; }
-      .challenge-card:hover img { transform: scale(1.08); }
-      .challenge-card.completed { border-color: rgba(74,222,128,0.5); opacity: 0.7; }
-      .challenge-card.completed::after { content: "✅ COMPLETED"; position: absolute; top: 12px; right: 12px; background: rgba(16,185,129,0.9); color: white; font-size: 10px; font-weight: 800; padding: 4px 10px; border-radius: 8px; letter-spacing: 1px; }
-      .camera-modal { display: none; position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); align-items: center; justify-content: center; }
-      .camera-modal.active { display: flex; }
-      .camera-panel { background: rgba(30,41,59,0.95); border: 1px solid rgba(255,255,255,0.15); border-radius: 28px; padding: 32px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; }
-      video, .captured-preview { border-radius: 16px; border: 2px solid rgba(255,255,255,0.15); }
-      @keyframes pulse-ring { 0% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.4); opacity: 0; } }
-      .capture-btn::before { content: ""; position: absolute; inset: -6px; border-radius: 50%; border: 3px solid #4ade80; animation: pulse-ring 1.5s infinite; }
-      .result-modal { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); align-items: center; justify-content: center; }
-      .result-modal.active { display: flex; }
-      @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.95); } 100% { transform: scale(1); opacity: 1; } }
-      .result-content { animation: bounceIn 0.6s ease-out; }
-      @keyframes spin-glow { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      .loader { width: 48px; height: 48px; border: 4px solid rgba(74,222,128,0.2); border-top-color: #4ade80; border-radius: 50%; animation: spin-glow 0.8s linear infinite; }
-      .location-warning-modal { display: none; position: fixed; inset: 0; z-index: 150; background: rgba(0,0,0,0.75); backdrop-filter: blur(6px); align-items: center; justify-content: center; }
-      .location-warning-modal.active { display: flex; }
-      .location-warning-panel { background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid rgba(74,222,128,0.3); border-radius: 24px; padding: 36px; max-width: 460px; width: 90%; text-align: center; animation: bounceIn 0.4s ease-out; }
-      .sidebar-active { background: rgba(74,222,128,0.15); color: #4ade80; border: 1px solid rgba(74,222,128,0.3); border-radius: 16px; }
-      .stat-icon-green { background: rgba(74,222,128,0.15); }
-      .stat-icon-blue  { background: rgba(96,165,250,0.15); }
-      .btn-green { background: linear-gradient(135deg, #22c55e, #16a34a); color: white; transition: all 0.2s; }
-      .btn-green:hover { background: linear-gradient(135deg, #4ade80, #22c55e); transform: scale(1.05); box-shadow: 0 8px 20px rgba(34,197,94,0.3); }
-      .capture-btn-green { background: #22c55e; transition: all 0.2s; }
-      .capture-btn-green:hover { background: #4ade80; }
-      @keyframes demoPulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(168,85,247,0.4); } 50% { box-shadow: 0 0 0 8px rgba(168,85,247,0); } }
-      .demo-badge { animation: demoPulse 2s infinite; }
-      .btn-reset-demo { background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; letter-spacing: 0.5px; }
-      .btn-reset-demo:hover { background: linear-gradient(135deg, #9333ea, #7c3aed); transform: scale(1.05); }
-    </style>
-  </head>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Photo challenges · HiddenTrails.AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/theme.css" />
+  <style>
+    /* Polaroid cards */
+    .polaroid { background: #fff; padding: .7rem .7rem 1rem; border-radius: 6px; border: 1px solid var(--line);
+      box-shadow: var(--shadow-sm); transition: transform .35s var(--spring), box-shadow .35s; position: relative; }
+    .polaroid:nth-child(3n+1) { --tilt: -1.2deg; } .polaroid:nth-child(3n+2) { --tilt: .8deg; } .polaroid:nth-child(3n) { --tilt: -.4deg; }
+    .polaroid { transform: rotate(var(--tilt, 0)); }
+    .polaroid:hover { transform: rotate(0) translateY(-6px) scale(1.015); box-shadow: var(--shadow); z-index: 2; }
+    .polaroid .frame { aspect-ratio: 4 / 3; border-radius: 3px; }
+    .polaroid .tape { position: absolute; top: -10px; left: 50%; width: 84px; height: 22px; transform: translateX(-50%) rotate(-3deg);
+      background: rgba(224, 163, 58, .35); border-left: 1px dashed rgba(0,0,0,.08); border-right: 1px dashed rgba(0,0,0,.08); z-index: 3; }
+    .visited-stamp { position: absolute; z-index: 3; top: 28%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg);
+      padding: .35rem .9rem; border: 3px solid var(--moss); border-radius: 10px; color: var(--moss);
+      font-family: var(--font-display); font-weight: 700; font-size: 1.35rem; letter-spacing: .12em; background: rgba(255,255,255,.82);
+      animation: stamp-in .5s var(--spring) both; }
+    @keyframes stamp-in { from { opacity: 0; transform: translate(-50%, -50%) rotate(-14deg) scale(2); } }
+    .polaroid.is-done .frame img { filter: grayscale(.35) sepia(.15); }
 
-  <body class="font-sans text-gray-800">
-    <!-- NAV -->
-    <nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <a href="dashboard.html" class="flex items-center gap-2">
-    <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <span class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</span>
-  </a>
-  <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-500 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-500 transition">Saved</a>
-    <a href="#" data-logout class="bg-red-500/20 text-red-500 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
-  </div>
-</nav>
+    .tabs { display: inline-flex; flex-wrap: wrap; gap: .25rem; padding: .3rem; border-radius: 999px; background: var(--paper-2); }
+    .tab { padding: .5rem 1rem; border-radius: 999px; font-weight: 600; font-size: .87rem; color: var(--ink-2); border: 0; background: transparent; transition: all .2s; }
+    .tab[aria-selected="true"] { background: var(--card); color: var(--ink); box-shadow: var(--shadow-sm); }
+    .tab .count { font-size: .72rem; margin-left: .3rem; color: var(--muted); }
 
-    <div class="flex min-h-[calc(100vh-72px)]">
-      <!-- SIDEBAR -->
-      <aside class="w-72 glass-sidebar p-8 space-y-3">
-        <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-        <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-house"></i> Dashboard</a>
-        <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-map-location-dot"></i> Plan Trip</a>
-        <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-bookmark"></i> Saved Trips</a>
-        <a href="photo-challenge.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-600 rounded-2xl font-bold border border-green-500/30"><i class="fa-solid fa-camera-retro"></i> Photo Challenge</a>
-        <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gift"></i> Rewards</a>
-        <a href="upload-gem.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gem"></i> Upload Gem</a>
-        <div class="mt-6 pt-6 border-t border-gray-200">
-          <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Dev Tools</p>
-          <button onclick="resetDemoChallenge()" class="btn-reset-demo w-full flex items-center justify-center gap-2 py-2">
-            <i class="fa-solid fa-rotate-left"></i> Reset Demo Challenge
-          </button>
-          <p class="text-[10px] text-gray-400 mt-2 text-center">Marks the demo challenge incomplete again for retesting</p>
-        </div>
-      </aside>
+    .progress-ring { width: 64px; height: 64px; transform: rotate(-90deg); }
+    .progress-ring circle { fill: none; stroke-width: 7; }
+    .progress-ring .bg { stroke: var(--paper-2); }
+    .progress-ring .fg { stroke: var(--clay); stroke-linecap: round; transition: stroke-dashoffset 1.2s var(--ease); }
 
-      <!-- MAIN -->
-      <main class="flex-1 p-12 overflow-y-auto">
-        <div class="max-w-6xl mx-auto">
-          <header class="mb-10">
-            <h2 class="text-3xl font-black tracking-tight flex items-center gap-3 text-gray-800">
-              <span class="bg-green-400/20 p-3 rounded-2xl"><i class="fa-solid fa-camera-retro text-green-400 text-3xl"></i></span>
-              Photo Challenges
-            </h2>
-            <p class="text-gray-400 mt-3 max-w-2xl">Visit famous landmarks, take a <strong class="text-green-500">real-time photo</strong> matching the reference, and earn reward points!</p>
-          </header>
+    /* Camera */
+    .cam-panel { background: #18211e; color: #f5f0e6; border-radius: var(--radius-lg); padding: clamp(1rem, 3vw, 1.75rem); width: 100%; max-width: 940px; max-height: 94vh; overflow-y: auto; animation: pop-in .35s var(--spring) both; }
+    .cam-label { font-size: .7rem; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: rgba(245,240,230,.55); margin-bottom: .6rem; display: flex; align-items: center; gap: .45rem; }
+    .viewfinder { position: relative; aspect-ratio: 4 / 3; border-radius: 16px; overflow: hidden; background: #0e1412; }
+    .viewfinder video, .viewfinder img { width: 100%; height: 100%; object-fit: cover; }
+    .viewfinder .corner { position: absolute; width: 28px; height: 28px; border: 3px solid rgba(255,255,255,.8); z-index: 2; pointer-events: none; }
+    .viewfinder .tl { top: 12px; left: 12px; border-right: 0; border-bottom: 0; border-top-left-radius: 8px; }
+    .viewfinder .tr { top: 12px; right: 12px; border-left: 0; border-bottom: 0; border-top-right-radius: 8px; }
+    .viewfinder .bl { bottom: 12px; left: 12px; border-right: 0; border-top: 0; border-bottom-left-radius: 8px; }
+    .viewfinder .br { bottom: 12px; right: 12px; border-left: 0; border-top: 0; border-bottom-right-radius: 8px; }
+    .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 3; }
+    .flash.go { animation: flash .45s ease-out; }
+    @keyframes flash { 0% { opacity: .9; } 100% { opacity: 0; } }
+    .live-dot { position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 2; display: inline-flex; align-items: center; gap: .4rem;
+      padding: .25rem .65rem; border-radius: 99px; background: rgba(184, 67, 47, .92); font-size: .7rem; font-weight: 700; letter-spacing: .1em; }
+    .live-dot::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #fff; animation: float 1s infinite; }
+    .shutter { width: 74px; height: 74px; border-radius: 50%; border: 4px solid #fff; background: transparent; padding: 5px; transition: transform .15s; }
+    .shutter span { display: block; width: 100%; height: 100%; border-radius: 50%; background: var(--clay); transition: transform .15s; }
+    .shutter:hover span { transform: scale(.92); }
+    .shutter:active { transform: scale(.92); }
+    .cam-btn { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); color: #fff; transition: background .2s, transform .2s; }
+    .cam-btn:hover { background: rgba(255,255,255,.2); transform: translateY(-2px); }
+    .scanline { position: absolute; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--sun), transparent); z-index: 4; animation: scan 1.6s ease-in-out infinite; box-shadow: 0 0 18px var(--sun); }
+    @keyframes scan { 0% { top: 4%; } 50% { top: 94%; } 100% { top: 4%; } }
 
-          <div class="glass-card p-6 mb-10 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 stat-icon-green rounded-2xl flex items-center justify-center"><i class="fa-solid fa-trophy text-green-400 text-2xl"></i></div>
-              <div>
-                <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Your Points</p>
-                <p id="totalPoints" class="text-3xl font-black text-green-400">0</p>
-              </div>
-            </div>
-            <div class="flex items-center gap-4">
-              <div class="w-14 h-14 stat-icon-blue rounded-2xl flex items-center justify-center"><i class="fa-solid fa-circle-check text-blue-400 text-2xl"></i></div>
-              <div>
-                <p class="text-xs text-gray-400 uppercase tracking-widest font-bold">Completed</p>
-                <p id="completedCount" class="text-3xl font-black text-blue-400">0/0</p>
-              </div>
-            </div>
-            <a href="rewards.html" class="btn-green font-bold px-6 py-3 rounded-xl flex items-center gap-2 shadow-lg"><i class="fa-solid fa-ticket"></i> View Coupons</a>
-          </div>
+    .result-photo { background: #fff; padding: .6rem .6rem 2.4rem; border-radius: 6px; box-shadow: var(--shadow); transform: rotate(-2deg); position: relative; max-width: 260px; margin: .5rem auto 1.5rem; }
+    .result-photo img { aspect-ratio: 4/3; object-fit: cover; width: 100%; border-radius: 3px; }
+    .result-photo .caption { position: absolute; bottom: .55rem; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-style: italic; color: var(--ink-2); }
+    .result-stamp { position: absolute; right: -18px; top: -18px; width: 86px; height: 86px; border-radius: 50%; display: grid; place-items: center; text-align: center;
+      font-family: var(--font-display); font-weight: 700; font-size: .8rem; line-height: 1.1; letter-spacing: .06em; transform: rotate(12deg);
+      border: 3px double currentColor; background: rgba(255,253,248,.95); animation: stamp-in2 .55s .2s var(--spring) both; }
+    @keyframes stamp-in2 { from { opacity: 0; transform: rotate(12deg) scale(2.2); } }
+  </style>
+</head>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="challengeGrid"></div>
-        </div>
-      </main>
-    </div>
+<body>
+<div class="shell">
+  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
 
-    <!-- CAMERA MODAL -->
-    <div class="camera-modal" id="cameraModal">
-      <div class="camera-panel">
-        <div class="flex items-center justify-between mb-6">
-          <h3 class="text-2xl font-black flex items-center gap-2 text-white">
-            <i class="fa-solid fa-crosshairs text-green-400"></i>
-            <span id="modalTitle">Challenge</span>
-          </h3>
-          <button onclick="closeCamera()" class="text-gray-400 hover:text-white text-2xl transition"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div id="demoHintBanner" class="hidden mb-4 p-3 rounded-xl text-xs font-semibold" style="background:rgba(168,85,247,0.12);border:1px solid rgba(168,85,247,0.3);color:#c4b5fd;">
-          🎯 <strong>DEMO MODE</strong> — Point your camera at the <strong>campus building</strong> to complete this challenge.
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="min-w-0">
+    <header id="mobileBar" class="mobile-bar"></header>
+
+    <main class="main">
+      <div class="page-wrap">
+        <header class="page-head flex flex-wrap items-end justify-between gap-6">
           <div>
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3"><i class="fa-solid fa-image"></i> Reference Photo</p>
-            <img id="referenceImg" src="" alt="Reference" class="w-full aspect-[4/3] object-cover rounded-2xl border-2 border-white/10" />
-            <p class="text-xs text-gray-500 mt-2 text-center italic">Take a photo that looks like this ☝️</p>
+            <span class="eyebrow">Field assignments</span>
+            <h1 class="h1">Photo <span class="italic-accent">challenges</span></h1>
+            <p>Stand in front of the landmark, snap a <b>live</b> photo, and the AI checks it against the reference. You only earn full points when you're really there.</p>
           </div>
-          <div>
-            <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3"><i class="fa-solid fa-video"></i> Your Camera</p>
+          <div class="card px-5 py-4 flex items-center gap-5">
             <div class="relative">
-              <video id="webcamVideo" autoplay playsinline muted class="w-full aspect-[4/3] object-cover rounded-2xl bg-slate-800"></video>
-              <img id="capturedImg" src="" alt="Captured" class="captured-preview w-full aspect-[4/3] object-cover rounded-2xl bg-slate-800 hidden" />
-              <div id="liveIndicator" class="absolute top-3 left-3 flex items-center gap-2 bg-red-600/90 px-3 py-1 rounded-full text-xs font-bold text-white">
-                <span class="w-2 h-2 bg-white rounded-full animate-pulse"></span> LIVE
-              </div>
+              <svg class="progress-ring" viewBox="0 0 64 64" aria-hidden="true">
+                <circle class="bg" cx="32" cy="32" r="27"></circle>
+                <circle class="fg" id="ringFg" cx="32" cy="32" r="27" stroke-dasharray="169.6" stroke-dashoffset="169.6"></circle>
+              </svg>
+              <span class="absolute inset-0 grid place-items-center text-xs font-bold" id="completedCount">0/0</span>
+            </div>
+            <div>
+              <div class="stat-value" id="totalPoints">0</div>
+              <div class="stat-label">Points earned</div>
             </div>
           </div>
-        </div>
-        <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)" />
-        <div class="flex items-center justify-center gap-6 mt-8" id="cameraActions">
-          <button onclick="document.getElementById('galleryInput').click()" class="relative w-14 h-14 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white text-xl transition-all transform hover:scale-110 border border-white/20" title="Upload from Gallery">
-            <i class="fa-solid fa-images"></i>
-          </button>
-          <button onclick="capturePhoto()" id="captureBtn" class="capture-btn capture-btn-green relative w-16 h-16 rounded-full flex items-center justify-center text-white text-2xl transform hover:scale-110 shadow-lg shadow-green-500/30">
-            <i class="fa-solid fa-camera"></i>
-          </button>
-        </div>
-        <p class="text-center text-gray-500 text-[11px] mt-2">📷 Capture live · 🖼️ or upload from gallery</p>
-        <div class="hidden flex-col items-center gap-4 mt-8" id="submitActions">
-          <div class="flex gap-4">
-            <button onclick="retakePhoto()" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold transition flex items-center gap-2 text-white"><i class="fa-solid fa-rotate-left"></i> Retake</button>
-            <button onclick="submitPhoto()" class="px-8 py-3 btn-green rounded-xl font-bold transition-all transform hover:scale-105 shadow-lg flex items-center gap-2"><i class="fa-solid fa-paper-plane"></i> Verify Photo</button>
+        </header>
+
+        <div class="flex flex-wrap items-center justify-between gap-3 mb-8">
+          <div class="tabs" role="tablist" id="tabs">
+            <button class="tab" role="tab" aria-selected="true" data-filter="all">All<span class="count" id="cAll"></span></button>
+            <button class="tab" role="tab" aria-selected="false" data-filter="todo">To do<span class="count" id="cTodo"></span></button>
+            <button class="tab" role="tab" aria-selected="false" data-filter="trips">From my trips<span class="count" id="cTrips"></span></button>
+            <button class="tab" role="tab" aria-selected="false" data-filter="done">Visited<span class="count" id="cDone"></span></button>
           </div>
+          <button onclick="resetDemoChallenge()" class="btn btn-ghost btn-sm btn-reset-demo" title="Dev tool: mark the demo challenge incomplete again">
+            <i class="fa-solid fa-rotate-left"></i> Reset demo
+          </button>
         </div>
-        <div class="hidden flex-col items-center gap-4 mt-8" id="loadingState">
-          <div class="loader"></div>
-          <p class="text-gray-400 text-sm animate-pulse" id="loadingText">Verifying your photo...</p>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-9 pt-2" id="challengeGrid">
+          <div class="skeleton h-80"></div><div class="skeleton h-80"></div><div class="skeleton h-80 hidden lg:block"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- CAMERA MODAL -->
+<div class="modal-backdrop" id="cameraModal">
+  <div class="cam-panel" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="flex items-center justify-between mb-5 gap-4">
+      <div>
+        <p class="cam-label !mb-1"><i class="fa-solid fa-crosshairs"></i> Challenge</p>
+        <h3 class="font-display text-2xl font-semibold" style="color:#fff" id="modalTitle">Challenge</h3>
+      </div>
+      <button onclick="closeCamera()" class="cam-btn" aria-label="Close camera"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <div id="demoHintBanner" class="hidden mb-4 px-4 py-3 rounded-xl text-sm" style="background:rgba(122,79,143,.25);border:1px solid rgba(190,150,210,.35)">
+      🎯 <b>Demo mode</b>: point your camera at the <b>campus building</b>, or upload one of the approved building photos.
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-5">
+      <div>
+        <p class="cam-label"><i class="fa-regular fa-image"></i> Reference</p>
+        <div class="viewfinder"><img id="referenceImg" src="" alt="Reference photo" /></div>
+        <p class="text-xs mt-2 text-center" style="color:rgba(245,240,230,.55)">Match this view as closely as you can.</p>
+      </div>
+      <div>
+        <p class="cam-label"><i class="fa-solid fa-video"></i> Your camera</p>
+        <div class="viewfinder" id="viewfinder">
+          <span class="corner tl"></span><span class="corner tr"></span><span class="corner bl"></span><span class="corner br"></span>
+          <span class="flash" id="flash"></span>
+          <video id="webcamVideo" autoplay playsinline muted></video>
+          <img id="capturedImg" src="" alt="Your photo" class="hidden" />
+          <div id="liveIndicator" class="live-dot">LIVE</div>
         </div>
       </div>
     </div>
 
-    <!-- RESULT MODAL -->
-    <div class="result-modal" id="resultModal">
-      <div class="result-content text-center p-10 rounded-3xl max-w-md mx-4 relative" id="resultContent"></div>
+    <input type="file" id="galleryInput" accept="image/*" class="hidden" onchange="handleGalleryUpload(event)" />
+
+    <div class="flex items-center justify-center gap-8 mt-7" id="cameraActions">
+      <button onclick="document.getElementById('galleryInput').click()" class="cam-btn" title="Upload from gallery" aria-label="Upload from gallery"><i class="fa-regular fa-images"></i></button>
+      <button onclick="capturePhoto()" id="captureBtn" class="shutter" aria-label="Take photo"><span></span></button>
+      <span class="w-[52px]"></span>
     </div>
 
-    <!-- LOCATION WARNING MODAL -->
-    <div class="location-warning-modal" id="locationWarningModal">
-      <div class="location-warning-panel">
-        <div class="text-6xl mb-4">📍</div>
-        <h3 class="text-2xl font-black text-green-400 mb-3">You're Not Near This Location</h3>
-        <p class="text-gray-300 mb-2">You are <span id="warningDistance" class="text-green-400 font-black text-xl">0km</span> away from <strong id="warningChallengeName" class="text-white">this landmark</strong>.</p>
-        <p class="text-gray-400 text-sm mb-6">You should be around <strong id="warningLocationName" class="text-green-300">the location</strong> to complete this challenge.</p>
-        <div class="flex gap-3 justify-center">
-          <button onclick="closeLocationWarning()" class="px-6 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold text-white transition flex items-center gap-2"><i class="fa-solid fa-arrow-left"></i> Go Back</button>
-          <button onclick="proceedAnywayFromWarning()" class="px-6 py-3 bg-green-500/20 hover:bg-green-500 text-green-400 hover:text-white rounded-xl font-bold transition flex items-center gap-2 border border-green-500/30"><i class="fa-solid fa-camera"></i> Take Photo Anyway</button>
+    <div class="items-center justify-center gap-3 mt-7" id="submitActions" style="display:none">
+      <button onclick="retakePhoto()" class="btn" style="--btn-bg:rgba(255,255,255,.1);--btn-fg:#fff;--btn-bd:rgba(255,255,255,.2)"><i class="fa-solid fa-rotate-left"></i> Retake</button>
+      <button onclick="submitPhoto()" class="btn btn-clay btn-lg"><i class="fa-solid fa-wand-magic-sparkles"></i> Verify photo</button>
+    </div>
+
+    <div class="flex-col items-center gap-2 mt-7" id="loadingState" style="display:none">
+      <p class="font-display text-lg" style="color:#fff" id="loadingText">Verifying your photo…</p>
+      <p class="text-xs" style="color:rgba(245,240,230,.55)">Comparing landmarks · checking it's a live shot</p>
+    </div>
+  </div>
+</div>
+
+<!-- RESULT MODAL -->
+<div class="modal-backdrop" id="resultModal">
+  <div class="modal text-center" id="resultContent" role="dialog" aria-modal="true"></div>
+</div>
+
+<!-- LOCATION WARNING MODAL -->
+<div class="modal-backdrop" id="locationWarningModal">
+  <div class="modal text-center" role="dialog" aria-modal="true">
+    <div class="text-5xl mb-3 float">📍</div>
+    <h3 class="h2 mb-2">You're a little far away</h3>
+    <p class="ink-2 mb-1">You're <b id="warningDistance" style="color:var(--clay)">0 km</b> from <b id="warningChallengeName">this landmark</b>.</p>
+    <p class="muted text-sm mb-6">Full points need you near <span id="warningLocationName">the location</span>. You can still try, but expect partial points.</p>
+    <div class="flex gap-3 justify-center">
+      <button onclick="closeLocationWarning()" class="btn"><i class="fa-solid fa-arrow-left"></i> Go back</button>
+      <button onclick="proceedAnywayFromWarning()" class="btn btn-clay"><i class="fa-solid fa-camera"></i> Try anyway</button>
+    </div>
+  </div>
+</div>
+
+<canvas id="captureCanvas" class="hidden"></canvas>
+
+<script type="module">
+  import { api, requireUser, escapeHtml } from "./js/app.js";
+  import { mountShell, toast, confetti, animateCount, setShellPoints, stagger, smoothImage } from "./js/ui.js";
+
+  const shell = mountShell("photo-challenge.html");
+
+  const PROXIMITY_WARNING_KM = 2;
+  const MAX_UPLOAD_DIMENSION = 1600;
+  const FALLBACK_IMG = "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop";
+  const $ = (id) => document.getElementById(id);
+
+  let currentUser = null;
+  let challenges = [];
+  let completed = [];
+  let filter = "all";
+  let currentChallenge = null;
+  let webcamStream = null;
+  let capturedBase64 = null;
+  let isGalleryUpload = false;
+  let userGPS = { latitude: null, longitude: null };
+
+  const grid = $("challengeGrid");
+
+  // ── Data ───────────────────────────────────────────────────
+  async function loadChallenges() {
+    try {
+      const data = await api(`/photo-challenges/${currentUser.uid}`);
+      challenges = data.challenges || [];
+      completed = data.completed || [];
+      animateCount($("totalPoints"), data.points || 0);
+      setShellPoints(data.points || 0);
+      renderChallenges();
+      fillMissingImages();
+    } catch (err) {
+      console.error("Could not load challenges:", err);
+      grid.innerHTML = `<div class="empty-state sm:col-span-2 lg:col-span-3"><div class="emoji">⚠️</div><p class="font-display text-xl">Couldn't load challenges.</p><p class="muted">Is the backend running?</p></div>`;
+    }
+  }
+
+  async function fillMissingImages() {
+    const missing = challenges.filter((c) => !c.image);
+    await Promise.all(missing.map(async (ch) => {
+      try {
+        const d = await api(`/get-destination-image?query=${encodeURIComponent(ch.imageQuery || ch.name)}`, { auth: false });
+        ch.image = d.image || FALLBACK_IMG;
+      } catch { ch.image = FALLBACK_IMG; }
+    }));
+    if (missing.length) renderChallenges(false);
+  }
+
+  // ── Render ─────────────────────────────────────────────────
+  const DIFF = { Easy: "tag-moss", Medium: "tag-sky", Hard: "tag-clay" };
+
+  function visible() {
+    const isDone = (c) => completed.includes(c.id);
+    switch (filter) {
+      case "todo": return challenges.filter((c) => !isDone(c));
+      case "done": return challenges.filter(isDone);
+      case "trips": return challenges.filter((c) => c.destination);
+      default: return challenges;
+    }
+  }
+
+  function updateCounts() {
+    const done = challenges.filter((c) => completed.includes(c.id)).length;
+    $("cAll").textContent = challenges.length;
+    $("cTodo").textContent = challenges.length - done;
+    $("cTrips").textContent = challenges.filter((c) => c.destination).length;
+    $("cDone").textContent = done;
+    $("completedCount").textContent = `${done}/${challenges.length}`;
+    const pct = challenges.length ? done / challenges.length : 0;
+    $("ringFg").style.strokeDashoffset = String(169.6 * (1 - pct));
+  }
+
+  function renderChallenges(animate = true) {
+    updateCounts();
+    const list = visible();
+    if (!list.length) {
+      const msg = { todo: ["🏆", "You've visited them all!", "Plan a new trip to unlock more."],
+                    done: ["📷", "No stamps yet", "Complete a challenge to see it here."],
+                    trips: ["🗺️", "No trip challenges yet", "Plan a trip and we'll add its landmarks."] }[filter]
+                 || ["🧭", "No challenges", ""];
+      grid.innerHTML = `<div class="empty-state sm:col-span-2 lg:col-span-3"><div class="emoji">${msg[0]}</div><p class="font-display text-xl mb-1">${msg[1]}</p><p class="muted">${msg[2]}</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = list.map((ch) => {
+      const done = completed.includes(ch.id);
+      return `
+      <article class="polaroid ${done ? "is-done" : ""}">
+        <span class="tape"></span>
+        ${done ? `<span class="visited-stamp">VISITED</span>` : ""}
+        <div class="frame"><img src="${escapeHtml(ch.image || FALLBACK_IMG)}" alt="${escapeHtml(ch.name)}" loading="lazy"/></div>
+        <div class="px-1 pt-4">
+          <div class="flex items-start justify-between gap-2">
+            <h3 class="h3">${escapeHtml(ch.name)}</h3>
+            ${ch.isDemo ? `<span class="tag tag-plum flex-none">🎯 Demo</span>` : `<span class="tag ${DIFF[ch.difficulty] || "tag-sky"} flex-none">${escapeHtml(ch.difficulty)}</span>`}
+          </div>
+          <p class="text-sm muted mt-1"><i class="fa-solid fa-location-dot mr-1" style="color:var(--clay)"></i>${escapeHtml(ch.location)}</p>
+          <p class="handwritten ink-2 mt-2 line-clamp-2">“${escapeHtml(ch.description)}”</p>
+          <div class="flex items-center justify-between mt-4">
+            <span class="font-display text-xl font-semibold" style="color:var(--moss)">+${escapeHtml(ch.points)} <span class="text-sm muted" style="font-family:var(--font-body)">pts</span></span>
+            ${done
+              ? `<span class="tag tag-moss"><i class="fa-solid fa-circle-check"></i> Done</span>`
+              : `<button data-challenge="${escapeHtml(ch.id)}" class="start-btn btn btn-primary btn-sm"><i class="fa-solid fa-camera"></i> Start</button>`}
+          </div>
         </div>
-      </div>
-    </div>
+      </article>`;
+    }).join("");
 
-    <canvas id="captureCanvas" class="hidden"></canvas>
+    grid.classList.toggle("stagger", animate);
+    if (animate) stagger(grid);
+    grid.querySelectorAll("img").forEach((img) => smoothImage(img, FALLBACK_IMG));
+  }
 
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <!--  SINGLE CLEAN SCRIPT — no duplicates, no localStorage      -->
-    <!-- ═══════════════════════════════════════════════════════════ -->
-    <script type="module">
-      import { api, requireUser, wireLogout, escapeHtml } from "./js/app.js";
+  grid.addEventListener("click", (e) => {
+    const btn = e.target.closest(".start-btn");
+    if (btn) openChallenge(btn.dataset.challenge);
+  });
 
-      wireLogout();
+  $("tabs").addEventListener("click", (e) => {
+    const tab = e.target.closest(".tab");
+    if (!tab) return;
+    filter = tab.dataset.filter;
+    document.querySelectorAll(".tab").forEach((t) => t.setAttribute("aria-selected", String(t === tab)));
+    renderChallenges();
+  });
 
-      // ── App state ──────────────────────────────────────────────
-      const PROXIMITY_WARNING_KM = 2;
-      const MAX_UPLOAD_DIMENSION = 1600; // px — keeps uploads well under the server limit
-      const FALLBACK_IMG = "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=800&h=400&fit=crop";
-
-      let currentUser       = null;
-      let challenges        = [];
-      let completed         = [];
-      let currentChallenge  = null;
-      let webcamStream      = null;
-      let capturedBase64    = null;
-      let isGalleryUpload   = false;
-      let userGPS           = { latitude: null, longitude: null };
-
-      const grid = document.getElementById("challengeGrid");
-
-      // ── Load challenges + progress from the backend ───────────
-      async function loadChallenges() {
-        try {
-          const data = await api(`/photo-challenges/${currentUser.uid}`);
-          challenges = data.challenges || [];
-          completed  = data.completed || [];
-          document.getElementById("totalPoints").textContent = data.points || 0;
-          renderChallenges();
-          fillMissingImages();
-        } catch (err) {
-          console.error("Could not load challenges:", err);
-          grid.innerHTML = `<p class="col-span-full text-center text-red-400 p-10">Could not load challenges. Is the backend running?</p>`;
-        }
-      }
-
-      // Itinerary-based challenges may not have an image yet — look one up
-      async function fillMissingImages() {
-        const missing = challenges.filter((c) => !c.image);
-        await Promise.all(missing.map(async (ch) => {
-          try {
-            const d = await api(`/get-destination-image?query=${encodeURIComponent(ch.imageQuery || ch.name)}`, { auth: false });
-            ch.image = d.image || FALLBACK_IMG;
-          } catch {
-            ch.image = FALLBACK_IMG;
-          }
-        }));
-        if (missing.length) renderChallenges();
-      }
-
-      // ── Render challenge cards ─────────────────────────────────
-      function difficultyColor(d) {
-        return d === "Easy" ? "green" : d === "Medium" ? "blue" : "red";
-      }
-
-      function renderChallenges() {
-        grid.innerHTML = challenges.map((ch) => {
-          const done = completed.includes(ch.id);
-          const color = difficultyColor(ch.difficulty);
-          return `
-          <div class="challenge-card relative ${done ? "completed" : ""}" ${done ? 'style="pointer-events:none"' : ""}>
-            <div class="h-48 overflow-hidden bg-gray-200">
-              <img src="${escapeHtml(ch.image || FALLBACK_IMG)}" alt="${escapeHtml(ch.name)}" class="w-full h-full object-cover" loading="lazy"/>
-            </div>
-            <div class="p-5">
-              <div class="flex items-center justify-between mb-2">
-                <h4 class="text-lg font-bold">${escapeHtml(ch.name)}</h4>
-                ${ch.isDemo
-                  ? `<span class="demo-badge text-xs font-bold px-2 py-1 rounded-lg bg-purple-500/20 text-purple-500 border border-purple-500/30">🎯 DEMO</span>`
-                  : `<span class="text-xs font-bold px-2 py-1 rounded-lg bg-${color}-500/20 text-${color}-500">${escapeHtml(ch.difficulty)}</span>`}
-              </div>
-              <p class="text-gray-400 text-xs flex items-center gap-1 mb-2"><i class="fa-solid fa-location-dot text-green-400"></i> ${escapeHtml(ch.location)}</p>
-              <p class="text-gray-500 text-xs mb-4">${escapeHtml(ch.description)}</p>
-              <div class="flex items-center justify-between">
-                <span class="text-green-500 font-black text-lg">+${escapeHtml(ch.points)} pts</span>
-                ${done
-                  ? `<span class="text-green-500 text-xs font-bold"><i class="fa-solid fa-circle-check"></i> Done</span>`
-                  : `<button data-challenge="${escapeHtml(ch.id)}" class="start-btn text-xs bg-green-500/20 text-green-600 px-4 py-2 rounded-lg font-bold hover:bg-green-500 hover:text-white transition">
-                       Start <i class="fa-solid fa-arrow-right"></i>
-                     </button>`}
-              </div>
-            </div>
-          </div>`;
-        }).join("");
-
-        grid.querySelectorAll("img").forEach((img) =>
-          img.addEventListener("error", () => { img.src = FALLBACK_IMG; }, { once: true }));
-
-        const doneCount = challenges.filter((c) => completed.includes(c.id)).length;
-        document.getElementById("completedCount").textContent = `${doneCount}/${challenges.length}`;
-      }
-
-      grid.addEventListener("click", (e) => {
-        const btn = e.target.closest(".start-btn");
-        if (btn) openChallenge(btn.dataset.challenge);
-      });
-
-      // ── Reset demo (dev tool) ──────────────────────────────────
-      window.resetDemoChallenge = async function () {
-        const btn = document.querySelector(".btn-reset-demo");
-        try {
-          await api("/photo/reset-demo", { method: "POST", body: {} });
-          await loadChallenges();
-          if (btn) {
-            const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Reset!';
-            btn.style.background = "linear-gradient(135deg,#16a34a,#15803d)";
-            setTimeout(() => { btn.innerHTML = orig; btn.style.background = ""; }, 1500);
-          }
-        } catch (err) {
-          alert("Could not reset demo: " + err.message);
-        }
-      };
-
-      // ── Location helpers ───────────────────────────────────────
-      function getUserLocation() {
-        return new Promise((resolve) => {
-          if (!navigator.geolocation) { resolve({ latitude: null, longitude: null }); return; }
-          navigator.geolocation.getCurrentPosition(
-            (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-            (err) => { console.warn("GPS:", err.message); resolve({ latitude: null, longitude: null }); },
-            { enableHighAccuracy: true, timeout: 10000 }
-          );
-        });
-      }
-
-      function haversineDistanceKm(lat1, lon1, lat2, lon2) {
-        const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      }
-
-      function showLocationWarning(name, loc, dist) {
-        document.getElementById("warningChallengeName").textContent = name;
-        document.getElementById("warningLocationName").textContent = loc;
-        document.getElementById("warningDistance").textContent = dist < 1 ? `${Math.round(dist * 1000)}m` : `${dist.toFixed(1)}km`;
-        document.getElementById("locationWarningModal").classList.add("active");
-      }
-      window.closeLocationWarning = () => document.getElementById("locationWarningModal").classList.remove("active");
-      window.proceedAnywayFromWarning = () => {
-        document.getElementById("locationWarningModal").classList.remove("active");
-        if (currentChallenge) openCameraForChallenge();
-      };
-
-      // ── Open challenge ─────────────────────────────────────────
-      async function openChallenge(id) {
-        currentChallenge = challenges.find((c) => c.id === id);
-        if (!currentChallenge) return;
-        userGPS = { latitude: null, longitude: null };
-        if (currentChallenge.isDemo) { openCameraForChallenge(); return; }
-
-        userGPS = await getUserLocation();
-        if (userGPS.latitude && userGPS.longitude && currentChallenge.latitude && currentChallenge.longitude) {
-          const dist = haversineDistanceKm(userGPS.latitude, userGPS.longitude, currentChallenge.latitude, currentChallenge.longitude);
-          if (dist > PROXIMITY_WARNING_KM) { showLocationWarning(currentChallenge.name, currentChallenge.location, dist); return; }
-        }
-        openCameraForChallenge();
-      }
-
-      function setView({ camera, submit, loading }) {
-        document.getElementById("cameraActions").style.display = camera ? "flex" : "none";
-        const sub = document.getElementById("submitActions");
-        sub.classList.toggle("hidden", !submit);
-        sub.style.display = submit ? "flex" : "none";
-        const load = document.getElementById("loadingState");
-        load.classList.toggle("hidden", !loading);
-        load.style.display = loading ? "flex" : "none";
-      }
-
-      async function openCameraForChallenge() {
-        if (!currentChallenge) return;
-        document.getElementById("modalTitle").textContent = currentChallenge.name;
-        document.getElementById("referenceImg").src = currentChallenge.image || FALLBACK_IMG;
-        document.getElementById("demoHintBanner").classList.toggle("hidden", !currentChallenge.isDemo);
-        document.getElementById("cameraModal").classList.add("active");
-        document.getElementById("capturedImg").classList.add("hidden");
-        document.getElementById("webcamVideo").classList.remove("hidden");
-        document.getElementById("liveIndicator").classList.remove("hidden");
-        document.getElementById("galleryInput").value = "";
-        setView({ camera: true, submit: false, loading: false });
-        capturedBase64 = null;
-        isGalleryUpload = false;
-
-        try {
-          webcamStream = await navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } },
-            audio: false,
-          });
-          document.getElementById("webcamVideo").srcObject = webcamStream;
-        } catch (err) {
-          // No camera: gallery upload still works
-          console.warn("Camera unavailable:", err.message);
-          document.getElementById("liveIndicator").classList.add("hidden");
-        }
-      }
-
-      window.closeCamera = function () {
-        document.getElementById("cameraModal").classList.remove("active");
-        if (webcamStream) { webcamStream.getTracks().forEach((t) => t.stop()); webcamStream = null; }
-      };
-
-      window.capturePhoto = function () {
-        const video = document.getElementById("webcamVideo");
-        if (!webcamStream || !video.videoWidth) {
-          alert("⚠️ Camera is not available. Allow camera access or upload from your gallery.");
-          return;
-        }
-        const canvas = document.getElementById("captureCanvas");
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext("2d").drawImage(video, 0, 0);
-        capturedBase64 = canvas.toDataURL("image/jpeg", 0.85);
-        isGalleryUpload = false;
-        showCaptured();
-      };
-
-      function showCaptured() {
-        document.getElementById("capturedImg").src = capturedBase64;
-        document.getElementById("capturedImg").classList.remove("hidden");
-        document.getElementById("webcamVideo").classList.add("hidden");
-        document.getElementById("liveIndicator").classList.add("hidden");
-        setView({ camera: false, submit: true, loading: false });
-      }
-
-      window.retakePhoto = function () {
-        isGalleryUpload = false;
-        capturedBase64 = null;
-        document.getElementById("capturedImg").classList.add("hidden");
-        document.getElementById("webcamVideo").classList.remove("hidden");
-        if (webcamStream) document.getElementById("liveIndicator").classList.remove("hidden");
-        document.getElementById("galleryInput").value = "";
-        setView({ camera: true, submit: false, loading: false });
-      };
-
-      // Downscale large gallery photos before upload
-      function fileToResizedDataUrl(file) {
-        return new Promise((resolve, reject) => {
-          const url = URL.createObjectURL(file);
-          const img = new Image();
-          img.onload = () => {
-            const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
-            const canvas = document.createElement("canvas");
-            canvas.width = Math.round(img.naturalWidth * scale);
-            canvas.height = Math.round(img.naturalHeight * scale);
-            canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-            URL.revokeObjectURL(url);
-            resolve(canvas.toDataURL("image/jpeg", 0.9));
-          };
-          img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Could not read image")); };
-          img.src = url;
-        });
-      }
-
-      window.handleGalleryUpload = async function (event) {
-        const file = event.target.files[0];
-        if (!file) return;
-        try {
-          capturedBase64 = await fileToResizedDataUrl(file);
-          isGalleryUpload = true;
-          showCaptured();
-        } catch (err) {
-          alert("⚠️ " + err.message);
-        }
-      };
-
-      // ── Submit photo ───────────────────────────────────────────
-      window.submitPhoto = async function () {
-        if (!capturedBase64 || !currentChallenge) { alert("⚠️ No photo captured."); return; }
-        setView({ camera: false, submit: false, loading: true });
-        document.getElementById("loadingText").textContent =
-          currentChallenge.isDemo ? "AI is checking for the building..." : "Verifying your photo...";
-
-        try {
-          const data = await api("/verify-photo", {
-            method: "POST",
-            body: {
-              userImageBase64: capturedBase64,
-              challengeId: currentChallenge.id,
-              latitude: userGPS.latitude,
-              longitude: userGPS.longitude,
-              timestamp: new Date().toISOString(),
-              isGalleryUpload,
-            },
-          });
-          window.closeCamera();
-          showResult(data);
-          await loadChallenges();
-        } catch (err) {
-          console.error("❌ submitPhoto error:", err);
-          setView({ camera: false, submit: true, loading: false });
-          alert("⚠️ Error: " + err.message);
-        }
-      };
-
-      // ── Show result (points are awarded by the backend) ────────
-      function showResult(data) {
-        const modal = document.getElementById("resultModal");
-        const content = document.getElementById("resultContent");
-        const isDemo = !!data.demo;
-        const message = escapeHtml(data.message || "");
-
-        if (data.points > 0) {
-          content.className = "result-content text-center p-10 rounded-3xl max-w-md mx-4 relative bg-gradient-to-br from-emerald-900/90 to-slate-900/90 border border-emerald-500/30";
-          content.innerHTML = `
-            <div class="text-7xl mb-4">${isDemo ? "🎓" : "🎉"}</div>
-            <h3 class="text-3xl font-black text-emerald-400 mb-2">${isDemo ? "Campus Verified!" : "Challenge Complete!"}</h3>
-            <p class="text-gray-300 mb-4">${message || "Your photo matches!"}</p>
-            ${isDemo ? `<div class="bg-purple-500/10 border border-purple-500/20 rounded-xl px-4 py-2 mb-3"><p class="text-xs text-purple-400 font-bold">🎯 DEMO MODE — Building detected ✅</p></div>` : ""}
-            <div class="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-6 mb-6">
-              <p class="text-xs text-emerald-300 uppercase tracking-widest font-bold mb-1">Points Earned</p>
-              <p class="text-5xl font-black text-emerald-400">+${escapeHtml(data.points)}</p>
-            </div>
-            <button onclick="closeResult()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-8 py-3 rounded-xl transition-all transform hover:scale-105">Awesome! <i class="fa-solid fa-arrow-right ml-1"></i></button>`;
-        } else if (data.alreadyCompleted) {
-          content.className = "result-content text-center p-10 rounded-3xl max-w-md mx-4 relative bg-gradient-to-br from-emerald-900/90 to-slate-900/90 border border-emerald-500/30";
-          content.innerHTML = `
-            <div class="text-7xl mb-4">✅</div>
-            <h3 class="text-3xl font-black text-emerald-400 mb-2">Already Done</h3>
-            <p class="text-gray-300 mb-6">${message}</p>
-            <button onclick="closeResult()" class="bg-emerald-500 hover:bg-emerald-400 text-white font-bold px-8 py-3 rounded-xl">OK</button>`;
-        } else if (data.isGalleryUpload) {
-          content.className = "result-content text-center p-10 rounded-3xl max-w-md mx-4 relative bg-gradient-to-br from-amber-900/90 to-slate-900/90 border border-amber-500/30";
-          content.innerHTML = `
-            <div class="text-7xl mb-4">${isDemo ? "🏛️" : "🖼️"}</div>
-            <h3 class="text-3xl font-black text-amber-400 mb-2">${isDemo ? "Wrong Photo!" : "Gallery Detected!"}</h3>
-            <p class="text-gray-300 mb-4">${message || "Visit the location in person!"}</p>
-            <div class="bg-red-500/20 border border-red-500/30 rounded-2xl p-6 mb-6">
-              <p class="text-xs text-red-300 uppercase tracking-widest font-bold mb-1">Points Earned</p>
-              <p class="text-5xl font-black text-red-400">+0</p>
-              <p class="text-xs text-gray-400 mt-2">Challenge stays incomplete 🔒</p>
-            </div>
-            <button onclick="closeResult()" class="bg-amber-500 hover:bg-amber-400 text-white font-bold px-8 py-3 rounded-xl">Got It</button>`;
-        } else {
-          content.className = "result-content text-center p-10 rounded-3xl max-w-md mx-4 relative bg-gradient-to-br from-red-900/90 to-slate-900/90 border border-red-500/30";
-          content.innerHTML = `
-            <div class="text-7xl mb-4">${isDemo ? "🚫" : "😕"}</div>
-            <h3 class="text-3xl font-black text-red-400 mb-2">${isDemo ? "Not the Building!" : "No Match"}</h3>
-            <p class="text-gray-300 mb-4">${message || "Photo doesn't match. Try again!"}</p>
-            <button onclick="closeResult()" class="bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-3 rounded-xl">Try Again <i class="fa-solid fa-rotate-left ml-1"></i></button>`;
-        }
-
-        modal.classList.add("active");
-      }
-
-      window.closeResult = () => document.getElementById("resultModal").classList.remove("active");
-
-      // ── Start ──────────────────────────────────────────────────
-      currentUser = await requireUser();
+  // ── Reset demo (dev tool) ──────────────────────────────────
+  window.resetDemoChallenge = async function () {
+    try {
+      const r = await api("/photo/reset-demo", { method: "POST", body: {} });
       await loadChallenges();
-    </script>
-  </body>
+      toast(r.reset ? "Demo challenge reset. Try it again!" : "The demo challenge wasn't completed yet.", "success");
+    } catch (err) {
+      toast("Couldn't reset demo: " + err.message, "error");
+    }
+  };
+
+  // ── Location ───────────────────────────────────────────────
+  function getUserLocation() {
+    return new Promise((resolve) => {
+      if (!navigator.geolocation) { resolve({ latitude: null, longitude: null }); return; }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+        (err) => { console.warn("GPS:", err.message); resolve({ latitude: null, longitude: null }); },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    });
+  }
+  function haversineDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+  function showLocationWarning(name, loc, dist) {
+    $("warningChallengeName").textContent = name;
+    $("warningLocationName").textContent = loc;
+    $("warningDistance").textContent = dist < 1 ? `${Math.round(dist * 1000)} m` : `${dist.toLocaleString("en-IN", { maximumFractionDigits: 1 })} km`;
+    $("locationWarningModal").classList.add("active");
+  }
+  window.closeLocationWarning = () => $("locationWarningModal").classList.remove("active");
+  window.proceedAnywayFromWarning = () => {
+    $("locationWarningModal").classList.remove("active");
+    if (currentChallenge) openCameraForChallenge();
+  };
+
+  // ── Camera flow ────────────────────────────────────────────
+  async function openChallenge(id) {
+    currentChallenge = challenges.find((c) => c.id === id);
+    if (!currentChallenge) return;
+    userGPS = { latitude: null, longitude: null };
+    if (currentChallenge.isDemo) { openCameraForChallenge(); return; }
+
+    toast("Checking your location…", "info", 2000);
+    userGPS = await getUserLocation();
+    if (userGPS.latitude && userGPS.longitude && currentChallenge.latitude && currentChallenge.longitude) {
+      const dist = haversineDistanceKm(userGPS.latitude, userGPS.longitude, currentChallenge.latitude, currentChallenge.longitude);
+      if (dist > PROXIMITY_WARNING_KM) { showLocationWarning(currentChallenge.name, currentChallenge.location, dist); return; }
+    }
+    openCameraForChallenge();
+  }
+
+  function setView({ camera, submit, loading }) {
+    $("cameraActions").style.display = camera ? "flex" : "none";
+    $("submitActions").style.display = submit ? "flex" : "none";
+    $("loadingState").style.display = loading ? "flex" : "none";
+    $("viewfinder").querySelector(".scanline")?.remove();
+    if (loading) $("viewfinder").insertAdjacentHTML("beforeend", `<span class="scanline"></span>`);
+  }
+
+  async function openCameraForChallenge() {
+    if (!currentChallenge) return;
+    $("modalTitle").textContent = currentChallenge.name;
+    $("referenceImg").src = currentChallenge.image || FALLBACK_IMG;
+    $("demoHintBanner").classList.toggle("hidden", !currentChallenge.isDemo);
+    $("cameraModal").classList.add("active");
+    $("capturedImg").classList.add("hidden");
+    $("webcamVideo").classList.remove("hidden");
+    $("liveIndicator").classList.remove("hidden");
+    $("galleryInput").value = "";
+    setView({ camera: true, submit: false, loading: false });
+    capturedBase64 = null;
+    isGalleryUpload = false;
+
+    try {
+      webcamStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment", width: { ideal: 1280 }, height: { ideal: 960 } }, audio: false,
+      });
+      $("webcamVideo").srcObject = webcamStream;
+    } catch (err) {
+      console.warn("Camera unavailable:", err.message);
+      $("liveIndicator").classList.add("hidden");
+      toast("Camera unavailable. You can still upload from your gallery.", "info");
+    }
+  }
+
+  window.closeCamera = function () {
+    $("cameraModal").classList.remove("active");
+    if (webcamStream) { webcamStream.getTracks().forEach((t) => t.stop()); webcamStream = null; }
+  };
+
+  window.capturePhoto = function () {
+    const video = $("webcamVideo");
+    if (!webcamStream || !video.videoWidth) {
+      toast("Camera isn't available. Allow access or upload from your gallery.", "error");
+      return;
+    }
+    const canvas = $("captureCanvas");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext("2d").drawImage(video, 0, 0);
+    capturedBase64 = canvas.toDataURL("image/jpeg", 0.85);
+    isGalleryUpload = false;
+    const flash = $("flash");
+    flash.classList.remove("go"); void flash.offsetWidth; flash.classList.add("go");
+    showCaptured();
+  };
+
+  function showCaptured() {
+    $("capturedImg").src = capturedBase64;
+    $("capturedImg").classList.remove("hidden");
+    $("webcamVideo").classList.add("hidden");
+    $("liveIndicator").classList.add("hidden");
+    setView({ camera: false, submit: true, loading: false });
+  }
+
+  window.retakePhoto = function () {
+    isGalleryUpload = false;
+    capturedBase64 = null;
+    $("capturedImg").classList.add("hidden");
+    $("webcamVideo").classList.remove("hidden");
+    if (webcamStream) $("liveIndicator").classList.remove("hidden");
+    $("galleryInput").value = "";
+    setView({ camera: true, submit: false, loading: false });
+  };
+
+  function fileToResizedDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        const scale = Math.min(1, MAX_UPLOAD_DIMENSION / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.naturalWidth * scale);
+        canvas.height = Math.round(img.naturalHeight * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.9));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Couldn't read that image")); };
+      img.src = url;
+    });
+  }
+
+  window.handleGalleryUpload = async function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    try {
+      capturedBase64 = await fileToResizedDataUrl(file);
+      isGalleryUpload = true;
+      showCaptured();
+    } catch (err) {
+      toast(err.message, "error");
+    }
+  };
+
+  window.submitPhoto = async function () {
+    if (!capturedBase64 || !currentChallenge) { toast("Take a photo first.", "error"); return; }
+    setView({ camera: false, submit: false, loading: true });
+    $("loadingText").textContent = currentChallenge.isDemo ? "Looking for the building…" : "Verifying your photo…";
+
+    try {
+      const data = await api("/verify-photo", {
+        method: "POST",
+        body: {
+          userImageBase64: capturedBase64,
+          challengeId: currentChallenge.id,
+          latitude: userGPS.latitude,
+          longitude: userGPS.longitude,
+          timestamp: new Date().toISOString(),
+          isGalleryUpload,
+        },
+      });
+      const shot = capturedBase64;
+      window.closeCamera();
+      showResult(data, shot);
+      await loadChallenges();
+    } catch (err) {
+      console.error("❌ submitPhoto error:", err);
+      setView({ camera: false, submit: true, loading: false });
+      toast(err.message, "error");
+    }
+  };
+
+  // ── Result ─────────────────────────────────────────────────
+  function showResult(data, shot) {
+    const content = $("resultContent");
+    const message = escapeHtml(data.message || "");
+    const name = escapeHtml(currentChallenge?.name || "");
+    let stamp, title, body = "", cta;
+
+    if (data.points > 0) {
+      stamp = `<span class="result-stamp" style="color:var(--moss)">VERIFIED<br>+${escapeHtml(data.points)}</span>`;
+      title = data.demo ? "Campus verified!" : "Challenge complete!";
+      body = `<div class="card px-5 py-3 inline-flex items-center gap-3 mb-5" style="background:var(--moss-soft);border-color:transparent">
+                <i class="fa-solid fa-leaf" style="color:var(--moss)"></i>
+                <span class="font-display text-3xl font-semibold" style="color:var(--moss-deep)">+<span id="ptsEarned">0</span></span>
+                <span class="text-sm ink-2">points</span>
+              </div>`;
+      cta = `<button onclick="closeResult()" class="btn btn-primary btn-lg">Brilliant <i class="fa-solid fa-arrow-right"></i></button>`;
+    } else if (data.alreadyCompleted) {
+      stamp = `<span class="result-stamp" style="color:var(--moss)">ALREADY<br>DONE</span>`;
+      title = "Already in your passport";
+      cta = `<button onclick="closeResult()" class="btn btn-primary">OK</button>`;
+    } else if (data.isGalleryUpload) {
+      stamp = `<span class="result-stamp" style="color:#a26d12">GALLERY<br>PHOTO</span>`;
+      title = data.demo ? "Not an approved photo" : "That's from your gallery";
+      body = `<p class="text-xs muted mb-5"><i class="fa-solid fa-lock mr-1"></i>Challenge stays open. Snap it live on location.</p>`;
+      cta = `<button onclick="closeResult()" class="btn btn-clay">Got it</button>`;
+    } else {
+      stamp = `<span class="result-stamp" style="color:var(--danger)">NO<br>MATCH</span>`;
+      title = data.demo ? "Can't see the building" : "Not quite a match";
+      cta = `<button onclick="closeResult()" class="btn btn-clay"><i class="fa-solid fa-rotate-left"></i> Try again</button>`;
+    }
+
+    content.innerHTML = `
+      <div class="result-photo">
+        ${stamp}
+        <img src="${escapeHtml(shot)}" alt="Your photo">
+        <span class="caption">${name}</span>
+      </div>
+      <h3 class="h2 mb-2">${title}</h3>
+      <p class="ink-2 text-sm mb-5">${message}</p>
+      ${body}
+      <div>${cta}</div>`;
+
+    $("resultModal").classList.add("active");
+    if (data.points > 0) {
+      animateCount($("ptsEarned"), data.points, 1200);
+      confetti();
+    }
+  }
+
+  window.closeResult = () => $("resultModal").classList.remove("active");
+
+  // Escape / backdrop click closes dialogs
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Escape") return;
+    if ($("cameraModal").classList.contains("active")) window.closeCamera();
+    window.closeResult();
+    window.closeLocationWarning();
+  });
+  ["resultModal", "locationWarningModal"].forEach((id) =>
+    $(id).addEventListener("click", (e) => { if (e.target.id === id) $(id).classList.remove("active"); }));
+
+  // ── Start ──────────────────────────────────────────────────
+  currentUser = await requireUser();
+  shell.setUser(currentUser);
+  await loadChallenges();
+</script>
+</body>
 </html>
