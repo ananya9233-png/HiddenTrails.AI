@@ -20,7 +20,7 @@ const MAX_IMAGE_BASE64_LENGTH = 9 * 1024 * 1024; // ~6.5 MB image
 
 /** Query used to find an image for an itinerary-based challenge (shared with the frontend). */
 export function challengeImageQuery(name, destination) {
-  return `${name} ${destination || ""} landmark photography`.trim();
+  return destination ? `${name}, ${destination}` : name;
 }
 
 /**
