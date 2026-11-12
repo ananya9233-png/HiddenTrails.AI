@@ -13,7 +13,7 @@
  */
 
 import fetch from "node-fetch";
-import { findPlaceByQuery } from "../controllers/adminController.js";
+import { findPlaceByQuery, validateImageUrl } from "../controllers/adminController.js";
 
 // Fallback image (a beautiful generic landscape)
 const FALLBACK_IMAGE =
@@ -129,7 +129,9 @@ export async function getDestinationImage(query) {
     // ══════ DATABASE-FIRST LOOKUP ══════
     // Check admin-curated touristPlaces collection before hitting Wikipedia
     const dbPlace = await findPlaceByQuery(query);
-    if (dbPlace && dbPlace.imageUrl) {
+    if (dbPlace?.imageUrl && validateImageUrl(dbPlace.imageUrl)) {
+      console.warn(`⚠️ Database image for "${dbPlace.name}" is not a direct image link — fix it in the admin panel. Using Wikipedia instead.`);
+    } else if (dbPlace && dbPlace.imageUrl) {
       console.log(`🗄️ Using database image for "${query}" → "${dbPlace.name}"`);
       imageCache.set(cacheKey, {
         url: dbPlace.imageUrl,

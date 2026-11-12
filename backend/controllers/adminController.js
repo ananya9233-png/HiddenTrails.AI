@@ -12,6 +12,33 @@ import { clearImageCache } from "../services/imageService.js";
 
 const COLLECTION = "touristPlaces";
 
+// Words shared by many landmarks — they can't identify a place on their own
+const GENERIC_PLACE_WORDS = new Set([
+  "mahal", "fort", "temple", "palace", "gate", "lake", "beach", "falls", "waterfall",
+  "garden", "gardens", "park", "museum", "market", "bazaar", "mandir", "masjid", "mosque",
+  "church", "cathedral", "tomb", "ghat", "ghats", "hill", "hills", "valley", "point",
+  "tower", "bridge", "cave", "caves", "complex", "memorial", "sahib", "gurudwara",
+  "dargah", "island", "dam", "national", "sanctuary", "city", "old", "new", "great",
+]);
+
+/** Image URLs must point at an image file, not a web page about the image. */
+export function validateImageUrl(url) {
+  let parsed;
+  try {
+    parsed = new URL(url);
+  } catch {
+    return "Image URL is not a valid URL";
+  }
+  if (!/^https?:$/.test(parsed.protocol)) return "Image URL must start with http(s)://";
+  if (parsed.hostname === "unsplash.com" || parsed.hostname === "www.unsplash.com") {
+    return "That is an Unsplash page link. Right-click the photo → 'Copy image address' (it starts with https://images.unsplash.com/)";
+  }
+  if (/(^|\.)google\.[a-z.]+$/.test(parsed.hostname) && parsed.pathname.startsWith("/search")) {
+    return "That is a Google search link, not an image. Open the image and use 'Copy image address'";
+  }
+  return null;
+}
+
 /**
  * GET /admin/places
  * List all tourist places from Firestore
@@ -48,6 +75,10 @@ export async function addPlace(req, res) {
     }
     if (!imageUrl || !imageUrl.trim()) {
       return res.status(400).json({ error: "Image URL is required" });
+    }
+    const imageError = validateImageUrl(imageUrl.trim());
+    if (imageError) {
+      return res.status(400).json({ error: imageError });
     }
 
     const placeData = {
@@ -91,6 +122,13 @@ export async function updatePlace(req, res) {
     const doc = await docRef.get();
     if (!doc.exists) {
       return res.status(404).json({ error: "Place not found" });
+    }
+
+    if (imageUrl !== undefined) {
+      const imageError = validateImageUrl(String(imageUrl).trim());
+      if (imageError) {
+        return res.status(400).json({ error: imageError });
+      }
     }
 
     const updateData = { updatedAt: new Date() };
@@ -236,21 +274,22 @@ export async function findPlaceByQuery(query) {
         nameScore += 15;
       }
 
-      // CHECK 2: ALL words of the place name appear in query
+      // CHECK 2: ALL words of the place name appear (as whole words) in query
       // "Red Fort" → ["red", "fort"] — both must be in query
       if (nameWords.length > 0 && nameScore === 0) {
-        const allNameWordsInQuery = nameWords.every(nw => queryLower.includes(nw));
+        const allNameWordsInQuery = nameWords.every(nw => meaningfulQueryWords.includes(nw));
         if (allNameWordsInQuery) {
           nameScore += 10;
         }
       }
 
-      // CHECK 3: At least one significant name word in query
+      // CHECK 3: All DISTINCTIVE name words appear in query.
+      // Generic landmark words never count on their own, so
+      // "Hawa Mahal Jaipur" does NOT match "Taj Mahal" just because of "mahal".
       if (nameScore === 0) {
-        for (const nw of nameWords) {
-          if (meaningfulQueryWords.includes(nw)) {
-            nameScore += 3;
-          }
+        const distinctive = nameWords.filter(w => !GENERIC_PLACE_WORDS.has(w));
+        if (distinctive.length > 0 && distinctive.every(w => meaningfulQueryWords.includes(w))) {
+          nameScore += 5;
         }
       }
 
