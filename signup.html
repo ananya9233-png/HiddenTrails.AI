@@ -4,101 +4,87 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sign up · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#0F3D3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
-  <style>
-    .split { display: grid; grid-template-columns: 1fr 1.05fr; min-height: 100vh; }
-    .photo-side { position: relative; overflow: hidden; background: var(--ink); color: #fff; order: 2; }
-    .photo-side img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: kenburns 24s ease-in-out infinite alternate; }
-    @keyframes kenburns { from { transform: scale(1.05); } to { transform: scale(1.18) translate(2%, -2%); } }
-    .photo-side::after { content: ""; position: absolute; inset: 0; background: linear-gradient(200deg, rgba(20,28,25,.1) 0%, rgba(20,28,25,.82) 100%); }
-    .photo-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; padding: 2.5rem; gap: 1rem; }
-    .perk { display: flex; gap: .8rem; align-items: center; background: rgba(255,255,255,.1); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.18); padding: .8rem 1rem; border-radius: 14px; max-width: 380px; }
-    .perk i { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; background: rgba(255,255,255,.16); flex: none; }
-    .split > * { min-width: 0; }
-    .form-side { display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.25rem; }
-    .meter { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: .55rem; }
-    .meter span { height: 5px; border-radius: 99px; background: var(--paper-2); transition: background .25s; }
-    .rules { display: flex; flex-wrap: wrap; gap: .35rem .9rem; margin-top: .6rem; font-size: .75rem; color: var(--muted); }
-    .rules li { list-style: none; display: inline-flex; align-items: center; gap: .3rem; transition: color .2s; }
-    .rules li.ok { color: var(--moss); }
-    .rules li i { font-size: .7rem; }
-    @media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } .photo-side { display: none; } }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
-<div class="split">
-  <section class="form-side">
-    <div class="w-full max-w-md stagger" id="card">
-      <a href="index.html" class="brand !p-0 mb-10"><span class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
-      <span class="eyebrow">Join the expedition</span>
-      <h1 class="h1 mt-2 mb-2">Start your <span class="italic-accent">journal</span>.</h1>
-      <p class="ink-2 mb-8">Free forever. Plan trips, chase landmarks, earn real perks.</p>
+<div class="auth-split">
+  <!-- Photo side -->
+  <aside class="auth-photo grain">
+    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Dzukou_Valley.jpg?width=1600" alt="Rolling green hills of Dzükou Valley, Nagaland, under low clouds" />
+    <div class="auth-photo-inner">
+      <a href="index.html" class="brand on-dark" aria-label="HiddenTrails.AI home">
+        <span class="brand-mark"><i data-lucide="mountain-snow"></i></span>
+        <span class="brand-name">HiddenTrails<em>.ai</em></span>
+      </a>
+      <div class="auth-quote">
+        <blockquote>Some of India's best places don't have a signboard. Go find them.</blockquote>
+        <p class="auth-place mt-5"><i data-lucide="map-pin" class="ico-sm"></i> Dzükou Valley · Nagaland</p>
+        <div class="grid gap-2 mt-8">
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="map"></i></span>Day-by-day plans that fit your budget</div>
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="camera"></i></span>Photo challenges at real landmarks</div>
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="ticket"></i></span>Points you can trade for travel perks</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-      <form id="signupForm" class="space-y-5" novalidate>
-        <div>
-          <label for="fullName" class="label">Your name</label>
-          <div class="input-icon">
-            <i class="fa-regular fa-user"></i>
-            <input id="fullName" type="text" autocomplete="name" placeholder="What should we call you?" class="input" maxlength="80" />
-          </div>
+  <!-- Form side -->
+  <main class="auth-form-side">
+    <div class="auth-card stagger" id="card">
+      <span class="eyebrow">Sign up</span>
+      <h1 class="h1 mt-3">Start your <span class="accent-italic">journal</span>.</h1>
+      <p class="muted mt-2 mb-8">Free. Plan trips, photograph landmarks, collect rewards.</p>
+
+      <form id="signupForm" class="space-y-4" novalidate>
+        <div class="float-field has-icon">
+          <i data-lucide="user-round" class="field-ico"></i>
+          <input id="fullName" type="text" autocomplete="name" placeholder=" " class="input" maxlength="80" />
+          <label for="fullName">Your name</label>
+        </div>
+
+        <div class="float-field has-icon">
+          <i data-lucide="mail" class="field-ico"></i>
+          <input id="email" type="email" autocomplete="email" placeholder=" " class="input" />
+          <label for="email">Email address</label>
         </div>
 
         <div>
-          <label for="email" class="label">Email</label>
-          <div class="input-icon">
-            <i class="fa-regular fa-envelope"></i>
-            <input id="email" type="email" autocomplete="email" placeholder="you@example.com" class="input" />
-          </div>
-        </div>
-
-        <div>
-          <label for="password" class="label">Password</label>
-          <div class="input-icon">
-            <i class="fa-solid fa-lock"></i>
-            <input id="password" type="password" autocomplete="new-password" placeholder="Create a strong password" class="input !pr-12" />
-            <button type="button" id="togglePassword" class="trailing btn btn-ghost btn-icon !w-9 !h-9" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+          <div class="float-field has-icon">
+            <i data-lucide="lock-keyhole" class="field-ico"></i>
+            <input id="password" type="password" autocomplete="new-password" placeholder=" " class="input !pr-14" aria-describedby="rules" />
+            <label for="password">Create a password</label>
+            <button type="button" id="togglePassword" class="field-action btn btn-ghost btn-sm btn-icon" aria-label="Show password"><i data-lucide="eye"></i></button>
           </div>
           <div class="meter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
-          <ul class="rules p-0 m-0" id="rules">
-            <li data-r="len"><i class="fa-solid fa-circle"></i>8+ characters</li>
-            <li data-r="case"><i class="fa-solid fa-circle"></i>Upper & lower case</li>
-            <li data-r="num"><i class="fa-solid fa-circle"></i>A number</li>
-            <li data-r="sym"><i class="fa-solid fa-circle"></i>A symbol</li>
+          <ul class="rules" id="rules" aria-label="Password requirements">
+            <li data-r="len">8+ characters</li>
+            <li data-r="case">Upper &amp; lower case</li>
+            <li data-r="num">A number</li>
+            <li data-r="sym">A symbol</li>
           </ul>
         </div>
 
-        <div>
-          <label for="confirmPassword" class="label">Confirm password</label>
-          <div class="input-icon">
-            <i class="fa-solid fa-shield-halved"></i>
-            <input id="confirmPassword" type="password" autocomplete="new-password" placeholder="Type it again" class="input" />
-          </div>
+        <div class="float-field has-icon">
+          <i data-lucide="shield-check" class="field-ico"></i>
+          <input id="confirmPassword" type="password" autocomplete="new-password" placeholder=" " class="input" />
+          <label for="confirmPassword">Confirm password</label>
         </div>
 
-        <button id="signupBtn" type="submit" class="btn btn-primary btn-lg btn-block">Create account <i class="fa-solid fa-arrow-right"></i></button>
+        <button id="signupBtn" type="submit" class="btn btn-accent btn-lg btn-block !mt-6">Create account <i data-lucide="arrow-right" class="arrow"></i></button>
       </form>
 
-      <p class="text-center ink-2 mt-8 text-sm">
-        Already exploring?
-        <a href="auth.html" class="font-bold underline underline-offset-4" style="color:var(--moss)">Log in</a>
-      </p>
+      <p class="divider-text mt-8">Already exploring?</p>
+      <a href="auth.html" class="btn btn-secondary btn-block mt-4">Log in</a>
     </div>
-  </section>
-
-  <section class="photo-side" aria-hidden="true">
-    <img src="https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1600&q=80" alt="" />
-    <div class="photo-content">
-      <div class="perk"><i class="fa-solid fa-wand-magic-sparkles"></i><span>AI itineraries built around your budget</span></div>
-      <div class="perk"><i class="fa-solid fa-camera-retro"></i><span>Photo challenges at real landmarks</span></div>
-      <div class="perk"><i class="fa-solid fa-ticket"></i><span>Points you can trade for travel perks</span></div>
-    </div>
-  </section>
+  </main>
 </div>
 
 <script type="module">
@@ -114,7 +100,7 @@
   $("togglePassword").addEventListener("click", () => {
     const hidden = passwordInput.type === "password";
     passwordInput.type = hidden ? "text" : "password";
-    $("togglePassword").innerHTML = `<i class="fa-regular ${hidden ? "fa-eye-slash" : "fa-eye"}"></i>`;
+    $("togglePassword").innerHTML = `<i data-lucide="${hidden ? "eye-off" : "eye"}"></i>`;
   });
 
   // ── Live password strength ──
@@ -124,7 +110,7 @@
     num: (p) => /\d/.test(p),
     sym: (p) => /[^A-Za-z0-9]/.test(p),
   };
-  const COLORS = ["var(--danger)", "var(--clay)", "var(--sun)", "var(--moss)"];
+  const COLORS = ["var(--terracotta)", "var(--saffron)", "var(--gold)", "var(--leaf)"];
   function strength(p) {
     let score = 0;
     for (const [key, test] of Object.entries(CHECKS)) {
@@ -132,7 +118,6 @@
       if (ok) score++;
       const li = document.querySelector(`#rules [data-r="${key}"]`);
       li.classList.toggle("ok", ok);
-      li.querySelector("i").className = `fa-solid ${ok ? "fa-circle-check" : "fa-circle"}`;
     }
     document.querySelectorAll(".meter span").forEach((bar, i) => {
       bar.style.background = i < score ? COLORS[score - 1] : "";

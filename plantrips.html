@@ -4,158 +4,176 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Plan a trip · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#F6F1E7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .vibe { display: flex; flex-direction: column; align-items: flex-start; gap: .35rem; padding: 1rem; text-align: left;
-      border-radius: 16px; border: 1.5px solid var(--line); background: #fff; transition: all .2s var(--ease); }
-    .vibe .em { font-size: 1.5rem; transition: transform .3s var(--spring); }
-    .vibe:hover { border-color: var(--moss-2); transform: translateY(-2px); }
-    .vibe:hover .em { transform: scale(1.2) rotate(-8deg); }
-    .vibe[aria-checked="true"] { border-color: var(--moss); background: var(--moss-soft); box-shadow: inset 0 0 0 1px var(--moss); }
-    .vibe b { font-size: .92rem; }
-    .vibe small { color: var(--muted); font-size: .75rem; line-height: 1.3; }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
 
-    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; border-radius: 99px; outline: none;
-      background: linear-gradient(to right, var(--moss) var(--fill, 20%), var(--paper-2) var(--fill, 20%)); }
-    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 24px; height: 24px; border-radius: 50%;
-      background: #fff; border: 3px solid var(--moss); box-shadow: var(--shadow-sm); cursor: grab; transition: transform .15s; }
-    input[type="range"]::-webkit-slider-thumb:active { transform: scale(1.15); cursor: grabbing; }
-    input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; background: #fff; border: 3px solid var(--moss); cursor: grab; }
+    /* Numbered form sections separated by rules */
+    #tripForm > section { display: grid; gap: 16px; padding-block: 32px; border-top: 1px solid var(--line); }
+    #tripForm > section:first-child { border-top: 0; padding-top: 0; }
+    @media (min-width: 768px) { #tripForm > section { grid-template-columns: 180px minmax(0, 1fr); gap: 32px; } }
+    .q { margin: 0; font-family: var(--font-display); font-size: 1.35rem; line-height: 1.2; }
+    .q .n { display: block; font-size: .95rem; color: var(--accent); margin-bottom: 4px; }
+    .q small { display: block; margin-top: 4px; font: 400 .85rem/1.4 var(--font-sans); color: var(--muted); }
+    #destination { font-size: 1.15rem; }
 
-    .summary { position: sticky; top: 1.5rem; }
-    .summary-row { display: flex; justify-content: space-between; gap: 1rem; padding: .7rem 0; border-bottom: 1px dashed var(--line); font-size: .9rem; }
-    .summary-row:last-child { border-bottom: 0; }
+    /* Quick-pick chips: underlined words */
+    .picks { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
+    .picks .chip { min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; color: var(--ink-2); font-size: .9rem; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+    .picks .chip:hover { color: var(--accent); text-decoration-color: currentColor; }
+
+    /* Budget slider: thin line, accent fill (script sets --fill) */
+    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; outline: none; margin: 18px 0 6px;
+      background: linear-gradient(to right, var(--accent) var(--fill, 20%), var(--line-2) var(--fill, 20%)); }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+    input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+    input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; }
+
+    /* Trip style: a plain radio list */
+    #vibes { display: grid; border-top: 1px solid var(--line); }
+    @media (min-width: 640px) { #vibes { grid-template-columns: 1fr 1fr; column-gap: 32px; } }
+    .vibe { display: grid; align-content: start; grid-template-columns: 18px 1fr; column-gap: 14px; align-items: baseline; padding: 14px 4px 14px 0; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; cursor: pointer; color: var(--ink); }
+    .vibe::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line-2); transform: translateY(2px); transition: all var(--t); grid-row: span 2; }
+    .vibe .em { display: none; }
+    .vibe b { font-weight: 500; font-size: 1rem; transition: color var(--t); }
+    .vibe small { grid-column: 2; color: var(--muted); font-size: .85rem; }
+    .vibe:hover b { color: var(--accent); }
+    .vibe[aria-checked="true"]::before { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--paper); }
+
+    /* Trip slip (live summary) */
+    .summary { position: sticky; top: calc(var(--nav-h) + 32px); }
+    .slip { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; }
+    .stamp-dest { font-family: var(--font-display); font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -.02em; word-break: break-word; margin: 10px 0 0; }
+    .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px dashed var(--line-2); font-size: .95rem; }
     .summary-row span:first-child { color: var(--muted); }
-    .summary-row span:last-child { font-weight: 700; text-align: right; }
-    .stamp-dest { font-family: var(--font-display); font-size: 1.8rem; font-weight: 600; line-height: 1.1; word-break: break-word; }
+    .summary-row span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
 
-    .gen-overlay { position: fixed; inset: 0; z-index: 300; display: none; place-items: center; background: rgba(245,240,230,.92); backdrop-filter: blur(6px); }
+    /* Generating overlay: a dotted trail slowly drawing itself */
+    .gen-overlay { position: fixed; inset: 0; z-index: 300; display: none; place-items: center; background: rgba(246, 241, 231, .97); }
     .gen-overlay.active { display: grid; animation: fade-in .3s both; }
-    .compass { width: 96px; height: 96px; border-radius: 50%; border: 3px solid var(--moss); display: grid; place-items: center; margin: 0 auto; position: relative; }
-    .compass .needle { width: 6px; height: 64px; background: linear-gradient(var(--clay) 50%, var(--ink) 50%); border-radius: 3px; animation: needle 2.4s ease-in-out infinite; }
-    @keyframes needle { 0% { transform: rotate(-40deg); } 30% { transform: rotate(200deg); } 60% { transform: rotate(150deg); } 100% { transform: rotate(320deg); } }
-    .gen-msg { min-height: 1.6em; transition: opacity .3s; }
+    .trail-anim path { stroke-dasharray: 1 10; stroke-linecap: round; animation: walk 1.6s linear infinite; }
+    @keyframes walk { to { stroke-dashoffset: -44; } }
+    .gen-msg { min-height: 1.6em; transition: opacity .25s; }
   </style>
 </head>
 
 <body>
-<div class="shell">
-  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
+  <header id="appNav"></header>
 
-  <div class="min-w-0">
-    <header id="mobileBar" class="mobile-bar"></header>
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head stagger">
+        <span class="eyebrow">New trip</span>
+        <h1>Plan a trip.</h1>
+        <p>Tell us where, when and how you like to travel. You’ll get a day-by-day plan with real places and local food, plus photo challenges for the landmarks on it.</p>
+      </header>
 
-    <main class="main">
-      <div class="page-wrap">
-        <header class="page-head stagger">
-          <span class="eyebrow">New journey</span>
-          <h1 class="h1">Plan your next <span class="italic-accent">escape</span>.</h1>
-          <p>Tell us where, when and how you like to travel. The AI scouts real places, local food and eco-friendly tips. You'll also get photo challenges for the landmarks.</p>
-        </header>
+      <div class="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-10 lg:gap-16 items-start">
+        <form id="tripForm" class="reveal" novalidate>
 
-        <div class="grid lg:grid-cols-[1fr_340px] gap-8 items-start">
-          <form id="tripForm" class="card p-6 md:p-8 space-y-8 reveal" novalidate>
-
-            <!-- Destination -->
-            <section>
-              <label class="label" for="destination"><span style="color:var(--clay)">01</span> · Where to?</label>
-              <div class="input-icon">
-                <i class="fa-solid fa-location-dot"></i>
-                <input id="destination" type="text" class="input text-lg" placeholder="A city, valley, coast or village…" maxlength="100" autocomplete="off" required />
-              </div>
-              <div class="flex flex-wrap gap-2 mt-3" id="destChips">
-                <button type="button" class="chip">🏜️ Jaisalmer</button>
-                <button type="button" class="chip">🌊 Varkala</button>
-                <button type="button" class="chip">🏔️ Tawang</button>
-                <button type="button" class="chip">🛕 Hampi</button>
-                <button type="button" class="chip">🌿 Coorg</button>
-              </div>
-            </section>
-
-            <!-- Dates -->
-            <section>
-              <p class="label"><span style="color:var(--clay)">02</span> · When? <span class="hint">(up to 10 days)</span></p>
-              <div class="grid sm:grid-cols-2 gap-4">
-                <div>
-                  <label class="text-xs muted font-semibold" for="arrivalDate">Arrive</label>
-                  <input id="arrivalDate" type="date" class="input mt-1" required />
-                </div>
-                <div>
-                  <label class="text-xs muted font-semibold" for="returnDate">Return</label>
-                  <input id="returnDate" type="date" class="input mt-1" required />
-                </div>
-              </div>
-            </section>
-
-            <!-- Budget -->
-            <section>
-              <div class="flex items-end justify-between mb-2">
-                <label class="label !mb-0" for="budget"><span style="color:var(--clay)">03</span> · Total budget</label>
-                <div class="input-icon w-40">
-                  <i class="fa-solid fa-indian-rupee-sign"></i>
-                  <input id="budget" type="number" min="1000" max="10000000" step="500" value="30000" class="input !py-2 text-right font-bold" required />
-                </div>
-              </div>
-              <input id="budgetRange" type="range" min="1000" max="200000" step="1000" value="30000" aria-label="Budget slider" />
-              <div class="flex flex-wrap gap-2 mt-3" id="budgetChips">
-                <button type="button" class="chip" data-v="10000">Shoestring · ₹10k</button>
-                <button type="button" class="chip" data-v="25000">Comfy · ₹25k</button>
-                <button type="button" class="chip" data-v="50000">Treat yourself · ₹50k</button>
-                <button type="button" class="chip" data-v="100000">Splurge · ₹1L</button>
-              </div>
-            </section>
-
-            <!-- Vibe -->
-            <section>
-              <p class="label"><span style="color:var(--clay)">04</span> · Pick a vibe</p>
-              <input type="hidden" id="preference" value="Adventure" />
-              <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" role="radiogroup" id="vibes">
-                <button type="button" class="vibe" role="radio" aria-checked="true" data-v="Adventure"><span class="em">🧗</span><b>Adventure</b><small>Treks, rafting, thrills</small></button>
-                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Relaxation"><span class="em">🏖️</span><b>Relaxation</b><small>Slow mornings, sea air</small></button>
-                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Culture"><span class="em">🏛️</span><b>Culture</b><small>Forts, food, festivals</small></button>
-                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Nature"><span class="em">🌿</span><b>Nature</b><small>Forests, lakes, wildlife</small></button>
-                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Luxury"><span class="em">✨</span><b>Luxury</b><small>Heritage stays, fine dining</small></button>
-              </div>
-            </section>
-
-            <button type="submit" id="generateBtn" class="btn btn-primary btn-lg btn-block">
-              <i class="fa-solid fa-wand-magic-sparkles"></i> Generate my itinerary
-            </button>
-          </form>
-
-          <!-- Live summary -->
-          <aside class="summary reveal">
-            <div class="card overflow-hidden">
-              <div class="p-6" style="background:var(--ink);color:#f5f0e6">
-                <p class="eyebrow" style="color:var(--sun)">Boarding pass</p>
-                <p class="stamp-dest mt-3" id="sumDest" style="color:#fff">Somewhere wonderful</p>
-                <p class="text-sm mt-1" style="opacity:.7" id="sumDates">Pick your dates</p>
-              </div>
-              <div class="px-6 py-3">
-                <div class="summary-row"><span>Duration</span><span id="sumDays">—</span></div>
-                <div class="summary-row"><span>Budget</span><span id="sumBudget">₹30,000</span></div>
-                <div class="summary-row"><span>Per day</span><span id="sumPerDay">—</span></div>
-                <div class="summary-row"><span>Vibe</span><span id="sumVibe">🧗 Adventure</span></div>
+          <!-- Destination -->
+          <section>
+            <label class="q" for="destination"><span class="n">01</span>Where to?</label>
+            <div>
+              <input id="destination" type="text" class="input" placeholder="A city, valley, coast or village" maxlength="100" autocomplete="off" required />
+              <div class="picks" id="destChips">
+                <span>Or try</span>
+                <button type="button" class="chip">Jaisalmer</button>
+                <button type="button" class="chip">Varkala</button>
+                <button type="button" class="chip">Tawang</button>
+                <button type="button" class="chip">Hampi</button>
+                <button type="button" class="chip">Coorg</button>
               </div>
             </div>
-            <p class="text-xs muted mt-3 px-1"><i class="fa-solid fa-seedling mr-1" style="color:var(--moss)"></i> Tip: trains and local homestays usually make trips cheaper and lower-carbon.</p>
-          </aside>
-        </div>
+          </section>
+
+          <!-- Dates -->
+          <section>
+            <p class="q"><span class="n">02</span>When?<small>Up to 10 days.</small></p>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label" for="arrivalDate">Arrive</label>
+                <input id="arrivalDate" type="date" class="input" required />
+              </div>
+              <div>
+                <label class="label" for="returnDate">Return</label>
+                <input id="returnDate" type="date" class="input" required />
+              </div>
+            </div>
+          </section>
+
+          <!-- Budget -->
+          <section>
+            <label class="q" for="budget"><span class="n">03</span>Total budget<small>For the whole trip, in rupees.</small></label>
+            <div>
+              <div class="input-icon max-w-[220px]">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+                <input id="budget" type="number" min="1000" max="10000000" step="500" value="30000" class="input" required />
+              </div>
+              <input id="budgetRange" type="range" min="1000" max="200000" step="1000" value="30000" aria-label="Budget slider" />
+              <div class="picks" id="budgetChips">
+                <button type="button" class="chip" data-v="10000">Shoestring, ₹10k</button>
+                <button type="button" class="chip" data-v="25000">Comfortable, ₹25k</button>
+                <button type="button" class="chip" data-v="50000">A treat, ₹50k</button>
+                <button type="button" class="chip" data-v="100000">Splurge, ₹1L</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Trip style -->
+          <section>
+            <p class="q"><span class="n">04</span>What kind of trip?</p>
+            <div>
+              <input type="hidden" id="preference" value="Adventure" />
+              <div role="radiogroup" aria-label="Trip style" id="vibes">
+                <button type="button" class="vibe" role="radio" aria-checked="true" data-v="Adventure"><span class="em"></span><b>Adventure</b><small>Treks, rafting, long days outside</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Relaxation"><span class="em"></span><b>Relaxation</b><small>Slow mornings, sea air</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Culture"><span class="em"></span><b>Culture</b><small>Forts, food, festivals</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Nature"><span class="em"></span><b>Nature</b><small>Forests, lakes, wildlife</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Luxury"><span class="em"></span><b>Luxury</b><small>Heritage stays, good dinners</small></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="!block">
+            <button type="submit" id="generateBtn" class="btn btn-primary btn-lg w-full sm:w-auto">Plan my trip</button>
+            <p class="caption mt-3 mb-0">Takes about ten seconds.</p>
+          </section>
+        </form>
+
+        <!-- Live summary -->
+        <aside class="summary reveal" aria-label="Trip summary">
+          <div class="slip">
+            <span class="eyebrow">Your trip</span>
+            <p class="stamp-dest" id="sumDest">Somewhere new</p>
+            <p class="caption mt-1 mb-4" id="sumDates">Pick your dates</p>
+            <div class="summary-row"><span>Duration</span><span id="sumDays">—</span></div>
+            <div class="summary-row"><span>Budget</span><span id="sumBudget">₹30,000</span></div>
+            <div class="summary-row"><span>Per day</span><span id="sumPerDay">—</span></div>
+            <div class="summary-row"><span>Style</span><span id="sumVibe">Adventure</span></div>
+          </div>
+          <p class="caption mt-4">Trains and local homestays usually make a trip cheaper and lower-carbon.</p>
+        </aside>
       </div>
-    </main>
-  </div>
-</div>
+    </div>
+  </main>
 
 <!-- Generating overlay -->
 <div class="gen-overlay" id="genOverlay" aria-live="polite">
-  <div class="text-center px-6">
-    <div class="compass mb-6"><span class="needle"></span></div>
-    <p class="font-display text-2xl font-semibold mb-2">Scouting your trail…</p>
+  <div class="px-6 max-w-md">
+    <svg class="trail-anim" width="220" height="60" viewBox="0 0 220 60" aria-hidden="true">
+      <path d="M4 50 C 50 50, 60 10, 110 22 S 170 54, 216 8" fill="none" stroke="#B5502D" stroke-width="2.5"/>
+    </svg>
+    <p class="font-display text-3xl font-light mt-6 mb-2">Planning your trip…</p>
     <p class="gen-msg ink-2" id="genMsg">Reading old maps</p>
   </div>
 </div>

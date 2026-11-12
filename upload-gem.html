@@ -4,113 +4,111 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Share a gem · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#F6F1E7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .gps-box { display: flex; align-items: center; gap: .9rem; padding: 1rem; border-radius: 14px; border: 1.5px dashed var(--line-2); background: var(--paper); }
-    .gps-box.ok { border-style: solid; border-color: var(--moss); background: var(--moss-soft); }
-    .gps-pin { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--card); color: var(--clay); flex: none; position: relative; }
-    .gps-box.ok .gps-pin { background: var(--moss); color: #fff; }
-    .gps-box.ok .gps-pin::after { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--moss); animation: pulse-ring 1.8s infinite; }
-    .preview { position: sticky; top: 1.5rem; }
-    .preview .frame { height: 170px; display: grid; place-items: center; font-size: 3.5rem;
-      background: radial-gradient(circle at 30% 30%, var(--moss-soft), var(--paper-2)); }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
+    #gemForm > div { padding-block: 24px; border-top: 1px solid var(--line); }
+    #gemForm > div:first-child { border-top: 0; padding-top: 0; }
+
+    .gps-box { display: flex; align-items: center; gap: 14px; padding: 14px 16px; border-radius: var(--r); border: 1px dashed var(--line-2); }
+    .gps-box.ok { border-style: solid; border-color: var(--ok); }
+    .gps-pin { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; border: 1px solid var(--line-2); color: var(--muted); flex: none; }
+    .gps-box.ok .gps-pin { border-color: var(--ok); color: var(--ok); }
+
+    /* Preview: the category emoji (set by the script) is hidden; show a quiet placeholder instead */
+    .preview { position: sticky; top: calc(var(--nav-h) + 32px); }
+    .preview .frame { height: 170px; display: grid; place-items: center; font-size: 0; border-radius: var(--r-sm); border: 1px dashed var(--line-2); background: transparent; }
+    .preview .frame::after { content: "Photo added after review"; font: 400 .85rem/1 var(--font-sans); color: var(--muted); }
   </style>
 </head>
 
 <body>
-<div class="shell">
-  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
+  <header id="appNav"></header>
 
-  <div class="min-w-0">
-    <header id="mobileBar" class="mobile-bar"></header>
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head">
+        <span class="eyebrow">Share a place</span>
+        <h1>Know somewhere quiet?</h1>
+        <p>A waterfall without a signboard, or a dhaba only locals know. Add it for other travellers. Every place is checked before it goes live.</p>
+      </header>
 
-    <main class="main">
-      <div class="page-wrap">
-        <header class="page-head">
-          <span class="eyebrow">Community map</span>
-          <h1 class="h1">Share a <span class="italic-accent">hidden gem</span></h1>
-          <p>Know a waterfall without a signboard, or a dhaba only locals know? Pin it for other travellers. Each submission is reviewed before it goes live.</p>
-        </header>
+      <div class="grid lg:grid-cols-[minmax(0,1fr)_300px] gap-10 lg:gap-16 items-start">
+        <form id="gemForm" class="reveal">
+          <div>
+            <label class="label" for="placeName">Place name</label>
+            <input id="placeName" type="text" class="input" placeholder="e.g. The waterfall behind the tea estate" maxlength="100" required />
+          </div>
 
-        <div class="grid lg:grid-cols-[1fr_320px] gap-8 items-start">
-          <form id="gemForm" class="card p-6 md:p-8 space-y-6 reveal">
-            <div>
-              <label class="label" for="placeName">Place name</label>
-              <input id="placeName" type="text" class="input" placeholder="e.g. Secret waterfall behind the tea estate" maxlength="100" required />
+          <div>
+            <label class="label" for="location">Town and state</label>
+            <input id="location" type="text" class="input" placeholder="e.g. Coorg, Karnataka" maxlength="100" required />
+          </div>
+
+          <div>
+            <p class="label">Category</p>
+            <input type="hidden" id="category" value="Nature" />
+            <div class="flex flex-wrap gap-2" id="catChips">
+              <button type="button" class="chip" aria-pressed="true" data-v="Nature" data-e="🌿">Nature</button>
+              <button type="button" class="chip" aria-pressed="false" data-v="Heritage" data-e="🏛️">Heritage</button>
+              <button type="button" class="chip" aria-pressed="false" data-v="Adventure" data-e="⛰️">Adventure</button>
+              <button type="button" class="chip" aria-pressed="false" data-v="Food" data-e="🍜">Food</button>
+              <button type="button" class="chip" aria-pressed="false" data-v="Cultural" data-e="🎭">Cultural</button>
+              <button type="button" class="chip" aria-pressed="false" data-v="Other" data-e="📍">Other</button>
             </div>
+          </div>
 
-            <div>
-              <label class="label" for="location">City / State</label>
-              <div class="input-icon">
-                <i class="fa-solid fa-map-pin"></i>
-                <input id="location" type="text" class="input" placeholder="e.g. Coorg, Karnataka" maxlength="100" required />
+          <div>
+            <div class="flex justify-between items-end">
+              <label class="label" for="description">What makes it special?</label>
+              <span class="caption mb-2" id="charCount">0 / 2000</span>
+            </div>
+            <textarea id="description" rows="5" class="textarea" maxlength="2000" placeholder="Best time to go, how to get there, what to bring" required></textarea>
+          </div>
+
+          <div>
+            <p class="label">Location pin <span class="hint">(optional, helps others find it)</span></p>
+            <div class="gps-box" id="gpsBox">
+              <span class="gps-pin"><i class="fa-solid fa-location-crosshairs"></i></span>
+              <div class="flex-1 min-w-0">
+                <p class="font-medium text-sm m-0" id="gpsTitle">No location yet</p>
+                <p class="caption truncate m-0" id="gpsSub">Stand at the spot and tap detect.</p>
               </div>
+              <button type="button" id="gpsBtn" class="btn btn-secondary btn-sm">Detect</button>
             </div>
+            <input id="lat" type="hidden" />
+            <input id="lng" type="hidden" />
+          </div>
 
-            <div>
-              <p class="label">Category</p>
-              <input type="hidden" id="category" value="Nature" />
-              <div class="flex flex-wrap gap-2" id="catChips">
-                <button type="button" class="chip" aria-pressed="true" data-v="Nature" data-e="🌿">🌿 Nature</button>
-                <button type="button" class="chip" aria-pressed="false" data-v="Heritage" data-e="🏛️">🏛️ Heritage</button>
-                <button type="button" class="chip" aria-pressed="false" data-v="Adventure" data-e="⛰️">⛰️ Adventure</button>
-                <button type="button" class="chip" aria-pressed="false" data-v="Food" data-e="🍜">🍜 Food</button>
-                <button type="button" class="chip" aria-pressed="false" data-v="Cultural" data-e="🎭">🎭 Cultural</button>
-                <button type="button" class="chip" aria-pressed="false" data-v="Other" data-e="📍">📍 Other</button>
-              </div>
+          <div>
+            <button type="submit" id="uploadBtn" class="btn btn-primary btn-lg w-full sm:w-auto">Share this place</button>
+          </div>
+        </form>
+
+        <aside class="preview reveal" aria-label="Preview">
+          <span class="eyebrow block mb-3">Preview</span>
+          <div class="frame" id="pvEmoji">🌿</div>
+          <div class="pt-4">
+            <div class="flex items-center justify-between gap-2">
+              <h3 class="h3 truncate" id="pvName">Your hidden gem</h3>
+              <span class="tag tag-sun flex-none">Pending</span>
             </div>
-
-            <div>
-              <div class="flex justify-between items-end">
-                <label class="label" for="description">What makes it special?</label>
-                <span class="text-xs muted mb-2" id="charCount">0 / 2000</span>
-              </div>
-              <textarea id="description" rows="5" class="textarea" maxlength="2000" placeholder="Best time to go, how to get there, what to bring…" required></textarea>
-            </div>
-
-            <div>
-              <p class="label">Location pin <span class="hint">(optional, helps others find it)</span></p>
-              <div class="gps-box" id="gpsBox">
-                <span class="gps-pin"><i class="fa-solid fa-location-crosshairs"></i></span>
-                <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-sm" id="gpsTitle">No location yet</p>
-                  <p class="text-xs muted truncate" id="gpsSub">Stand at the spot and tap detect.</p>
-                </div>
-                <button type="button" id="gpsBtn" class="btn btn-sm">Detect</button>
-              </div>
-              <input id="lat" type="hidden" />
-              <input id="lng" type="hidden" />
-            </div>
-
-            <button type="submit" id="uploadBtn" class="btn btn-primary btn-lg btn-block">
-              <i class="fa-solid fa-gem"></i> Share this gem
-            </button>
-          </form>
-
-          <aside class="preview reveal">
-            <p class="eyebrow mb-3">Preview</p>
-            <div class="card overflow-hidden">
-              <div class="frame" id="pvEmoji">🌿</div>
-              <div class="p-5">
-                <div class="flex items-center justify-between gap-2">
-                  <h3 class="h3 truncate" id="pvName">Your hidden gem</h3>
-                  <span class="tag tag-sun flex-none">Pending</span>
-                </div>
-                <p class="text-sm muted mt-1"><i class="fa-solid fa-location-dot mr-1" style="color:var(--clay)"></i><span id="pvLoc">Somewhere in India</span></p>
-                <p class="text-sm ink-2 mt-3 line-clamp-3" id="pvDesc">A short description will appear here.</p>
-              </div>
-            </div>
-          </aside>
-        </div>
+            <p class="text-sm muted mt-1 mb-0"><span id="pvLoc">Somewhere in India</span></p>
+            <p class="text-sm ink-2 mt-3 line-clamp-3" id="pvDesc">A short description will appear here.</p>
+          </div>
+        </aside>
       </div>
-    </main>
-  </div>
-</div>
+    </div>
+  </main>
 
 <script type="module">
   import { db, requireUser } from "./js/app.js";

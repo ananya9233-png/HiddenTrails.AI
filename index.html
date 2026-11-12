@@ -3,227 +3,304 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HiddenTrails.AI · Travel the trails guidebooks forgot</title>
-  <meta name="description" content="AI travel planner for India: day-by-day itineraries, GPS + AI verified photo challenges at landmarks, and points you can trade for travel perks." />
+  <title>HiddenTrails.AI · The India your guidebook skipped</title>
+  <meta name="description" content="Plan a trip around quiet villages, local food and places with no queues. Snap a photo when you get there and earn rewards." />
+  <meta name="theme-color" content="#F6F1E7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .wrap { max-width: 1180px; margin: 0 auto; padding: 0 1.25rem; }
-    .topnav { position: sticky; top: 0; z-index: 50; transition: background .3s, box-shadow .3s; }
-    .topnav.scrolled { background: rgba(245,240,230,.9); backdrop-filter: blur(10px); box-shadow: 0 1px 0 var(--line); }
-    .navlink { font-weight: 600; font-size: .92rem; color: var(--ink-2); position: relative; }
-    .navlink::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -4px; height: 2px; background: var(--clay); transition: right .25s var(--ease); }
-    .navlink:hover { color: var(--ink); } .navlink:hover::after { right: 0; }
+    /* Nav: plain paper bar; gains a rule once you scroll (#topnav.scrolled) */
+    .site-nav { position: sticky; top: 0; z-index: 100; height: var(--nav-h); background: var(--paper); border-bottom: 1px solid transparent; transition: border-color var(--t); }
+    .site-nav.scrolled { border-bottom-color: var(--line); }
+    .site-nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .pub-link { font-size: .92rem; color: var(--ink-2); transition: color var(--t); }
+    .pub-link:hover { color: var(--accent); }
 
-    .hero-title { font-size: clamp(2.6rem, 1.6rem + 4.4vw, 5.2rem); line-height: .98; font-weight: 600; letter-spacing: -.025em; }
-    .underline-scribble { position: relative; white-space: nowrap; }
-    .underline-scribble svg { position: absolute; left: -2%; bottom: -.18em; width: 104%; height: .4em; }
-    .underline-scribble path { stroke-dasharray: 400; stroke-dashoffset: 400; animation: draw 1.2s .6s var(--ease) forwards; }
-    @keyframes draw { to { stroke-dashoffset: 0; } }
+    /* Hero: text left, tall photo right with a caption under it */
+    .hero { display: grid; gap: 40px; padding-block: 40px 72px; }
+    @media (min-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 64px; align-items: end; padding-block: 72px 112px; } }
+    .hero h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.7rem, 1.4rem + 5vw, 5.4rem); line-height: .98; letter-spacing: -.03em; margin: 0; }
+    .hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .hero-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--r-sm); }
+    @media (min-width: 900px) { .hero-photo { margin-top: -24px; } .hero-photo img { aspect-ratio: 4 / 4.6; } }
+    figcaption { margin-top: 10px; font-size: .8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; }
+    figcaption b { font-weight: 500; color: var(--ink-2); }
 
-    .collage { position: relative; height: 520px; }
-    .pc { position: absolute; background: #fff; padding: .6rem .6rem 2.2rem; border-radius: 6px; box-shadow: var(--shadow); width: 250px; transition: transform .5s var(--spring); }
-    .pc img { width: 100%; aspect-ratio: 4/5; object-fit: cover; border-radius: 3px; }
-    .pc .cap { position: absolute; bottom: .55rem; left: 0; right: 0; text-align: center; font-family: var(--font-display); font-style: italic; font-size: .95rem; color: var(--ink-2); }
-    .pc-1 { left: 4%; top: 40px; transform: rotate(-7deg); }
-    .pc-2 { left: 34%; top: 0; transform: rotate(4deg); z-index: 2; }
-    .pc-3 { right: 0; top: 150px; transform: rotate(-2deg); }
-    .collage:hover .pc-1 { transform: rotate(-10deg) translate(-12px, 6px); }
-    .collage:hover .pc-2 { transform: rotate(2deg) translateY(-10px); }
-    .collage:hover .pc-3 { transform: rotate(2deg) translate(12px, 6px); }
-    .float-card { position: absolute; z-index: 3; background: var(--card); border: 1px solid var(--line); border-radius: 16px; box-shadow: var(--shadow); padding: .9rem 1rem; }
-    .verified { left: 26%; bottom: 40px; display: flex; align-items: center; gap: .7rem; }
-    .verified .seal { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--moss); color: #fff; font-size: 1.1rem; }
-    .daycard { right: 6%; top: -6px; width: 220px; }
-    @media (max-width: 1023px) { .collage { height: 440px; transform: scale(.85); transform-origin: top center; } }
-    @media (max-width: 640px) { .collage { display: none; } }
+    /* Numbered steps */
+    .steps li { display: grid; grid-template-columns: 56px 1fr; gap: 8px 20px; padding-block: 26px; border-top: 1px solid var(--line); }
+    .steps li:last-child { border-bottom: 1px solid var(--line); }
+    @media (min-width: 768px) { .steps li { grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1.3fr); align-items: baseline; } }
+    .steps .n { font-family: var(--font-display); font-size: 1.05rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .steps h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; line-height: 1.2; margin: 0; }
+    .steps p { margin: 0; color: var(--ink-2); grid-column: 2; }
+    @media (min-width: 768px) { .steps p { grid-column: 3; } }
 
-    .marquee { overflow: hidden; border-block: 1px solid var(--line); background: var(--card); }
-    .marquee-track { display: flex; gap: 3rem; width: max-content; padding: 1rem 0; animation: marquee 40s linear infinite; }
-    .marquee:hover .marquee-track { animation-play-state: paused; }
-    .marquee-track span { font-family: var(--font-display); font-size: 1.35rem; font-style: italic; color: var(--ink-2); white-space: nowrap; display: inline-flex; align-items: center; gap: 3rem; }
-    .marquee-track span::after { content: "✦"; font-style: normal; color: var(--clay); font-size: .9rem; }
-    @keyframes marquee { to { transform: translateX(-50%); } }
+    /* Full-bleed band */
+    .band img { width: 100%; height: clamp(280px, 52vw, 620px); object-fit: cover; }
 
-    .step-num { font-family: var(--font-display); font-size: 3.4rem; font-weight: 600; line-height: 1; color: var(--clay); opacity: .9; }
-    .steps { position: relative; }
-    .steps::before { content: ""; position: absolute; top: 2rem; left: 8%; right: 8%; height: 2px;
-      background-image: linear-gradient(90deg, var(--line-2) 50%, transparent 50%); background-size: 14px 2px; }
-    @media (max-width: 767px) { .steps::before { display: none; } }
+    /* Places */
+    .place { display: block; }
+    .place img { width: 100%; object-fit: cover; border-radius: var(--r-sm); transition: opacity var(--t); }
+    .place:hover img { opacity: .9; }
+    .place h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; line-height: 1.15; margin: 14px 0 6px; transition: color var(--t); }
+    .place:hover h3 { color: var(--accent); }
+    .place p { margin: 0; color: var(--ink-2); font-size: .96rem; }
+    .more li a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding-block: 16px; border-top: 1px solid var(--line); }
+    .more li:last-child a { border-bottom: 1px solid var(--line); }
+    .more li a span:first-child { font-family: var(--font-display); font-size: 1.3rem; transition: color var(--t); }
+    .more li a:hover span:first-child { color: var(--accent); }
 
-    .check-row { display: flex; align-items: center; gap: .8rem; padding: .85rem 0; border-bottom: 1px dashed var(--line); }
-    .check-row:last-child { border-bottom: 0; }
-    .check-row .ico { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; }
-    .bar { height: 8px; border-radius: 99px; background: var(--paper-2); overflow: hidden; }
-    .bar span { display: block; height: 100%; width: 0; background: var(--moss); border-radius: inherit; transition: width 1.4s var(--ease); }
-    .in .bar span { width: var(--w); }
+    /* Passport page */
+    .passport { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px 24px; }
+    @media (min-width: 768px) { .passport { padding: 36px 40px; } }
+    .stamps { display: grid; grid-template-columns: repeat(4, 92px); justify-content: space-between; }
+    @media (max-width: 519px) {
+      .stamps { grid-template-columns: repeat(4, 66px); }
+      .stamps .stamp { width: 66px; height: 66px; font-size: .5rem; letter-spacing: .08em; outline-offset: -5px; }
+      .stamps .stamp b { font-size: .85rem; }
+      ol.levels li { font-size: .66rem; }
+    }
+    .stamps .stamp:nth-child(2) { transform: rotate(6deg); color: var(--ink-2); }
+    .stamps .stamp:nth-child(3) { transform: rotate(-3deg); }
+    .levels { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 8px; }
+    .levels::before { content: ""; position: absolute; left: 0; right: 0; top: 5px; border-top: 1px solid var(--line-2); }
+    .levels::after { content: ""; position: absolute; left: 0; width: 30%; top: 4px; border-top: 3px solid var(--accent); }
+    .levels li { position: relative; padding-top: 22px; font-size: .78rem; line-height: 1.3; color: var(--muted); }
+    .levels li::before { content: ""; position: absolute; left: 0; top: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line-2); }
+    .levels li.on { color: var(--ink); }
+    .levels li.on::before { background: var(--accent); border-color: var(--accent); }
+    .levels b { display: block; font-weight: 500; color: inherit; }
+    .perks li { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px; border-top: 1px dashed var(--line-2); font-size: .95rem; }
+    .perks li span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
 
-    .cta-band { background: var(--moss-deep); color: #f5f0e6; border-radius: var(--radius-lg); position: relative; overflow: hidden; }
-    .cta-band::after { content: ""; position: absolute; right: -80px; bottom: -120px; width: 380px; height: 380px; border-radius: 50%; border: 2px dashed rgba(245,240,230,.14); }
+    /* Verification receipt */
+    .receipt { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px 24px; font-size: .95rem; }
+    .receipt dl { margin: 18px 0 0; }
+    .receipt dl div { display: flex; align-items: baseline; gap: 10px; padding-block: 9px; }
+    .receipt dt { color: var(--ink-2); }
+    .receipt dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .receipt dl div::after { content: ""; order: 1; flex: 1; border-bottom: 1px dotted var(--line-2); transform: translateY(-4px); }
+    .receipt dd { order: 2; }
+    .receipt .stamp { position: absolute; right: 18px; top: -26px; background: var(--surface); }
   </style>
 </head>
 
 <body>
-  <!-- Nav -->
-  <header class="topnav" id="topnav">
-    <div class="wrap flex items-center justify-between py-4">
-      <a href="index.html" class="brand !p-0"><span class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
-      <nav class="hidden md:flex items-center gap-8">
-        <a href="#how" class="navlink">How it works</a>
-        <a href="#challenges" class="navlink">Photo challenges</a>
-        <a href="#rewards" class="navlink">Rewards</a>
+  <a href="#main" class="skip-link">Skip to content</a>
+
+  <header class="site-nav" id="topnav">
+    <div class="wrap">
+      <a href="index.html" class="brand" aria-label="HiddenTrails.AI home">
+        <span class="brand-mark"><i data-lucide="mountain"></i></span>
+        <span class="brand-name">HiddenTrails<em>.ai</em></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-8" aria-label="Sections">
+        <a href="#how" class="pub-link">How it works</a>
+        <a href="#places" class="pub-link">Places</a>
+        <a href="#rewards" class="pub-link">Rewards</a>
       </nav>
       <div class="flex items-center gap-2" id="navActions">
-        <a href="auth.html" class="btn btn-ghost">Log in</a>
-        <a href="signup.html" class="btn btn-primary">Start free</a>
+        <a href="auth.html" class="btn btn-ghost btn-sm">Log in</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Sign up</a>
       </div>
     </div>
   </header>
 
-  <!-- Hero -->
-  <section class="wrap grid lg:grid-cols-[1.05fr_1fr] gap-10 items-center pt-10 pb-16 md:pt-16 md:pb-24">
-    <div class="stagger" id="heroText">
-      <span class="eyebrow">AI travel planner · made for India</span>
-      <h1 class="font-display hero-title mt-5">
-        Travel the trails the
-        <span class="underline-scribble italic-accent">guidebooks
-          <svg viewBox="0 0 300 20" preserveAspectRatio="none" aria-hidden="true"><path d="M2 14 C 60 4, 120 18, 180 9 S 270 6, 298 12" fill="none" stroke="#e0a33a" stroke-width="5" stroke-linecap="round"/></svg>
-        </span>
-        forgot.
-      </h1>
-      <p class="text-lg ink-2 mt-6 max-w-xl">Get a day-by-day plan in seconds, chase real landmarks with photo challenges, and earn points every time you actually show up.</p>
-      <div class="flex flex-wrap gap-3 mt-8">
-        <a href="signup.html" class="btn btn-clay btn-lg" id="heroCta">Plan my first trip <i class="fa-solid fa-arrow-right"></i></a>
-        <a href="#how" class="btn btn-lg"><i class="fa-regular fa-circle-play"></i> See how it works</a>
-      </div>
-      <div class="flex flex-wrap gap-x-8 gap-y-3 mt-10 text-sm ink-2">
-        <span><i class="fa-solid fa-route mr-2" style="color:var(--moss)"></i>Itineraries in ~10 s</span>
-        <span><i class="fa-solid fa-location-crosshairs mr-2" style="color:var(--clay)"></i>GPS + AI photo checks</span>
-        <span><i class="fa-solid fa-seedling mr-2" style="color:var(--moss)"></i>Eco-first suggestions</span>
-      </div>
-    </div>
-
-    <div class="collage" aria-hidden="true">
-      <div class="float-card daycard float">
-        <p class="eyebrow !text-[.62rem]">Day 2 · Jaipur</p>
-        <p class="font-display font-semibold mt-1 leading-tight">Pink city, slow mornings</p>
-        <p class="text-xs muted mt-2"><i class="fa-solid fa-sun mr-1" style="color:var(--sun)"></i>Sunrise at Nahargarh, kachori at Rawat's</p>
-      </div>
-      <figure class="pc pc-1"><img src="https://images.unsplash.com/photo-1650530777057-3a7dbc24bf6c?q=80&w=600&auto=format&fit=crop" alt=""><figcaption class="cap">Hawa Mahal</figcaption></figure>
-      <figure class="pc pc-2"><img src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=600&q=80" alt=""><figcaption class="cap">Taj Mahal, 6 am</figcaption></figure>
-      <figure class="pc pc-3"><img src="https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=600&q=80" alt=""><figcaption class="cap">Golden Temple</figcaption></figure>
-      <div class="float-card verified">
-        <span class="seal"><i class="fa-solid fa-check"></i></span>
-        <div>
-          <p class="font-semibold text-sm leading-tight">Photo verified</p>
-          <p class="text-xs muted">You were there · <b style="color:var(--moss)">+150 pts</b></p>
+  <main id="main">
+    <!-- Hero -->
+    <section class="wrap hero" aria-labelledby="heroTitle">
+      <div class="stagger" id="heroText">
+        <span class="eyebrow">A travel planner for India</span>
+        <h1 id="heroTitle" class="mt-5">The India your guidebook <em>skipped.</em></h1>
+        <p class="lead mt-6 max-w-md">Plan a trip around quiet villages, local food and places with no queues. Snap a photo when you get there and earn rewards.</p>
+        <div class="flex flex-wrap items-center gap-6 mt-8">
+          <a href="signup.html" class="btn btn-primary btn-lg" id="heroCta">Plan a trip</a>
+          <a href="#how" class="btn-text">How it works</a>
         </div>
       </div>
-    </div>
-  </section>
+      <figure class="hero-photo m-0">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Key_Monastery_Spiti.jpg?width=1400"
+             alt="Key Monastery, a cluster of white buildings on a brown hillside in Spiti Valley" fetchpriority="high" />
+        <figcaption><span><b>Key Monastery</b>, Spiti Valley</span><span>Himachal Pradesh</span></figcaption>
+      </figure>
+    </section>
 
-  <!-- Marquee -->
-  <div class="marquee" aria-hidden="true">
-    <div class="marquee-track">
-      <span>Ziro Valley</span><span>Hampi</span><span>Majuli</span><span>Spiti</span><span>Gokarna</span><span>Chettinad</span><span>Gurez</span><span>Dzükou Valley</span><span>Mawlynnong</span><span>Bhitarkanika</span>
-      <span>Ziro Valley</span><span>Hampi</span><span>Majuli</span><span>Spiti</span><span>Gokarna</span><span>Chettinad</span><span>Gurez</span><span>Dzükou Valley</span><span>Mawlynnong</span><span>Bhitarkanika</span>
-    </div>
-  </div>
+    <!-- How it works: a numbered list, not cards -->
+    <section id="how" class="wrap section !pt-0 scroll-mt-20" aria-labelledby="howTitle">
+      <div class="grid lg:grid-cols-[minmax(0,.8fr)_minmax(0,2fr)] gap-10 lg:gap-16">
+        <div class="reveal">
+          <span class="eyebrow">How it works</span>
+          <h2 id="howTitle" class="h1 mt-4">From “where to?” to “I was there.”</h2>
+        </div>
+        <ol class="steps m-0 p-0 list-none reveal">
+          <li><span class="n">01</span><h3>Tell it where and when</h3><p>A place, your dates, a budget in rupees and the kind of trip you like. You get a day-by-day plan with real spots and rough costs.</p></li>
+          <li><span class="n">02</span><h3>Go</h3><p>Each day comes with a Google Maps link. Stuck somewhere? Ask the travel guide in the app.</p></li>
+          <li><span class="n">03</span><h3>Take the photo</h3><p>At a landmark on your plan, take a picture. We check your location is within 150 m and that the photo really shows the place.</p></li>
+          <li><span class="n">04</span><h3>Collect the stamp</h3><p>Verified photos earn points. Points move you up from Rookie to Legend and pay for discounts on stays, trains and food.</p></li>
+        </ol>
+      </div>
+    </section>
 
-  <!-- How it works -->
-  <section id="how" class="wrap py-20 md:py-28">
-    <div class="max-w-2xl reveal">
-      <span class="eyebrow">How it works</span>
-      <h2 class="h1 mt-3">Three steps from <span class="italic-accent">“where?”</span> to “I was there.”</h2>
-    </div>
-    <div class="steps grid md:grid-cols-3 gap-6 mt-14">
-      <div class="card card-pad card-hover reveal relative">
-        <span class="step-num">01</span>
-        <h3 class="h3 mt-4">Tell us the vibe</h3>
-        <p class="ink-2 mt-2 text-sm">Destination, dates, budget, and whether you want temples or treks. That's it.</p>
-      </div>
-      <div class="card card-pad card-hover reveal relative" style="transition-delay:.1s">
-        <span class="step-num">02</span>
-        <h3 class="h3 mt-4">Get a real plan</h3>
-        <p class="ink-2 mt-2 text-sm">Morning, afternoon and evening for every day, with real places, food, costs and directions.</p>
-      </div>
-      <div class="card card-pad card-hover reveal relative" style="transition-delay:.2s">
-        <span class="step-num">03</span>
-        <h3 class="h3 mt-4">Go, snap, earn</h3>
-        <p class="ink-2 mt-2 text-sm">Landmarks on your plan become photo challenges. Snap them live and your points add up.</p>
-      </div>
-    </div>
-  </section>
+    <!-- Full-bleed photo band -->
+    <figure class="band m-0 reveal">
+      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Dzukou_Valley.jpg?width=2000" alt="Green rolling hills of Dzükou Valley under low clouds" loading="lazy" />
+      <figcaption class="wrap"><span><b>Dzükou Valley</b>, a two-hour walk from the nearest road</span><span>Nagaland</span></figcaption>
+    </figure>
 
-  <!-- Challenges feature -->
-  <section id="challenges" class="wrap pb-20 md:pb-28 grid lg:grid-cols-2 gap-12 items-center">
-    <div class="reveal">
-      <span class="eyebrow">Photo challenges</span>
-      <h2 class="h1 mt-3">No screenshots. <br><span class="italic-accent">You have to be there.</span></h2>
-      <p class="ink-2 mt-5 text-lg max-w-lg">Every photo goes through two checks. GPS confirms you're within 150 m of the landmark, with no teleporting allowed. A vision model then confirms it's the right place and a live shot, not a download.</p>
-      <a href="signup.html" class="btn btn-primary btn-lg mt-8">Try a challenge <i class="fa-solid fa-camera"></i></a>
-    </div>
-    <div class="card p-6 md:p-8 reveal paper-edge" id="verifyDemo">
-      <div class="flex items-center justify-between mb-2">
-        <p class="font-display text-xl font-semibold">Verification report</p>
-        <span class="tag tag-moss"><i class="fa-solid fa-circle-check"></i> Passed</span>
+    <!-- Places -->
+    <section id="places" class="wrap section scroll-mt-20" aria-labelledby="placesTitle">
+      <div class="max-w-2xl reveal">
+        <span class="eyebrow">Worth the detour</span>
+        <h2 id="placesTitle" class="h1 mt-4">Places your group chat hasn’t heard of.</h2>
+        <p class="lead mt-4">Pick one and the planner fills in the days, the food and the route.</p>
       </div>
-      <p class="text-sm muted mb-4">Gateway of India · Mumbai</p>
-      <div class="check-row">
-        <span class="ico" style="background:var(--sky-soft);color:var(--sky)"><i class="fa-solid fa-location-dot"></i></span>
-        <div class="flex-1"><p class="font-semibold text-sm">Within range</p><p class="text-xs muted">38 m from the landmark</p></div>
-        <i class="fa-solid fa-check" style="color:var(--moss)"></i>
-      </div>
-      <div class="check-row">
-        <span class="ico" style="background:var(--clay-soft);color:var(--clay)"><i class="fa-solid fa-landmark"></i></span>
-        <div class="flex-1"><p class="font-semibold text-sm">Landmark match</p><div class="bar mt-2"><span style="--w:92%"></span></div></div>
-        <b class="text-sm">92%</b>
-      </div>
-      <div class="check-row">
-        <span class="ico" style="background:var(--sun-soft);color:#a26d12"><i class="fa-solid fa-camera"></i></span>
-        <div class="flex-1"><p class="font-semibold text-sm">Live photo</p><div class="bar mt-2"><span style="--w:81%;background:var(--sun)"></span></div></div>
-        <b class="text-sm">81%</b>
-      </div>
-      <div class="check-row">
-        <span class="ico" style="background:var(--moss-soft);color:var(--moss)"><i class="fa-solid fa-gauge-high"></i></span>
-        <div class="flex-1"><p class="font-semibold text-sm">No GPS spoofing</p><p class="text-xs muted">Speed & teleport checks clean</p></div>
-        <i class="fa-solid fa-check" style="color:var(--moss)"></i>
-      </div>
-    </div>
-  </section>
 
-  <!-- Rewards teaser -->
-  <section id="rewards" class="wrap pb-20 md:pb-28">
-    <div class="text-center max-w-2xl mx-auto reveal">
-      <span class="eyebrow">Rewards</span>
-      <h2 class="h1 mt-3">Points that turn into <span class="italic-accent">perks</span>.</h2>
-      <p class="ink-2 mt-4">Level up from Rookie to Legend, collect passport stamps, and trade points for discounts on stays, trains and food.</p>
-    </div>
-    <div class="grid md:grid-cols-3 gap-4 mt-12 max-w-4xl mx-auto">
-      <article class="ticket reveal"><div class="ticket-body"><p class="font-semibold">🏕️ Hostels partner</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--plum)">50% OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">500</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
-      <article class="ticket reveal" style="transition-delay:.1s"><div class="ticket-body"><p class="font-semibold">🚂 Rail bookings</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--sky)">₹400 OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">350</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
-      <article class="ticket reveal" style="transition-delay:.2s"><div class="ticket-body"><p class="font-semibold">🍔 Food delivery</p><p class="font-display text-2xl font-semibold mt-2" style="color:var(--clay)">15% OFF</p></div><div class="ticket-stub"><b class="font-display text-xl">120</b><span class="text-[.62rem] font-bold uppercase tracking-widest muted">points</span></div></article>
-    </div>
-  </section>
+      <div class="grid md:grid-cols-12 gap-x-8 gap-y-14 mt-14">
+        <a href="plantrips.html?dest=Ziro%20Valley" class="place md:col-span-7 reveal">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Ziro_valley.jpg?width=1200" alt="Paddy fields and pine-covered hills in Ziro Valley" loading="lazy" style="aspect-ratio:4/3">
+          <span class="eyebrow mt-4 block">Arunachal Pradesh</span>
+          <h3>Ziro Valley</h3>
+          <p>Pine hills, rice fields and Apatani villages. Go in late September for the music festival.</p>
+        </a>
+        <div class="md:col-span-5 grid gap-14 md:pt-24">
+          <a href="plantrips.html?dest=Chandratal%20Lake" class="place reveal">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Chandratal_Lake.jpg?width=900" alt="Turquoise Chandratal Lake ringed by bare mountains" loading="lazy" style="aspect-ratio:3/2">
+            <span class="eyebrow mt-4 block">Himachal Pradesh</span>
+            <h3>Chandratal Lake</h3>
+            <p>A crescent of blue water at 4,300 m. Camp nearby for a sky full of stars.</p>
+          </a>
+        </div>
+        <a href="plantrips.html?dest=Hampi" class="place md:col-span-5 md:col-start-2 reveal">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Hampi.jpg?width=900" alt="Stone temple ruins among granite boulders in Hampi" loading="lazy" style="aspect-ratio:1/1">
+          <span class="eyebrow mt-4 block">Karnataka</span>
+          <h3>Hampi</h3>
+          <p>The ruins of Vijayanagara, scattered across a landscape of giant boulders. Rent a bicycle.</p>
+        </a>
+        <div class="md:col-span-5 md:col-start-8 self-end reveal">
+          <span class="eyebrow">Also on the list</span>
+          <ul class="more list-none p-0 mt-4 mb-0">
+            <li><a href="plantrips.html?dest=Mawlynnong"><span>Mawlynnong</span><span class="caption">Meghalaya</span></a></li>
+            <li><a href="plantrips.html?dest=Majuli"><span>Majuli</span><span class="caption">Assam</span></a></li>
+            <li><a href="plantrips.html?dest=Gurez%20Valley"><span>Gurez Valley</span><span class="caption">Jammu &amp; Kashmir</span></a></li>
+            <li><a href="plantrips.html?dest=Chettinad"><span>Chettinad</span><span class="caption">Tamil Nadu</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
-  <!-- CTA -->
-  <section class="wrap pb-16">
-    <div class="cta-band p-10 md:p-16 reveal">
-      <div class="relative z-10 max-w-2xl">
-        <h2 class="font-display font-semibold leading-tight" style="color:#fff;font-size:clamp(2rem, 1.4rem + 2.4vw, 3.2rem)">Your next favourite place<br>isn't on the main road.</h2>
-        <p class="mt-4 text-lg" style="opacity:.8">Make a free account and plan a trip in under a minute.</p>
-        <a href="signup.html" class="btn btn-clay btn-lg mt-8" id="ctaBottom">Get started, it's free <i class="fa-solid fa-arrow-right"></i></a>
+    <!-- Rewards: a passport page -->
+    <section id="rewards" class="section scroll-mt-20" style="background:var(--paper-2)" aria-labelledby="rewardsTitle">
+      <div class="wrap grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-12 lg:gap-20 items-start">
+        <div class="reveal lg:sticky lg:top-28">
+          <span class="eyebrow">Rewards</span>
+          <h2 id="rewardsTitle" class="h1 mt-4">Every place you reach leaves a stamp.</h2>
+          <p class="lead mt-5">A verified photo earns points, usually 100 to 150. Save them up and spend them on things that make the next trip cheaper.</p>
+          <ul class="perks list-none p-0 mt-8 mb-0">
+            <li><span>50% off a hostel stay</span><span>500 pts</span></li>
+            <li><span>₹400 off train tickets</span><span>350 pts</span></li>
+          </ul>
+        </div>
+
+        <div class="passport reveal" aria-label="Example passport page">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="eyebrow">Passport · page 1</span>
+            <span class="caption">Example</span>
+          </div>
+          <div class="stamps mt-8" aria-label="Stamps collected">
+            <span class="stamp">Hampi<b>+150</b>Mar 26</span>
+            <span class="stamp">Spiti<b>+130</b>Jun 26</span>
+            <span class="stamp">Ziro<b>+100</b>Sep 26</span>
+            <span class="stamp is-empty">Next<b>?</b>stamp</span>
+          </div>
+
+          <hr class="rule my-9">
+          <div class="flex items-baseline justify-between gap-4">
+            <p class="m-0"><span class="font-display text-2xl">380</span> <span class="muted">points</span></p>
+            <p class="m-0 caption">120 more to Adventurer</p>
+          </div>
+          <ol class="levels list-none p-0 mb-0 mt-5" aria-label="Levels">
+            <li class="on"><b>Rookie</b>0</li>
+            <li class="on"><b>Explorer</b>200</li>
+            <li><b>Adventurer</b>500</li>
+            <li><b>Pro</b>1,000</li>
+            <li><b>Legend</b>2,000</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fair play + light footprint -->
+    <section class="wrap section" aria-labelledby="trustTitle">
+      <div class="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-14 lg:gap-20 items-center">
+        <div class="reveal">
+          <span class="eyebrow">Fair play</span>
+          <h2 id="trustTitle" class="h1 mt-4">No screenshots. You have to be there.</h2>
+          <p class="lead mt-5">Every photo is checked twice. Your phone’s location has to be within 150 m of the landmark, and the picture has to show that landmark, taken just now.</p>
+          <h3 class="eyebrow mt-12 mb-0">And go lightly</h3>
+          <ul class="list-none p-0 mt-4 mb-0 grid gap-3 ink-2">
+            <li>The travel guide suggests trains over flights when the route allows.</li>
+            <li>Homestays and dhabas over chains, so the money stays local.</li>
+            <li>Take only photos. Leave only footprints.</li>
+          </ul>
+        </div>
+
+        <div class="receipt reveal" id="verifyDemo">
+          <span class="stamp" aria-hidden="true">Verified<b>✓</b>+150</span>
+          <span class="eyebrow">Photo check</span>
+          <p class="font-display text-2xl m-0 mt-2">Gateway of India</p>
+          <p class="caption m-0 mt-1">Mumbai, Maharashtra</p>
+          <dl>
+            <div><dt>Distance from landmark</dt><dd>38 m</dd></div>
+            <div><dt>Landmark match</dt><dd>92%</dd></div>
+            <div><dt>Taken live</dt><dd>Yes</dd></div>
+            <div><dt>Speed and location checks</dt><dd>Clean</dd></div>
+            <div><dt>Points</dt><dd>150</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="wrap pb-20 md:pb-28">
+      <hr class="rule mb-14 md:mb-20">
+      <div class="grid md:grid-cols-[minmax(0,1.6fr)_auto] gap-8 items-end reveal">
+        <h2 class="h1 m-0 max-w-3xl">Your next favourite place isn’t on the main road.</h2>
+        <a href="signup.html" class="btn btn-primary btn-lg justify-self-start" id="ctaBottom">Plan a trip</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr]">
+      <div>
+        <a href="index.html" class="brand"><span class="brand-mark"><i data-lucide="mountain"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
+        <p class="mt-4 max-w-sm text-sm">A trip planner for the quieter parts of India. Built as a student project, still growing.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul class="grid gap-2 text-sm list-none p-0 m-0">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#places">Places</a></li>
+          <li><a href="#rewards">Rewards</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <ul class="grid gap-2 text-sm list-none p-0 m-0">
+          <li><a href="signup.html">Sign up</a></li>
+          <li><a href="auth.html">Log in</a></li>
+        </ul>
       </div>
     </div>
-  </section>
-
-  <footer class="wrap py-10 flex flex-wrap items-center justify-between gap-4 text-sm muted border-t" style="border-color:var(--line)">
-    <a href="index.html" class="brand !p-0"><span class="brand-mark !w-8 !h-8"><i class="fa-solid fa-mountain-sun text-sm"></i></span><span class="brand-name !text-base">HiddenTrails<em>.ai</em></span></a>
-    <p>Take only photos, leave only footprints. © <span id="year"></span> HiddenTrails.AI</p>
+    <div class="wrap py-6 flex flex-wrap items-center justify-between gap-3 text-xs muted" style="border-top:1px solid var(--line)">
+      <p class="m-0">© <span id="year"></span> HiddenTrails.AI · Made in India</p>
+      <p class="m-0">Photos: Wikimedia Commons contributors (CC BY-SA)</p>
+    </div>
   </footer>
 
 <script type="module">
@@ -243,7 +320,7 @@
   // Signed-in visitors go straight to the app
   onAuthStateChanged(auth, (user) => {
     if (!user) return;
-    document.getElementById("navActions").innerHTML = `<a href="dashboard.html" class="btn btn-primary">Open my journal <i class="fa-solid fa-arrow-right"></i></a>`;
+    document.getElementById("navActions").innerHTML = `<a href="dashboard.html" class="btn btn-primary">Open my journal <i data-lucide="arrow-right" class="arrow"></i></a>`;
     ["heroCta", "ctaBottom"].forEach((id) => { document.getElementById(id).href = "plantrips.html"; });
   });
 </script>

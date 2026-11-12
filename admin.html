@@ -7,9 +7,9 @@
   <meta name="description" content="Admin panel for managing tourist places, images, and descriptions for HiddenTrails.AI" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    * { font-family: 'DM Sans', system-ui, sans-serif; }
+    * { font-family: 'Inter', system-ui, sans-serif; }
     h1, h2, h3 { font-family: 'Fraunces', Georgia, serif !important; letter-spacing: -.01em; }
     body { background: #f5f0e6; min-height: 100vh; color: #1d2925; }
 
@@ -123,6 +123,68 @@
       animation: slideUp 0.3s ease-out;
     }
   </style>
+
+  <style id="journal-overrides">
+    /* Journal palette: paper, ink, one terracotta accent. Remaps the Tailwind
+       utilities this page uses; markup and script are unchanged. */
+    :root { --paper:#F6F1E7; --paper-2:#EFE8DA; --surface:#FBF8F2; --ink:#1E1B16; --ink-2:#4A443A; --muted:#6B6355; --line:#E4DCCB; --line-2:#D2C6AE; --accent:#B5502D; --accent-ink:#923F22; }
+    body { background: var(--paper) !important; color: var(--ink); font-size: 15.5px; }
+    h1, h2, h3 { font-weight: 400 !important; }
+    .font-black { font-weight: 500 !important; }
+    h1.font-black, h2.font-black, h3.font-black, p.text-2xl.font-black { font-family: 'Fraunces', Georgia, serif !important; font-weight: 400 !important; }
+
+    /* Login gate: paper instead of a dark gradient */
+    .login-overlay { background: var(--paper) !important; }
+    .login-card { background: var(--surface) !important; border: 1px solid var(--line) !important; backdrop-filter: none !important; border-radius: 10px !important; text-align: left !important; }
+    .login-card h2 { color: var(--ink) !important; font-size: 2rem !important; }
+    .login-card .text-gray-400 { color: var(--muted) !important; }
+    .login-card input { background: #fff !important; border: 1px solid var(--line-2) !important; color: var(--ink) !important; text-align: left !important; letter-spacing: .08em !important; border-radius: 6px !important; }
+    .login-card input::placeholder { color: #9B927F !important; letter-spacing: 0; }
+
+    /* Gradient buttons -> flat accent */
+    .bg-gradient-to-r { background: var(--accent) !important; box-shadow: none !important; border-radius: 6px !important; transform: none !important; font-weight: 500 !important; }
+    .bg-gradient-to-r:hover { background: var(--accent-ink) !important; }
+    .bg-emerald-500, .bg-emerald-400 { background: var(--accent) !important; }
+    .bg-emerald-50, .bg-emerald-500\/10 { background: var(--paper-2) !important; }
+    .text-emerald-500, .text-emerald-600 { color: var(--accent) !important; }
+    .border-emerald-400 { border-color: var(--accent) !important; }
+    .shadow-lg, .shadow-sm, .shadow-emerald-500\/20 { box-shadow: none !important; }
+    .hover\:scale-105:hover, .hover\:scale-\[1\.02\]:hover { transform: none !important; }
+
+    /* Neutrals */
+    .bg-white { background: var(--surface) !important; }
+    .bg-gray-50, .bg-gray-100 { background: var(--paper-2) !important; }
+    .bg-gray-200 { background: var(--line) !important; }
+    .text-gray-800, .text-gray-700 { color: var(--ink) !important; }
+    .text-gray-600, .text-gray-500 { color: var(--ink-2) !important; }
+    .text-gray-400, .text-gray-300 { color: var(--muted) !important; }
+    .border-gray-100, .border-gray-200 { border-color: var(--line) !important; }
+    .text-blue-500, .text-amber-500 { color: var(--ink-2) !important; }
+    .bg-blue-50 { background: var(--paper-2) !important; }
+
+    /* Page components */
+    .glass-card, .stat-card { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important; }
+    .stat-icon { display: none !important; }
+    .place-row { border-bottom-color: var(--line) !important; }
+    .place-row:hover { background: var(--paper) !important; }
+    .thumb { border-radius: 6px !important; border: 1px solid var(--line) !important; }
+    .form-input { background: #fff !important; border: 1px solid var(--line-2) !important; border-radius: 6px !important; }
+    .form-input:focus { border-color: var(--ink) !important; box-shadow: 0 0 0 3px rgba(30,27,22,.08) !important; }
+    .img-preview { border-radius: 6px !important; border: 1px dashed var(--line-2) !important; background: var(--paper) !important; }
+    .img-preview.loaded { border-style: solid !important; border-color: var(--line-2) !important; }
+    .modal-overlay { background: rgba(22,19,15,.5) !important; backdrop-filter: none !important; }
+    .modal-panel, .confirm-panel { background: var(--surface) !important; border: 1px solid var(--line); border-radius: 10px !important; box-shadow: 0 12px 32px -14px rgba(30,27,22,.28) !important; animation: none !important; }
+    .badge { border-radius: 4px !important; background: transparent !important; border: 1px solid currentColor; font-weight: 600 !important; letter-spacing: .06em !important; }
+    .badge-easy { color: #2F5439 !important; } .badge-medium { color: #6B5119 !important; } .badge-hard { color: #7E231F !important; } .badge-db { color: var(--ink-2) !important; }
+    .toast { border-radius: 8px !important; animation: none !important; }
+    .toast.success { background: var(--ink) !important; }
+    .toast.error { background: #4A1C18 !important; }
+    ::-webkit-scrollbar-track { background: var(--paper) !important; }
+    ::-webkit-scrollbar-thumb { background: var(--line-2) !important; }
+    .bg-red-500 { background: #A3302A !important; }
+    .bg-red-50 { background: #F5DFDB !important; }
+    .text-red-500, .text-red-400 { color: #A3302A !important; }
+  </style>
 </head>
 
 <body>
@@ -130,7 +192,6 @@
 <!-- ═══════════════ LOGIN GATE ═══════════════ -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card text-center">
-    <div class="text-5xl mb-4">🔐</div>
     <h2 class="text-2xl font-black text-white mb-2">Admin Access</h2>
     <p class="text-gray-400 text-sm mb-8">Enter your admin key to manage tourist places</p>
     <input
@@ -250,7 +311,6 @@
 
   <!-- Empty state -->
   <div id="emptyState" class="hidden text-center py-16">
-    <div class="text-6xl mb-4">🏔️</div>
     <h3 class="text-xl font-bold text-gray-600 mb-2">No Tourist Places Yet</h3>
     <p class="text-gray-400 mb-6 max-w-md mx-auto">
       Start adding tourist places with images and descriptions. They'll appear automatically in itineraries and photo challenges.
@@ -357,7 +417,6 @@
 <!-- ═══════════════ DELETE CONFIRM ═══════════════ -->
 <div class="modal-overlay" id="deleteModal">
   <div class="confirm-panel">
-    <div class="text-5xl mb-4">🗑️</div>
     <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Place?</h3>
     <p class="text-gray-500 text-sm mb-6">
       Are you sure you want to delete <strong id="deleteName"></strong>?

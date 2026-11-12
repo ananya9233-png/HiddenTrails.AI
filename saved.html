@@ -4,68 +4,76 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My journeys · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#F6F1E7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .trip-card { display: flex; flex-direction: column; overflow: hidden; }
-    .trip-card .frame { height: 190px; }
-    .trip-card .date-badge {
-      position: absolute; left: .9rem; top: .9rem; z-index: 2; padding: .45rem .6rem; border-radius: 12px; text-align: center; line-height: 1;
-      background: var(--card); box-shadow: var(--shadow-sm); min-width: 52px;
-    }
-    .trip-card .date-badge b { display: block; font-family: var(--font-display); font-size: 1.35rem; }
-    .trip-card .date-badge small { font-size: .65rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--clay); }
-    .trip-card .del { position: absolute; right: .75rem; top: .75rem; z-index: 2; opacity: 0; transform: scale(.9); transition: all .2s var(--ease);
-      background: rgba(255,253,248,.95); }
-    .trip-card:hover .del, .trip-card .del:focus-visible { opacity: 1; transform: none; }
-    @media (hover: none) { .trip-card .del { opacity: 1; transform: none; } }
-    .trip-card.removing { animation: removing .35s var(--ease) forwards; }
-    @keyframes removing { to { opacity: 0; transform: scale(.94); } }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
+
+    /* Toolbar: search + sort on one thin rule */
+    #toolbar .input { background: transparent; }
+
+    /* Trip entries (cards come from the page script) */
+    .trip-card { display: flex; flex-direction: column; background: transparent; border: 0; border-radius: 0; }
+    .trip-card .frame { height: 220px; border-radius: var(--r-sm); }
+    .trip-card .date-badge { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 4px 8px; border-radius: 4px; background: rgba(251, 248, 242, .95); line-height: 1.1; font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+    .trip-card .date-badge b { font: inherit; margin-right: 4px; }
+    .trip-card .date-badge small { font: inherit; color: var(--accent); }
+    .trip-card .del { position: absolute; right: 10px; top: 10px; z-index: 2; width: 34px; height: 34px; min-height: 0; border-radius: 4px; border-color: transparent; background: rgba(251, 248, 242, .95); color: var(--ink-2); opacity: 0; transition: opacity var(--t), color var(--t); }
+    .trip-card .del:hover { color: var(--err); background: rgba(251, 248, 242, .95); }
+    .trip-card:hover .del, .trip-card .del:focus-visible { opacity: 1; }
+    @media (hover: none) { .trip-card .del { opacity: 1; } }
+    .trip-card > a.p-5 { padding: 14px 0 0 !important; }
+    .trip-card .h3 { font-size: 1.5rem; transition: color var(--t); }
+    .trip-card:hover .h3 { color: var(--accent); }
+    .trip-card .muted i { display: none; }
+    .trip-card span.mt-auto { color: var(--ink) !important; font-weight: 500; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+    .trip-card span.mt-auto i { display: none; }
+    /* The script waits for this animation to end before re-rendering. Keep it. */
+    .trip-card.removing { animation: removing .3s var(--ease) forwards; }
+    @keyframes removing { to { opacity: 0; } }
   </style>
 </head>
 
 <body>
-<div class="shell">
-  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
+  <header id="appNav"></header>
 
-  <div class="min-w-0">
-    <header id="mobileBar" class="mobile-bar"></header>
-
-    <main class="main">
-      <div class="page-wrap">
-        <header class="page-head flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <span class="eyebrow">Travel journal</span>
-            <h1 class="h1">My <span class="italic-accent">journeys</span></h1>
-            <p id="countLine">Every trail you've planned, in one place.</p>
-          </div>
-          <a href="plantrips.html" class="btn btn-primary"><i class="fa-solid fa-plus"></i> New trip</a>
-        </header>
-
-        <div class="flex flex-col sm:flex-row gap-3 mb-6" id="toolbar" hidden>
-          <div class="input-icon flex-1">
-            <i class="fa-solid fa-magnifying-glass"></i>
-            <input id="search" class="input" placeholder="Search by destination or vibe…" autocomplete="off" />
-          </div>
-          <select id="sort" class="input sm:w-56" aria-label="Sort trips">
-            <option value="new">Newest first</option>
-            <option value="old">Oldest first</option>
-            <option value="soon">Upcoming dates</option>
-            <option value="budget">Highest budget</option>
-          </select>
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head flex flex-wrap items-end justify-between gap-6">
+        <div>
+          <span class="eyebrow">Travel journal</span>
+          <h1>My journeys</h1>
+          <p id="countLine">Every trip you’ve planned, in one place.</p>
         </div>
+        <a href="plantrips.html" class="btn btn-primary">Plan a new trip</a>
+      </header>
 
-        <div id="tripsContainer" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-5">
-          <div class="skeleton h-80"></div><div class="skeleton h-80"></div><div class="skeleton h-80 hidden xl:block"></div>
+      <div class="flex flex-col sm:flex-row gap-3 mb-10" id="toolbar" hidden>
+        <div class="input-icon flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="search" class="input" placeholder="Search by place or trip style" autocomplete="off" />
         </div>
+        <select id="sort" class="input sm:w-56" aria-label="Sort trips">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="soon">Upcoming dates</option>
+          <option value="budget">Highest budget</option>
+        </select>
       </div>
-    </main>
-  </div>
-</div>
+
+      <div id="tripsContainer" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+        <div class="skeleton h-80"></div><div class="skeleton h-80"></div><div class="skeleton h-80 hidden xl:block"></div>
+      </div>
+    </div>
+  </main>
 
 <script type="module">
   import { api, db, requireUser, escapeHtml, FALLBACK_IMAGE } from "./js/app.js";

@@ -4,117 +4,120 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Rewards · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#F6F1E7" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    .passport { background: var(--moss-deep); color: #f5f0e6; border-radius: var(--radius-lg); position: relative; overflow: hidden; }
-    .passport::before { content: ""; position: absolute; inset: 14px; border: 1.5px dashed rgba(245,240,230,.22); border-radius: 18px; pointer-events: none; }
-    .passport .seal { position: absolute; right: -50px; top: -50px; width: 220px; height: 220px; border-radius: 50%; border: 2px solid rgba(245,240,230,.12); }
-    .passport .seal::after { content: ""; position: absolute; inset: 24px; border-radius: 50%; border: 2px dashed rgba(245,240,230,.12); }
-    .passport .progress { background: rgba(255,255,255,.14); height: 12px; }
-    .passport .progress > span { background: repeating-linear-gradient(45deg, var(--sun) 0 10px, #edb757 10px 20px); }
-    .level-steps { display: flex; justify-content: space-between; font-size: .68rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(245,240,230,.5); margin-top: .55rem; }
-    .level-steps .on { color: var(--sun); }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
 
+    /* Passport page: balance + level line */
+    .passport { display: grid; gap: 32px; padding: 28px 24px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); }
+    @media (min-width: 768px) { .passport { grid-template-columns: auto minmax(0, 1fr); gap: 64px; padding: 40px; align-items: end; } }
+    #pointsDisplay { font-variant-numeric: tabular-nums; }
+    .passport .progress { height: 3px; background: var(--line); margin-top: 16px; }
+    .level-steps { display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 10px; font-size: .74rem; color: var(--muted); }
+    .level-steps span { position: relative; padding-top: 4px; }
+    .level-steps .on { color: var(--ink); font-weight: 500; }
+    @media (max-width: 519px) { .level-steps { font-size: .64rem; column-gap: 4px; } }
+    #progressLabel { border-color: rgba(181, 80, 45, .35); color: var(--accent-ink); }
+
+    /* Coupons (tickets come from the page script) */
+    .ticket-body span.w-11 { display: none; }
+    .ticket-body .font-display { color: var(--ink) !important; font-weight: 400 !important; }
+    .ticket-stub .font-display { font-weight: 400 !important; }
+    .ticket-stub .fa-circle-check { color: var(--ok) !important; font-size: 1.1rem !important; }
     .redeem-btn { width: 100%; }
-    .code-box { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: .12em; font-weight: 700; font-size: .95rem;
-      padding: .45rem .7rem; border-radius: 10px; border: 1.5px dashed var(--line-2); background: var(--paper); }
+    .code-box { font-family: ui-monospace, "Cascadia Code", Consolas, monospace; letter-spacing: .12em; font-weight: 600; font-size: .9rem; padding: 4px 8px; border-radius: 4px; border: 1px dashed var(--line-2); background: var(--paper); }
+
+    /* Passport stamps (badges come from the page script) */
+    .badge-card { background: transparent; border: 0; padding: 8px 0 !important; }
+    .badge-card .stamp { width: 96px; height: 96px; margin: 0 auto; display: grid; place-items: center; font-size: 1.5rem; transform: rotate(-8deg); opacity: 1; }
+    .badge-card:nth-child(even) .stamp { transform: rotate(6deg); }
+    .badge-card .stamp i { font-size: 1.5rem; }
+    .badge-card.is-locked .stamp { color: var(--line-2) !important; border-style: dashed; outline-style: dashed; }
+    .badge-card.is-locked .font-display { color: var(--muted); }
+    .badge-card .font-display { font-weight: 400 !important; font-size: 1.05rem; }
   </style>
 </head>
 
 <body>
-<div class="shell">
-  <aside id="sidebar" class="sidebar" aria-label="Main navigation"></aside>
+  <header id="appNav"></header>
 
-  <div class="min-w-0">
-    <header id="mobileBar" class="mobile-bar"></header>
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head">
+        <span class="eyebrow">Passport</span>
+        <h1>Rewards and stamps</h1>
+        <p>Points come from verified photo challenges. Spend them on travel perks, and collect a stamp for each milestone.</p>
+      </header>
 
-    <main class="main">
-      <div class="page-wrap">
-        <header class="page-head">
-          <span class="eyebrow">Explorer passport</span>
-          <h1 class="h1">Rewards & <span class="italic-accent">stamps</span></h1>
-          <p>Points come from verified photo challenges. Spend them on travel perks, and collect stamps as you level up.</p>
-        </header>
-
-        <!-- Passport -->
-        <section class="passport p-7 md:p-10 mb-10 reveal">
-          <span class="seal"></span>
-          <div class="relative z-10 grid md:grid-cols-[auto_1fr] gap-8 md:gap-12 items-center">
+      <!-- Passport -->
+      <section class="passport mb-14 reveal" aria-label="Your points and level">
+        <div>
+          <span class="eyebrow">Balance</span>
+          <p class="font-display font-light leading-none mt-3 mb-0" style="font-size:clamp(3.4rem,8vw,5.4rem)"><span id="pointsDisplay">0</span></p>
+          <p class="muted mt-2 mb-0">points</p>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p class="eyebrow" style="color:var(--sun)">Available balance</p>
-              <p class="font-display font-semibold leading-none mt-3" style="font-size:clamp(3.2rem,8vw,5rem);color:#fff"><span id="pointsDisplay">0</span></p>
-              <p class="text-sm mt-2" style="opacity:.75">points</p>
+              <span class="eyebrow">Level</span>
+              <p class="font-display text-2xl mt-1 mb-0" id="levelLabel">Level 1 · Rookie</p>
             </div>
-            <div>
-              <div class="flex items-end justify-between gap-4 mb-3">
-                <div>
-                  <p class="text-xs font-bold uppercase tracking-[.16em]" style="opacity:.6">Current rank</p>
-                  <p class="font-display text-2xl font-semibold mt-1" style="color:#fff" id="levelLabel">Level 1 · Rookie</p>
-                </div>
-                <span class="tag" style="background:rgba(224,163,58,.18);color:var(--sun)" id="progressLabel">0% to next</span>
-              </div>
-              <div class="progress"><span id="progressBar"></span></div>
-              <div class="level-steps" id="levelSteps">
-                <span>Rookie</span><span>Explorer</span><span>Adventurer</span><span>Pro</span><span>Legend</span>
-              </div>
-              <p id="statusMsg" class="text-sm mt-4" style="opacity:.8"></p>
-            </div>
+            <span class="tag" id="progressLabel">0% to next</span>
           </div>
-        </section>
+          <div class="progress"><span id="progressBar"></span></div>
+          <div class="level-steps" id="levelSteps">
+            <span>Rookie</span><span>Explorer</span><span>Adventurer</span><span>Pro</span><span>Legend</span>
+          </div>
+          <p id="statusMsg" class="ink-2 text-sm mt-5 mb-0"></p>
+        </div>
+      </section>
 
-        <!-- Challenges CTA -->
-        <a href="photo-challenge.html" class="card card-hover flex items-center justify-between gap-4 p-5 mb-12 reveal" style="background:var(--clay-soft);border-color:transparent">
-          <div class="flex items-center gap-4">
-            <span class="stat-icon wiggle" style="background:var(--clay);color:#fff"><i class="fa-solid fa-camera-retro"></i></span>
-            <div>
-              <p class="font-display text-lg font-semibold">Need more points?</p>
-              <p class="text-sm ink-2">Snap landmarks on your trips. Each one is worth 50–150 points.</p>
-            </div>
-          </div>
-          <span class="flex items-center gap-3 flex-none">
-            <span id="challengeBadge" class="tag" style="background:var(--clay);color:#fff">…</span>
-            <i class="fa-solid fa-arrow-right" style="color:var(--clay)"></i>
-          </span>
-        </a>
+      <!-- Challenges link -->
+      <a href="photo-challenge.html" class="flex flex-wrap items-baseline justify-between gap-3 py-5 mb-14 reveal" style="border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+        <span><span class="font-display text-xl">Need more points?</span> <span class="ink-2 ml-1">Photograph landmarks on your trips. Each is worth 50–150 points.</span></span>
+        <span class="flex items-center gap-3 flex-none">
+          <span id="challengeBadge" class="tag tag-clay">…</span>
+          <span class="link text-sm">See challenges</span>
+        </span>
+      </a>
 
-        <!-- Store -->
-        <section class="mb-12">
-          <div class="flex flex-wrap items-end justify-between gap-2 mb-5">
-            <div>
-              <h2 class="h2">Coupon store</h2>
-              <p class="muted text-sm mt-1">Redeeming deducts the points shown on the ticket.</p>
-            </div>
-          </div>
-          <div id="storeGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-            <div class="skeleton h-32"></div><div class="skeleton h-32"></div><div class="skeleton h-32 hidden xl:block"></div>
-          </div>
-        </section>
+      <!-- Store -->
+      <section class="mb-14" aria-labelledby="storeTitle">
+        <div class="mb-6">
+          <h2 id="storeTitle" class="h2">Coupon store</h2>
+          <p class="muted text-sm mt-2 mb-0">Redeeming takes the points shown on the coupon from your balance.</p>
+        </div>
+        <div id="storeGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="skeleton h-32"></div><div class="skeleton h-32"></div><div class="skeleton h-32 hidden xl:block"></div>
+        </div>
+      </section>
 
-        <!-- Redeemed -->
-        <section class="mb-12">
-          <h2 class="h2 mb-5">Your coupons</h2>
-          <div id="couponGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
-          <div id="noCoupons" class="empty-state hidden">
-            <div class="emoji">🎟️</div>
-            <p class="font-display text-xl mb-1">No coupons yet</p>
-            <p class="muted text-sm">Redeem one from the store above and it'll be kept here.</p>
-          </div>
-        </section>
+      <!-- Redeemed -->
+      <section class="mb-14" aria-labelledby="mineTitle">
+        <h2 id="mineTitle" class="h2 mb-6">Your coupons</h2>
+        <div id="couponGrid" class="grid md:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+        <div id="noCoupons" class="empty-state hidden">
+          <p class="font-display text-xl mb-1">No coupons yet</p>
+          <p class="muted text-sm mb-0">Redeem one from the store above and it’ll be kept here.</p>
+        </div>
+      </section>
 
-        <!-- Badges -->
-        <section>
-          <h2 class="h2 mb-5">Passport stamps</h2>
-          <div id="badgeGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"></div>
-        </section>
-      </div>
-    </main>
-  </div>
-</div>
+      <!-- Badges -->
+      <section aria-labelledby="stampsTitle">
+        <h2 id="stampsTitle" class="h2 mb-6">Passport stamps</h2>
+        <div id="badgeGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6"></div>
+      </section>
+    </div>
+  </main>
 
 <script type="module">
 import { api, requireUser, escapeHtml } from "./js/app.js";

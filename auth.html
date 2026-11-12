@@ -4,76 +4,68 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log in · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#0F3D3E" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
-  <link rel="stylesheet" href="css/theme.css" />
-  <style>
-    .split { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
-    .photo-side { position: relative; overflow: hidden; background: var(--ink); color: #fff; }
-    .photo-side img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; animation: kenburns 24s ease-in-out infinite alternate; }
-    @keyframes kenburns { from { transform: scale(1.05); } to { transform: scale(1.18) translate(-2%, -2%); } }
-    .photo-side::after { content: ""; position: absolute; inset: 0; background: linear-gradient(160deg, rgba(20,28,25,.15) 0%, rgba(20,28,25,.8) 100%); }
-    .photo-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; justify-content: space-between; padding: 2.5rem; }
-    .postcard { background: rgba(255,253,248,.95); color: var(--ink); border-radius: 16px; padding: 1.25rem 1.4rem; max-width: 360px; transform: rotate(-2deg); box-shadow: var(--shadow-lg); }
-    .split > * { min-width: 0; }
-    .form-side { display: flex; align-items: center; justify-content: center; padding: 2.5rem 1.25rem; }
-    @media (max-width: 900px) { .split { grid-template-columns: minmax(0, 1fr); } .photo-side { display: none; } }
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
 
 <body>
-<div class="split">
-  <section class="photo-side" aria-hidden="true">
-    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80" alt="" />
-    <div class="photo-content">
-      <a href="index.html" class="brand !p-0"><span class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></span><span class="brand-name" style="color:#fff">HiddenTrails<em>.ai</em></span></a>
-      <div class="postcard float">
-        <p class="handwritten text-lg leading-snug">“Found a waterfall the map didn't know about. Best detour of my life.”</p>
-        <p class="text-xs muted mt-3">— postcard from Meghalaya</p>
+<div class="auth-split">
+  <!-- Photo side -->
+  <aside class="auth-photo grain">
+    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Chandratal_Lake.jpg?width=1600" alt="Chandratal Lake ringed by mountains in Spiti, Himachal Pradesh" />
+    <div class="auth-photo-inner">
+      <a href="index.html" class="brand on-dark" aria-label="HiddenTrails.AI home">
+        <span class="brand-mark"><i data-lucide="mountain-snow"></i></span>
+        <span class="brand-name">HiddenTrails<em>.ai</em></span>
+      </a>
+      <div class="auth-quote">
+        <blockquote>The road ended where the lake began. No signboard, no crowd, just a sky full of stars.</blockquote>
+        <p class="auth-place mt-5"><i data-lucide="map-pin" class="ico-sm"></i> Chandratal Lake · Spiti Valley, Himachal Pradesh</p>
       </div>
     </div>
-  </section>
+  </aside>
 
-  <section class="form-side">
-    <div id="authCard" class="w-full max-w-md stagger">
-      <a href="index.html" class="brand !p-0 mb-10 lg:hidden"><span class="brand-mark"><i class="fa-solid fa-mountain-sun"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
+  <!-- Form side -->
+  <main class="auth-form-side">
+    <div id="authCard" class="auth-card stagger">
       <span class="eyebrow">Welcome back</span>
-      <h1 class="h1 mt-2 mb-2">Pick up the <span class="italic-accent">trail</span>.</h1>
-      <p class="ink-2 mb-8">Log in to see your journeys, challenges and points.</p>
+      <h1 class="h1 mt-3">Pick up the <span class="accent-italic">trail</span>.</h1>
+      <p class="muted mt-2 mb-8">Log in to see your journeys, challenges and points.</p>
 
-      <form id="loginForm" class="space-y-5" novalidate>
-        <div>
-          <label for="email" class="label">Email</label>
-          <div class="input-icon">
-            <i class="fa-regular fa-envelope"></i>
-            <input id="email" type="email" autocomplete="email" placeholder="you@example.com" class="input" />
-          </div>
+      <form id="loginForm" class="space-y-4" novalidate>
+        <div class="float-field has-icon">
+          <i data-lucide="mail" class="field-ico"></i>
+          <input id="email" type="email" autocomplete="email" placeholder=" " class="input" />
+          <label for="email">Email address</label>
         </div>
 
         <div>
-          <div class="flex justify-between items-end">
-            <label for="password" class="label">Password</label>
-            <a href="#" id="forgotPassword" class="text-xs font-semibold mb-2" style="color:var(--clay)">Forgot password?</a>
+          <div class="float-field has-icon">
+            <i data-lucide="lock-keyhole" class="field-ico"></i>
+            <input id="password" type="password" autocomplete="current-password" placeholder=" " class="input !pr-14" />
+            <label for="password">Password</label>
+            <button type="button" id="togglePassword" class="field-action btn btn-ghost btn-sm btn-icon" aria-label="Show password"><i data-lucide="eye"></i></button>
           </div>
-          <div class="input-icon">
-            <i class="fa-solid fa-lock"></i>
-            <input id="password" type="password" autocomplete="current-password" placeholder="••••••••" class="input !pr-12" />
-            <button type="button" id="togglePassword" class="trailing btn btn-ghost btn-icon !w-9 !h-9" aria-label="Show password"><i class="fa-regular fa-eye"></i></button>
+          <div class="flex justify-end mt-2">
+            <a href="#" id="forgotPassword" class="text-sm font-semibold hover:underline underline-offset-4" style="color:var(--forest)">Forgot password?</a>
           </div>
         </div>
 
-        <button id="loginBtn" type="submit" class="btn btn-primary btn-lg btn-block">Log in <i class="fa-solid fa-arrow-right"></i></button>
+        <button id="loginBtn" type="submit" class="btn btn-primary btn-lg btn-block !mt-6">Log in <i data-lucide="arrow-right" class="arrow"></i></button>
       </form>
 
-      <p class="text-center ink-2 mt-8 text-sm">
-        New here?
-        <a href="signup.html" class="font-bold underline underline-offset-4" style="color:var(--moss)">Create an account</a>
-      </p>
+      <p class="divider-text mt-8">New to HiddenTrails?</p>
+      <a href="signup.html" class="btn btn-secondary btn-block mt-4">Create a free account</a>
+
+      <p class="flex items-center justify-center gap-2 text-xs muted mt-8"><i data-lucide="shield-check" class="ico-sm" style="color:var(--leaf-ink)"></i> Secured by Firebase Authentication</p>
     </div>
-  </section>
+  </main>
 </div>
 
 <script type="module">
@@ -92,7 +84,7 @@
   $("togglePassword").addEventListener("click", () => {
     const hidden = passwordInput.type === "password";
     passwordInput.type = hidden ? "text" : "password";
-    $("togglePassword").innerHTML = `<i class="fa-regular ${hidden ? "fa-eye-slash" : "fa-eye"}"></i>`;
+    $("togglePassword").innerHTML = `<i data-lucide="${hidden ? "eye-off" : "eye"}"></i>`;
   });
 
   // LOGIN
@@ -134,14 +126,14 @@
   if (urlParams.get("mode") === "resetPassword" && oobCode) {
     $("authCard").innerHTML = `
       <span class="eyebrow">Account recovery</span>
-      <h1 class="h1 mt-2 mb-2">Set a new <span class="italic-accent">password</span>.</h1>
-      <p class="ink-2 mb-8">Choose something you'll remember.</p>
-      <form id="resetForm" class="space-y-5">
-        <div><label class="label" for="newPassword">New password</label>
-          <input id="newPassword" type="password" class="input" placeholder="••••••••" autocomplete="new-password" /></div>
-        <div><label class="label" for="confirmPassword">Confirm password</label>
-          <input id="confirmPassword" type="password" class="input" placeholder="••••••••" autocomplete="new-password" /></div>
-        <button id="resetBtn" class="btn btn-primary btn-lg btn-block">Reset password</button>
+      <h1 class="h1 mt-3">Set a new <span class="accent-italic">password</span>.</h1>
+      <p class="muted mt-2 mb-8">Choose something you'll remember.</p>
+      <form id="resetForm" class="space-y-4">
+        <div class="float-field has-icon"><i data-lucide="lock-keyhole" class="field-ico"></i>
+          <input id="newPassword" type="password" class="input" placeholder=" " autocomplete="new-password" /><label for="newPassword">New password</label></div>
+        <div class="float-field has-icon"><i data-lucide="shield-check" class="field-ico"></i>
+          <input id="confirmPassword" type="password" class="input" placeholder=" " autocomplete="new-password" /><label for="confirmPassword">Confirm password</label></div>
+        <button id="resetBtn" class="btn btn-primary btn-lg btn-block !mt-6">Reset password</button>
       </form>`;
 
     $("resetForm").addEventListener("submit", async (e) => {

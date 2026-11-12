@@ -1,5 +1,14 @@
 # Changelog
 
+## v2.2.0 (November 2026): "travel journal" redesign
+- New design system (`css/styles.css`, `js/theme.js`): warm paper, ink text and one terracotta accent, with Fraunces and Inter fonts. Thin rules and small corners replace heavy shadows, gradients and glass effects.
+- Every page redesigned with editorial layouts: an asymmetric landing page with captioned photos, numbered lists instead of card grids, and a passport-style rewards page with postmark stamps.
+- Logged-in pages use a top navbar, with a tab bar on phones. The old sidebar and `css/theme.css` are no longer used.
+- Motion is limited to fades. Confetti and counting-up numbers are off, and emojis are removed from the interface.
+- Page scripts are unchanged: same IDs, API calls and behaviour.
+- Fixed photo-challenge images: a challenge no longer shows its city's photo, lookups no longer overload Wikipedia, and failed lookups are no longer cached.
+- AI models now default to `qwen/qwen3.8-27b`, because Groq retired the Llama models.
+
 ## v2.1.0 (November 2026): "field journal" redesign
 - New design system (`css/theme.css`): warm paper and topographic-line background, Fraunces and DM Sans fonts, forest-green and terracotta colors. Coupons look like tickets, badges like passport stamps, and challenges like polaroids.
 - Shared UI kit (`js/ui.js`): sidebar with a mobile drawer, toasts and styled dialogs instead of browser popups, animated counters, confetti, scroll-reveal and skeleton loaders.
