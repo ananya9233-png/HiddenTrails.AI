@@ -5,12 +5,13 @@
  * 1. Landmark Match — Does the photo show the correct landmark?
  * 2. Liveness — Was the photo taken live (not a screenshot/copy)?
  *
- * DEMO MODE (banasthali challenge):
- *  - Live photo: ONLY passes if the dept building facade is clearly visible.
- *                A person, room, sky, or random scene → rejected (match = false).
- *  - Gallery upload: ONLY passes if the image URL matches one of the
- *                    pre-approved known building photos list sent from frontend.
- *                    Any other photo → rejected.
+ * The reference image is always chosen by the server (from the challenge
+ * definition), never supplied by the client.
+ *
+ * DEMO MODE (campus challenge):
+ *  - Live photo: ONLY passes if the building facade is clearly visible.
+ *  - Gallery upload: ONLY passes if the image visually matches one of the
+ *                    approved building photos (32x32 pixel fingerprint).
  */
 
 import fetch from "node-fetch";
@@ -21,8 +22,20 @@ import {
   getGroqHeaders,
   LLAMA_VISION_MODEL,
 } from "../config/groq.js";
+import { DEMO_KNOWN_IMAGES, PHOTO_CHALLENGE } from "../config/constants.js";
 
-const httpsAgent = new https.Agent({ rejectUnauthorized: false });
+// Certificate checks stay ON unless explicitly disabled for a network
+// with a TLS-intercepting proxy (set ALLOW_INSECURE_TLS=true in .env).
+const httpsAgent =
+  process.env.ALLOW_INSECURE_TLS === "true"
+    ? new https.Agent({ rejectUnauthorized: false })
+    : undefined;
+
+async function fetchImageBuffer(url) {
+  const res = await fetch(url, { agent: httpsAgent });
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return Buffer.from(await res.arrayBuffer());
+}
 
 async function compressImageBuffer(buffer) {
   return sharp(buffer)
@@ -31,41 +44,45 @@ async function compressImageBuffer(buffer) {
     .toBuffer();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  DEMO GALLERY CHECK
-//  Checks if the uploaded gallery image is one of the known building photos.
-//  We compare by fetching each known image and doing a pixel-level hash check,
-//  OR (simpler & sufficient) by checking if the data URI prefix matches after
-//  fetching the known URLs and re-encoding them.
-//  For simplicity and speed we do a base64 prefix comparison (first 500 chars
-//  of the image data) which is unique enough to distinguish photos.
-// ─────────────────────────────────────────────────────────────────────────────
-async function isDemoKnownBuildingImage(userImageBase64, knownImageUrls = []) {
-  if (!knownImageUrls || knownImageUrls.length === 0) return false;
+function dataUrlToBuffer(dataUrl) {
+  return Buffer.from(dataUrl.replace(/^data:image\/[\w+.-]+;base64,/, ""), "base64");
+}
 
-  // Extract raw base64 data from the user image data URI
-  const userDataPart = userImageBase64.replace(/^data:image\/\w+;base64,/, "");
-  // Use first 800 chars as a fingerprint (enough to distinguish photos)
-  const userFingerprint = userDataPart.slice(0, 800);
+// ─────────────────────────────────────────────────────────────────────────────
+//  DEMO GALLERY CHECK — perceptual fingerprint
+//  Both images are shrunk to 32x32 RGB; similarity = 1 - mean absolute
+//  pixel difference. Robust to re-encoding/resizing, but different photos
+//  score well below the threshold.
+// ─────────────────────────────────────────────────────────────────────────────
+const knownFingerprintCache = new Map();
 
-  for (const url of knownImageUrls) {
+async function fingerprint(buffer) {
+  return sharp(buffer).rotate().resize(32, 32, { fit: "fill" }).removeAlpha().raw().toBuffer();
+}
+
+function fingerprintSimilarity(a, b) {
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff += Math.abs(a[i] - b[i]);
+  return 1 - diff / (a.length * 255);
+}
+
+async function isDemoKnownBuildingImage(userImageBase64) {
+  let userFp;
+  try {
+    userFp = await fingerprint(dataUrlToBuffer(userImageBase64));
+  } catch (err) {
+    console.warn("⚠️ Could not read uploaded image:", err.message);
+    return false;
+  }
+
+  for (const url of DEMO_KNOWN_IMAGES) {
     try {
-      const res = await fetch(url, { agent: httpsAgent });
-      if (!res.ok) continue;
-      const raw = await res.arrayBuffer();
-      const compressed = await compressImageBuffer(Buffer.from(raw));
-      const knownBase64 = compressed.toString("base64");
-      const knownFingerprint = knownBase64.slice(0, 800);
-
-      // Allow ~10% tolerance in fingerprint similarity for JPEG re-encoding differences
-      const matchLen = [...userFingerprint].filter((c, i) => c === knownFingerprint[i]).length;
-      const similarity = matchLen / userFingerprint.length;
-      console.log(`🔍 Gallery fingerprint similarity vs ${url.slice(-30)}: ${(similarity * 100).toFixed(1)}%`);
-
-      if (similarity > 0.85) {
-        console.log("✅ Demo gallery: known building photo matched");
-        return true;
+      if (!knownFingerprintCache.has(url)) {
+        knownFingerprintCache.set(url, await fingerprint(await fetchImageBuffer(url)));
       }
+      const similarity = fingerprintSimilarity(userFp, knownFingerprintCache.get(url));
+      console.log(`🔍 Demo fingerprint vs …${url.slice(-30)}: ${(similarity * 100).toFixed(1)}%`);
+      if (similarity >= PHOTO_CHALLENGE.DEMO_IMAGE_SIMILARITY) return true;
     } catch (err) {
       console.warn("⚠️ Could not fetch known image for comparison:", err.message);
     }
@@ -78,56 +95,56 @@ async function isDemoKnownBuildingImage(userImageBase64, knownImageUrls = []) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  MAIN VERIFY FUNCTION
 // ─────────────────────────────────────────────────────────────────────────────
-export async function verifyPhoto(
+/**
+ * @param {{
+ *   userImageBase64: string,
+ *   referenceImageUrl: string,
+ *   landmarkName: string,
+ *   isGalleryUpload?: boolean,
+ *   demoMode?: boolean
+ * }} params
+ */
+export async function verifyPhoto({
   userImageBase64,
   referenceImageUrl,
   landmarkName,
   isGalleryUpload = false,
   demoMode = false,
-  demoKnownImages = []
-) {
+}) {
   // ── DEMO GALLERY: strict known-image check, no AI needed ──────────────────
   if (demoMode && isGalleryUpload) {
-    const isKnown = await isDemoKnownBuildingImage(userImageBase64, demoKnownImages);
-    if (isKnown) {
-      return {
-        landmarkMatchScore: 90,
-        livenessScore: 50,   // gallery so liveness is moderate — controller decides points
-        match: true,
-        liveness: false,     // gallery upload → no live credit
-        confidence: 90,
-        reason: "Gallery photo matches a known photo of the Banasthali Vidyapeeth dept building.",
-        demoGalleryMatch: true,
-      };
-    } else {
-      return {
-        landmarkMatchScore: 5,
-        livenessScore: 0,
-        match: false,
-        liveness: false,
-        confidence: 95,
-        reason: "This gallery image is not one of the approved photos of the dept building. Only photos you personally took of the building are accepted in demo mode.",
-        demoGalleryMatch: false,
-      };
-    }
+    const isKnown = await isDemoKnownBuildingImage(userImageBase64);
+    return isKnown
+      ? {
+          landmarkMatchScore: 90,
+          livenessScore: 50,
+          match: true,
+          liveness: false,
+          confidence: 90,
+          reason: "Gallery photo matches an approved photo of the campus building.",
+          demoGalleryMatch: true,
+        }
+      : {
+          landmarkMatchScore: 5,
+          livenessScore: 0,
+          match: false,
+          liveness: false,
+          confidence: 95,
+          reason: "This gallery image is not one of the approved photos of the campus building.",
+          demoGalleryMatch: false,
+        };
   }
 
   // ── Fetch + compress reference image ──────────────────────────────────────
   let referenceBase64 = null;
-  if (referenceImageUrl && !referenceImageUrl.startsWith("data:")) {
+  if (referenceImageUrl) {
     try {
-      const imgRes = await fetch(referenceImageUrl, { agent: httpsAgent });
-      if (imgRes.ok) {
-        const rawBuffer = await imgRes.arrayBuffer();
-        const compressed = await compressImageBuffer(Buffer.from(rawBuffer));
-        referenceBase64 = `data:image/jpeg;base64,${compressed.toString("base64")}`;
-        console.log("✅ Reference image ready, size:", Math.round(compressed.length / 1024), "KB");
-      }
+      const compressed = await compressImageBuffer(await fetchImageBuffer(referenceImageUrl));
+      referenceBase64 = `data:image/jpeg;base64,${compressed.toString("base64")}`;
+      console.log("✅ Reference image ready, size:", Math.round(compressed.length / 1024), "KB");
     } catch (err) {
       console.warn("⚠️ Could not fetch reference image:", err.message);
     }
-  } else if (referenceImageUrl?.startsWith("data:")) {
-    referenceBase64 = referenceImageUrl;
   }
 
   if (!referenceBase64) {
@@ -138,6 +155,15 @@ export async function verifyPhoto(
     };
   }
 
+  // Compress the user's photo too (keeps the Groq request small)
+  let userImage = userImageBase64;
+  try {
+    const compressedUser = await compressImageBuffer(dataUrlToBuffer(userImageBase64));
+    userImage = `data:image/jpeg;base64,${compressedUser.toString("base64")}`;
+  } catch (err) {
+    console.warn("⚠️ Could not compress user image, sending original:", err.message);
+  }
+
   // ── Build the AI prompt ───────────────────────────────────────────────────
   let systemPrompt;
   let userPrompt;
@@ -146,7 +172,7 @@ export async function verifyPhoto(
     // ── DEMO LIVE PHOTO: ultra-strict — must see the actual building ─────────
     systemPrompt = `You are a strict photo verification AI for a campus challenge demo.
 
-The target is the BANASTHALI VIDYAPEETH DEPT BUILDING — a specific multi-storey academic building
+The target is the ${landmarkName.toUpperCase()} — a specific multi-storey academic building
 with a light-colored (white/cream/beige) facade, multiple floors, rectangular windows, and campus surroundings.
 
 YOUR ONLY JOB: Does the user's photo clearly show THIS BUILDING (or a very similar campus building facade)?
@@ -171,7 +197,7 @@ Liveness scoring (live demo capture):
 Respond ONLY in this exact JSON format:
 {"match": true/false, "liveness": true/false, "landmarkMatchScore": 0-100, "livenessScore": 0-100, "confidence": 0-100, "reason": "one sentence describing what you see"}`;
 
-    userPrompt = `Reference image (first): the Banasthali Vidyapeeth dept building exterior.
+    userPrompt = `Reference image (first): the ${landmarkName} exterior.
 User live capture (second): does it show the BUILDING EXTERIOR? Reject if it shows a person, room, wall, sky, or anything that is not clearly a multi-storey academic building facade.`;
 
   } else {
@@ -217,7 +243,7 @@ Respond ONLY in this exact JSON format:
           content: [
             { type: "text", text: userPrompt },
             { type: "image_url", image_url: { url: referenceBase64 } },
-            { type: "image_url", image_url: { url: userImageBase64 } },
+            { type: "image_url", image_url: { url: userImage } },
           ],
         },
       ],

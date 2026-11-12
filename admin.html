@@ -380,7 +380,13 @@
   let allPlaces = [];
   let deleteTargetId = null;
   let deleteTargetName = "";
-  const API_BASE = "http://localhost:5000";
+  const API_BASE = window.location.port === "5000" ? "" : "http://localhost:5000";
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
 
   // ═══════════════ AUTH ═══════════════
   // Auto-login if key is saved
@@ -472,26 +478,26 @@
         <div class="grid grid-cols-12 gap-3 px-6 py-4 items-center place-row">
           <div class="col-span-2">
             ${p.imageUrl
-              ? `<img src="${p.imageUrl}" class="thumb" alt="${p.name}" onerror="this.src='https://placehold.co/96x72/f1f5f9/94a3b8?text=No+Img'" />`
+              ? `<img src="${escapeHtml(p.imageUrl)}" class="thumb" alt="${escapeHtml(p.name)}" onerror="this.src='https://placehold.co/96x72/f1f5f9/94a3b8?text=No+Img'" />`
               : `<div class="thumb bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-image"></i></div>`
             }
           </div>
           <div class="col-span-2">
-            <p class="font-bold text-gray-800 text-sm">${p.name}</p>
+            <p class="font-bold text-gray-800 text-sm">${escapeHtml(p.name)}</p>
             ${p.tags && p.tags.length > 0
-              ? `<div class="flex flex-wrap gap-1 mt-1">${p.tags.slice(0, 3).map(t => `<span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">${t}</span>`).join("")}</div>`
+              ? `<div class="flex flex-wrap gap-1 mt-1">${p.tags.slice(0, 3).map(t => `<span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">${escapeHtml(t)}</span>`).join("")}</div>`
               : ""
             }
           </div>
-          <div class="col-span-2 text-sm text-gray-500">${p.location || "—"}</div>
-          <div class="col-span-2 text-xs text-gray-400">${truncDesc}</div>
-          <div class="col-span-1"><span class="badge ${diffClass}">${p.difficulty || "Medium"}</span></div>
-          <div class="col-span-1 font-bold text-emerald-600 text-sm">${p.points || 100}</div>
+          <div class="col-span-2 text-sm text-gray-500">${escapeHtml(p.location || "—")}</div>
+          <div class="col-span-2 text-xs text-gray-400">${escapeHtml(truncDesc)}</div>
+          <div class="col-span-1"><span class="badge ${diffClass}">${escapeHtml(p.difficulty || "Medium")}</span></div>
+          <div class="col-span-1 font-bold text-emerald-600 text-sm">${escapeHtml(p.points || 100)}</div>
           <div class="col-span-2 flex items-center justify-end gap-2">
-            <button onclick="openEditModal('${p.id}')" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition flex items-center justify-center" title="Edit">
+            <button data-edit="${escapeHtml(p.id)}" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition flex items-center justify-center" title="Edit">
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
-            <button onclick="openDeleteModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center justify-center" title="Delete">
+            <button data-delete="${escapeHtml(p.id)}" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center justify-center" title="Delete">
               <i class="fa-solid fa-trash text-xs"></i>
             </button>
           </div>
@@ -499,6 +505,17 @@
       `;
     }).join("");
   }
+
+  // Edit / delete buttons (event delegation — no inline handlers with user data)
+  document.getElementById("placesBody").addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit]");
+    const delBtn = e.target.closest("[data-delete]");
+    if (editBtn) openEditModal(editBtn.dataset.edit);
+    if (delBtn) {
+      const place = allPlaces.find(p => p.id === delBtn.dataset.delete);
+      if (place) openDeleteModal(place.id, place.name);
+    }
+  });
 
   // ═══════════════ STATS ═══════════════
   function updateStats() {
@@ -609,7 +626,7 @@
 
     try {
       const url = id
-        ? `${API_BASE}/admin/places/${id}`
+        ? `${API_BASE}/admin/places/${encodeURIComponent(id)}`
         : `${API_BASE}/admin/places`;
       const method = id ? "PUT" : "POST";
 
@@ -652,7 +669,7 @@
     if (!deleteTargetId) return;
 
     try {
-      const res = await fetch(`${API_BASE}/admin/places/${deleteTargetId}`, {
+      const res = await fetch(`${API_BASE}/admin/places/${encodeURIComponent(deleteTargetId)}`, {
         method: "DELETE",
         headers: apiHeaders(),
       });

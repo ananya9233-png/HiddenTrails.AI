@@ -26,7 +26,7 @@
   </nav>
 
   <!-- MAIN CARD -->
-  <div class="relative z-10 w-full max-w-md p-8 mx-4 bg-gray-50/90 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl">
+  <div id="authCard" class="relative z-10 w-full max-w-md p-8 mx-4 bg-gray-50/90 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl">
 
     
     <div class="text-center mb-8">
@@ -35,17 +35,17 @@
     </div>
 
     <div class="relative mb-6">
-      <label class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Username</label>
+      <label for="email" class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Email</label>
       <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-          <i class="fa-solid fa-user text-sm"></i>
+          <i class="fa-solid fa-envelope text-sm"></i>
         </span>
         <input
           id="email"
-          type="text"
-          placeholder="username"
-          class="w-full bg-white border border-gray-300 p-3 pl-10 pr-24 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition"/>
-        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs font-medium border-l border-gray-300 pl-2">@gmail.com</span>
+          type="email"
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="w-full bg-white border border-gray-300 p-3 pl-10 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition"/>
       </div>
     </div>
 
@@ -77,35 +77,21 @@
       id="loginBtn"
       class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg shadow-green-900/20 transform transition active:scale-95">Login</button>
 
-    <p class="text-center text-gray-200 mt-8 text-sm">
+    <p class="text-center text-gray-500 mt-8 text-sm">
       Don’t have an account?
-      <a href="signup.html" class="text-green-400 font-bold hover:text-green-300 transition underline-offset-4 hover:underline">
+      <a href="signup.html" class="text-green-600 font-bold hover:text-green-700 transition underline-offset-4 hover:underline">
         Create Account</a>
     </p>
 
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-     import {
-      getAuth,
+    import { auth } from "./js/app.js";
+    import {
       signInWithEmailAndPassword,
       sendPasswordResetEmail,
       confirmPasswordReset,
-      verifyPasswordResetCode
     } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAVmXdDq2mqxRpn10KomHJxzFA7v-aJnEU",
-      authDomain: "hiddentrails-ai.firebaseapp.com",
-      projectId: "hiddentrails-ai",
-      storageBucket: "hiddentrails-ai.firebasestorage.app",
-      messagingSenderId: "739490816318",
-      appId: "1:739490816318:web:3d1adc77b25cf1dfb70c6f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
 
     // 👁️ SHOW / HIDE PASSWORD (Updated with Icons)
     const togglePassword = document.getElementById("togglePassword");
@@ -117,59 +103,47 @@
       togglePassword.innerHTML = isHidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
     });
 
-    function getFullEmail(value) {
-      if (!value.includes("@")) { return value + "@gmail.com"; }
-      return value;
-    }
-
     // LOGIN LOGIC
-    document.getElementById("loginBtn").addEventListener("click", () => {
-      let email = document.getElementById("email").value.trim();
-      const password = passwordInput.value.trim();
+    async function login() {
+      const email = document.getElementById("email").value.trim();
+      const password = passwordInput.value;
 
       if (!email || !password) {
         alert("All fields are required");
         return;
       }
 
-      email = getFullEmail(email);
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = "dashboard.html";
+      } catch (err) {
+        alert("Login failed: check your email and password.");
+        console.error(err);
+      }
+    }
 
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {
-          window.location.href = "dashboard.html";
-        })
-        .catch(err => {
-          alert("Error: " + err.message);
-        });
-    });
+    document.getElementById("loginBtn").addEventListener("click", login);
+    passwordInput.addEventListener("keypress", (e) => { if (e.key === "Enter") login(); });
 
     // FORGOT PASSWORD
-document.getElementById("forgotPassword").addEventListener("click", (e) => {
-  e.preventDefault();
+    document.getElementById("forgotPassword").addEventListener("click", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value.trim();
 
-  let email = document.getElementById("email").value.trim();
+      if (!email) {
+        alert("Please enter your email first");
+        return;
+      }
+      if (!confirm("We will send a password reset link to your email. Do you want to continue?")) return;
 
-  if (!email) {
-    alert("Please enter your email/username first");
-    return;
-  }
-
-  email = getFullEmail(email);
-
-  const confirmReset = confirm(
-    "We will send a password reset link to your email.\nDo you want to continue?"
-  );
-
-  if (!confirmReset) return;
-
-  sendPasswordResetEmail(auth, email)
-    .then(() => {
-      alert("✅ Reset link sent! Check your email.");
-    })
-    .catch(err => {
-      alert("Error: " + err.message);
+      try {
+        await sendPasswordResetEmail(auth, email);
+        alert("✅ If an account exists for that email, a reset link has been sent.");
+      } catch (err) {
+        alert("Error: " + err.message);
+      }
     });
-});
+
 // ========== HANDLE PASSWORD RESET FROM EMAIL LINK ==========
     
     const urlParams = new URLSearchParams(window.location.search);
@@ -178,7 +152,7 @@ document.getElementById("forgotPassword").addEventListener("click", (e) => {
 
     if (mode === 'resetPassword' && oobCode) {
       // Hide login form, show reset password form
-      document.querySelector('.relative.z-10').innerHTML = `
+      document.getElementById('authCard').innerHTML = `
         <div class="text-center mb-8">
           <h2 class="text-2xl font-bold text-gray-800 mb-2">Set New Password</h2>
           <p class="text-gray-500 text-sm">Enter your new password below</p>

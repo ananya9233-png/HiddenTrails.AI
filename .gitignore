@@ -1,7 +1,24 @@
+# Dependencies
 node_modules/
+
+# Secrets — never commit these
 .env
+*.env
+!.env.example
+backend/config/serviceAccountKey.json
+backend/config/*firebase-adminsdk*
+*.pem
+
+# Firebase / editor / OS
 .firebase/
 .vscode/
-backend/.env
-backend/config/serviceAccountKey.json
-backend/config/*firebase-adminsdk* 
+.DS_Store
+Thumbs.db
+*.log
+
+# Private documents (academic reports, team submissions, scans, archives)
+private/
+docs/private/
+*.pdf
+*.docx
+*.zip

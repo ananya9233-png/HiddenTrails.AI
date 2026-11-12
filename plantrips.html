@@ -63,14 +63,14 @@
 <body class="font-sans text-gray-800">
 
 <nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
+  <a href="dashboard.html" class="flex items-center gap-2">
     <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
+    <span class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</span>
+  </a>
   <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-400 transition">Saved</a>
-    <a href="#" id="logoutBtn" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-600 transition">Logout</a>
+    <a href="dashboard.html" class="hover:text-green-500 transition">Home</a>
+    <a href="saved.html" class="hover:text-green-500 transition">Saved</a>
+    <a href="#" data-logout class="bg-red-500/20 text-red-500 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
   </div>
 </nav>
 
@@ -78,21 +78,12 @@
 
   <aside class="w-72 glass-sidebar p-8 space-y-3">
     <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera-retro"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
+    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="plantrips.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-600 rounded-2xl font-bold border border-green-500/30"><i class="fa-solid fa-map-location-dot"></i> Plan Trip</a>
+    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-bookmark"></i> Saved Trips</a>
+    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-camera-retro"></i> Photo Challenge</a>
+    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gift"></i> Rewards</a>
+    <a href="upload-gem.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gem"></i> Upload Gem</a>
   </aside>
 
   <main class="flex-1 p-12 overflow-y-auto flex justify-center items-start">
@@ -137,7 +128,7 @@
           </div>
         </div>
 
-        <button type="submit" id="generateBtn" class="w-full py-5 rounded-2xl btn-primary text-xl font-black uppercase tracking-widest mt-4">
+        <button type="submit" id="generateBtn" class="w-full py-5 rounded-2xl btn-primary text-white text-xl font-black uppercase tracking-widest mt-4">
           Generate Itinerary <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>
         </button>
       </form>
@@ -146,82 +137,60 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  import { api, requireUser, wireLogout } from "./js/app.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAVmXdDq2mqxRpn10KomHJxzFA7v-aJnEU",
-    authDomain: "hiddentrails-ai.firebaseapp.com",
-    projectId: "hiddentrails-ai",
-  };
+  wireLogout();
+  await requireUser();
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
-
-  let currentUserId = null;
-  onAuthStateChanged(auth, (user) => {
-    if (!user) { window.location.href = "auth.html"; return; }
-    currentUserId = user.uid;
-  });
-
-  // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "auth.html");
-  });
-
+  const MAX_DAYS = 10;
   const form = document.getElementById("tripForm");
   const btn = document.getElementById("generateBtn");
+  const arrivalInput = document.getElementById("arrivalDate");
+  const returnInput = document.getElementById("returnDate");
 
-  // Prevent selecting past dates
-const today = new Date().toISOString().split("T")[0];
-document.getElementById("arrivalDate").min = today;
-document.getElementById("returnDate").min = today;
+  // Local date in YYYY-MM-DD (toISOString would use UTC and can be off by a day in IST)
+  function localISODate(d = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
 
-// Ensure return date can't be before arrival
-document.getElementById("arrivalDate").addEventListener("change", () => {
-  document.getElementById("returnDate").min =
-    document.getElementById("arrivalDate").value;
-});
+  // Prevent selecting past dates; return date can't be before arrival
+  const today = localISODate();
+  arrivalInput.min = today;
+  returnInput.min = today;
+  arrivalInput.addEventListener("change", () => {
+    returnInput.min = arrivalInput.value || today;
+  });
 
-  form.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
     const destination = document.getElementById("destination").value.trim();
-    const budget = parseInt(document.getElementById("budget").value);
+    const budget = parseInt(document.getElementById("budget").value, 10);
+    const preference = document.getElementById("preference").value;
+    const arrivalDate = arrivalInput.value;
+    const returnDate = returnInput.value;
+
     if (!budget || budget < 1000) {
-         alert("Minimum budget must be ₹1000.");
-         return;
+      alert("Minimum budget must be ₹1000.");
+      return;
     }
     if (budget > 10000000) {
-         alert("Budget seems unrealistic. Please enter a valid amount.");
-         return;
+      alert("Budget seems unrealistic. Please enter a valid amount.");
+      return;
     }
-    const preference = document.getElementById("preference").value;
-    const arrivalDate = document.getElementById("arrivalDate").value;
-    const returnDate = document.getElementById("returnDate").value;
-    const todayDate = new Date();
-    todayDate.setHours(0,0,0,0);
-
-    const arrival = new Date(arrivalDate);
-    const ret = new Date(returnDate);
-
-    if (arrival < todayDate) {
-  alert("Arrival date cannot be in the past.");
-  return;
-}
-
-   if (ret < arrival) {
-  alert("Return date must be after arrival date.");
-  return;
-}
-
-    const diffTime = new Date(returnDate) - new Date(arrivalDate);
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-    if (days <= 0) {
+    if (arrivalDate < today) {
+      alert("Arrival date cannot be in the past.");
+      return;
+    }
+    if (returnDate < arrivalDate) {
       alert("Return date must be after arrival date.");
+      return;
+    }
+
+    const days = Math.round((new Date(returnDate) - new Date(arrivalDate)) / 86400000) + 1;
+    if (days > MAX_DAYS) {
+      alert(`Trips can be at most ${MAX_DAYS} days long.`);
       return;
     }
 
@@ -229,57 +198,19 @@ document.getElementById("arrivalDate").addEventListener("change", () => {
     btn.innerHTML = `Generating... <i class="fa-solid fa-spinner fa-spin ml-2"></i>`;
 
     try {
-      // Send userId so backend saves the trip to Firestore for us
-      const response = await fetch("http://localhost:5000/generate-itinerary", {
+      // The backend generates the plan and saves it to your trips
+      const data = await api("/generate-itinerary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          destination, days, preference, budget,
-          userId: currentUserId,
-          arrivalDate, returnDate
-        })
+        body: { destination, days, preference, budget, arrivalDate, returnDate },
       });
 
-      if (!response.ok) {
-        const errData = await response.json();
-        alert("Backend error: " + errData.error);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!data || !Array.isArray(data.days)) {
-        alert("AI failed to generate itinerary");
-        return;
-      }
-
-      // If backend saved the trip and returned a tripId, use it directly
-      let tripId = data.tripId;
-
-      // Fallback: save from frontend if backend didn't save (no userId case)
-      if (!tripId) {
-        const docRef = await addDoc(collection(db, "trips"), {
-          destination,
-          daysCount: days,
-          budget,
-          preference,
-          arrivalDate,
-          returnDate,
-          total_estimated_cost: data.total_estimated_cost,
-          days: data.days,
-          createdAt: new Date()
-        });
-        tripId = docRef.id;
-      }
-
-      window.location.href = `itinerary.html?id=${tripId}`;
-
+      if (!data.tripId) throw new Error("Trip could not be saved");
+      window.location.href = `itinerary.html?id=${encodeURIComponent(data.tripId)}`;
     } catch (err) {
       console.error(err);
-      alert("Something went wrong. Check if your backend server is running.");
-    } finally {
+      alert(err.status ? err.message : "Something went wrong. Check if your backend server is running.");
       btn.disabled = false;
-      btn.innerText = "Generate Itinerary";
+      btn.innerHTML = `Generate Itinerary <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>`;
     }
   });
 </script>

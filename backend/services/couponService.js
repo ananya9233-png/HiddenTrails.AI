@@ -1,163 +1,104 @@
 /**
  * Coupon Service
  * ----------------
- * Manages the coupon reward system:
- * - Retrieves available coupons
- * - Handles coupon redemption with eligibility checks
- * - Prevents duplicate redemption
+ * Coupon store backed by a fixed catalog (config/constants.js).
+ * A redemption deducts points and records the coupon on the user's
+ * document inside a Firestore transaction, so points can't go negative
+ * and the same coupon can't be redeemed twice by concurrent requests.
  */
 
-import { COUPONS } from "../config/constants.js";
+import { COUPON_CATALOG } from "../config/constants.js";
+import { getLevel } from "../utils/levelCalculator.js";
 
 /**
- * Get all available (unredeemed) coupons from Firestore.
- *
- * @param {admin.firestore.Firestore} db
- * @returns {Promise<Array<{ id: string, couponCode: string, pointsRequired: number, ... }>>}
- */
-export async function getAvailableCoupons(db) {
-  const snapshot = await db
-    .collection("coupons")
-    .where("isRedeemed", "==", false)
-    .get();
-
-  const coupons = [];
-  snapshot.forEach((doc) => {
-    const data = doc.data();
-
-    // Filter out expired coupons
-    if (data.expiryDate && new Date(data.expiryDate) < new Date()) {
-      return;
-    }
-
-    coupons.push({
-      id: doc.id,
-      ...data,
-    });
-  });
-
-  return coupons;
-}
-
-/**
- * Redeem a coupon for a user.
- *
- * Validation steps:
- * 1. Coupon exists and is not already redeemed
- * 2. Coupon is not expired
- * 3. User has enough points (minimum 500)
- * 4. User has enough points for this specific coupon
- * 5. User hasn't already redeemed this coupon code
+ * Get the catalog annotated for a specific user.
  *
  * @param {string} userId
- * @param {string} couponCode
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<{ success: boolean, message: string, deductedPoints?: number, remainingPoints?: number }>}
  */
-export async function redeemCoupon(userId, couponCode, db) {
-  // Step 1: Find the coupon by code
-  const couponSnapshot = await db
-    .collection("coupons")
-    .where("couponCode", "==", couponCode)
-    .limit(1)
-    .get();
-
-  if (couponSnapshot.empty) {
-    return { success: false, message: "Coupon not found" };
-  }
-
-  const couponDoc = couponSnapshot.docs[0];
-  const coupon = couponDoc.data();
-
-  // Step 2: Check if already redeemed
-  if (coupon.isRedeemed) {
-    return { success: false, message: "Coupon has already been redeemed" };
-  }
-
-  // Step 3: Check expiry
-  if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
-    return { success: false, message: "Coupon has expired" };
-  }
-
-  // Step 4: Check if user has enough points (global minimum)
+export async function getCouponsForUser(userId, db) {
   const userDoc = await db.collection("users").doc(userId).get();
-  const userPoints = userDoc.exists ? userDoc.data().rewardPoints || 0 : 0;
-
-  if (userPoints < COUPONS.MIN_POINTS_FOR_ELIGIBILITY) {
-    return {
-      success: false,
-      message: `Need at least ${COUPONS.MIN_POINTS_FOR_ELIGIBILITY} points to redeem coupons (you have ${userPoints})`,
-    };
-  }
-
-  // Step 5: Check if user has enough for this specific coupon
-  const pointsRequired = coupon.pointsRequired || 0;
-  if (userPoints < pointsRequired) {
-    return {
-      success: false,
-      message: `This coupon requires ${pointsRequired} points (you have ${userPoints})`,
-    };
-  }
-
-  // Step 6: Prevent duplicate redemption by same user
-  const duplicateCheck = await db
-    .collection("coupons")
-    .where("couponCode", "==", couponCode)
-    .where("redeemedBy", "==", userId)
-    .get();
-
-  if (!duplicateCheck.empty) {
-    return {
-      success: false,
-      message: "You have already redeemed this coupon",
-    };
-  }
-
-  // Step 7: Execute the redemption
-  const newPoints = userPoints - pointsRequired;
-
-  // Update user's points
-  await db.collection("users").doc(userId).update({
-    rewardPoints: newPoints,
-    updatedAt: new Date(),
-  });
-
-  // Mark coupon as redeemed
-  await couponDoc.ref.update({
-    isRedeemed: true,
-    redeemedBy: userId,
-    redeemedAt: new Date(),
-  });
-
-  console.log(
-    `✅ Coupon ${couponCode} redeemed by ${userId} (-${pointsRequired} pts)`
-  );
+  const data = userDoc.exists ? userDoc.data() : {};
+  const points = data.rewardPoints || 0;
+  const redeemed = Array.isArray(data.coupons) ? data.coupons : [];
+  const redeemedCodes = new Set(redeemed.map((c) => c.code));
 
   return {
-    success: true,
-    message: `Coupon "${couponCode}" redeemed successfully!`,
-    deductedPoints: pointsRequired,
-    remainingPoints: newPoints,
+    points,
+    catalog: COUPON_CATALOG.map((c) => ({
+      ...c,
+      redeemed: redeemedCodes.has(c.code),
+      affordable: points >= c.cost,
+    })),
+    redeemed,
   };
 }
 
 /**
- * Get all coupons redeemed by a specific user.
+ * Redeem a coupon from the catalog for a user.
  *
  * @param {string} userId
+ * @param {string} couponCode
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<Array>}
+ * @returns {Promise<{ success: boolean, message: string, remainingPoints?: number }>}
  */
-export async function getUserCoupons(userId, db) {
-  const snapshot = await db
-    .collection("coupons")
-    .where("redeemedBy", "==", userId)
-    .get();
+export async function redeemCoupon(userId, couponCode, db) {
+  const coupon = COUPON_CATALOG.find((c) => c.code === couponCode);
+  if (!coupon) {
+    return { success: false, message: "Coupon not found" };
+  }
 
-  const coupons = [];
-  snapshot.forEach((doc) => {
-    coupons.push({ id: doc.id, ...doc.data() });
+  const userRef = db.collection("users").doc(userId);
+
+  return db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const data = snap.exists ? snap.data() : {};
+    const points = data.rewardPoints || 0;
+    const coupons = Array.isArray(data.coupons) ? data.coupons : [];
+
+    if (coupons.some((c) => c.code === coupon.code)) {
+      return { success: false, message: "You have already redeemed this coupon" };
+    }
+
+    if (points < coupon.cost) {
+      return {
+        success: false,
+        message: `This coupon costs ${coupon.cost} points (you have ${points})`,
+      };
+    }
+
+    const remainingPoints = points - coupon.cost;
+    const level = getLevel(remainingPoints);
+
+    tx.set(
+      userRef,
+      {
+        rewardPoints: remainingPoints,
+        level: level.name,
+        levelNumber: level.level,
+        coupons: [
+          ...coupons,
+          {
+            code: coupon.code,
+            brand: coupon.brand,
+            discount: coupon.discount,
+            icon: coupon.icon,
+            cost: coupon.cost,
+            redeemedAt: new Date().toISOString(),
+          },
+        ],
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    console.log(`✅ Coupon ${coupon.code} redeemed by ${userId} (-${coupon.cost} pts)`);
+
+    return {
+      success: true,
+      message: `Coupon "${coupon.code}" redeemed successfully!`,
+      deductedPoints: coupon.cost,
+      remainingPoints,
+    };
   });
-
-  return coupons;
 }

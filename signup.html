@@ -46,9 +46,9 @@
 
     <!-- EMAIL -->
     <div class="relative mb-5">
-      <label class="block text-xs font-bold text-gray-200 uppercase tracking-widest mb-2 ml-1">Email</label>
+      <label for="email" class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Email</label>
       <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-300">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
           <i class="fa-solid fa-envelope text-sm"></i>
         </span>
         <input id="email" type="email" placeholder="you@example.com"
@@ -58,9 +58,9 @@
 
     <!-- PASSWORD -->
     <div class="relative mb-5">
-      <label class="block text-xs font-bold text-gray-200 uppercase tracking-widest mb-2 ml-1">Password</label>
+      <label for="password" class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Password</label>
       <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-300">
+        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
           <i class="fa-solid fa-lock text-sm"></i>
         </span>
         <input id="password" type="password" placeholder="••••••••"
@@ -99,24 +99,11 @@
   </div>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from
+    import { auth, db } from "./js/app.js";
+    import { createUserWithEmailAndPassword } from
       "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from
+    import { doc, setDoc } from
       "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAVmXdDq2mqxRpn10KomHJxzFA7v-aJnEU",
-      authDomain: "hiddentrails-ai.firebaseapp.com",
-      projectId: "hiddentrails-ai",
-      storageBucket: "hiddentrails-ai.firebasestorage.app",
-      messagingSenderId: "739490816318",
-      appId: "1:739490816318:web:3d1adc77b25cf1dfb70c6f"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
 
     const togglePassword = document.getElementById("togglePassword");
     const passwordInput = document.getElementById("password");
@@ -130,8 +117,8 @@
     document.getElementById("signupBtn").addEventListener("click", async () => {
       const fullName = document.getElementById("fullName").value.trim();
       const email = document.getElementById("email").value.trim();
-      const password = passwordInput.value.trim();
-      const confirmPassword = document.getElementById("confirmPassword").value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
 
       if (!fullName || !email || !password || !confirmPassword) {
         alert("All fields are required");
@@ -160,7 +147,7 @@
         const user = userCredential.user;
 
         await setDoc(doc(db, "users", user.uid), {
-          name: fullName,
+          name: fullName.slice(0, 80),
           email: user.email,
           rewardPoints: 0,
           level: "Rookie",

@@ -1,16 +1,20 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
+  "name": "hiddentrails-ai-backend",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Express API for HiddenTrails.AI — AI itineraries, travel chatbot, GPS + vision-verified photo challenges, rewards",
+  "main": "server.js",
   "type": "module",
-  "description": "",
-  "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node --watch server.js",
+    "test": "echo \"No automated tests yet\" && exit 0"
+  },
+  "engines": {
+    "node": ">=20"
   },
   "keywords": [],
-  "author": "",
+  "author": "Ananya",
   "license": "ISC",
   "dependencies": {
     "cors": "^2.8.5",

@@ -66,11 +66,13 @@ export async function chat(sessionId, message) {
       messages,
       max_tokens: CHATBOT.MAX_TOKENS,
       temperature: CHATBOT.TEMPERATURE,
-      stop: null,
     }),
   });
 
   const data = await response.json();
+  if (!response.ok) {
+    console.error("❌ Groq API error:", response.status, JSON.stringify(data?.error || data));
+  }
   const reply = data.choices?.[0]?.message?.content;
 
   if (!reply) {
@@ -80,8 +82,14 @@ export async function chat(sessionId, message) {
   // Append AI's reply to history for future context
   history.push({ role: "assistant", content: reply });
 
-  // Update the conversation store
+  // Update the conversation store (re-insert so it becomes most recent)
+  conversationStore.delete(sessionId);
   conversationStore.set(sessionId, history);
+
+  // Evict the oldest conversations so memory can't grow without bound
+  while (conversationStore.size > CHATBOT.MAX_SESSIONS) {
+    conversationStore.delete(conversationStore.keys().next().value);
+  }
 
   return reply;
 }

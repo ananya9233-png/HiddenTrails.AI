@@ -139,14 +139,14 @@
 <body class="font-sans text-gray-800">
 
 <nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
+  <a href="dashboard.html" class="flex items-center gap-2">
     <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
+    <span class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</span>
+  </a>
   <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-400 transition">Saved</a>
-    <a href="auth.html" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-600 transition">Logout</a>
+    <a href="dashboard.html" class="hover:text-green-500 transition">Home</a>
+    <a href="saved.html" class="hover:text-green-500 transition">Saved</a>
+    <a href="#" data-logout class="bg-red-500/20 text-red-500 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
   </div>
 </nav>
 
@@ -154,22 +154,12 @@
 
   <aside class="w-72 glass-sidebar p-8 space-y-3">
     <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera-retro"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
-    
+    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-map-location-dot"></i> Plan Trip</a>
+    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-bookmark"></i> Saved Trips</a>
+    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-camera-retro"></i> Photo Challenge</a>
+    <a href="rewards.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-600 rounded-2xl font-bold border border-green-500/30"><i class="fa-solid fa-gift"></i> Rewards</a>
+    <a href="upload-gem.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gem"></i> Upload Gem</a>
   </aside>
 
   <main class="flex-1 p-12 overflow-y-auto">
@@ -214,7 +204,7 @@
           </div>
         </div>
         <div class="flex items-center gap-3">
-          <span id="challengeBadge" class="bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full">6 Active</span>
+          <span id="challengeBadge" class="bg-amber-500 text-white text-xs font-black px-3 py-1 rounded-full">…</span>
           <i class="fa-solid fa-arrow-right text-amber-400"></i>
         </div>
       </div>
@@ -252,297 +242,153 @@
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { api, requireUser, wireLogout, escapeHtml } from "./js/app.js";
 
-/* ================= FIREBASE ================= */
-const app = initializeApp({
-  apiKey: "AIzaSyAVmXdDq2mqxRpn10KomHJxzFA7v-aJnEU",
-  authDomain: "hiddentrails-ai.firebaseapp.com",
-  projectId: "hiddentrails-ai",
-});
+wireLogout();
 
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-let currentUserId = null;
-
-/* ================= FIRESTORE ================= */
-async function readUser() {
-  if (!currentUserId) return { rewardPoints:0, completedChallenges:[], coupons:[] };
-
-  try {
-    const snap = await getDoc(doc(db, 'users', currentUserId));
-    return snap.exists()
-      ? snap.data()
-      : { rewardPoints:0, completedChallenges:[], coupons:[] };
-  } catch(e) {
-    console.warn("Firestore read error", e);
-    return { rewardPoints:0, completedChallenges:[], coupons:[] };
-  }
-}
-
-/* ================= LEVEL SYSTEM ================= */
-const levels = [
-  { name: 'Rookie', min: 0, max: 200 },
-  { name: 'Explorer', min: 200, max: 500 },
-  { name: 'Adventurer', min: 500, max: 1000 },
-  { name: 'Pro Traveler', min: 1000, max: 2000 },
-  { name: 'Legend', min: 2000, max: 9999 }
-];
-
-function getLevel(pts) {
-  for (let i = levels.length - 1; i >= 0; i--) {
-    if (pts >= levels[i].min) return { level: i + 1, ...levels[i] };
-  }
-  return { level: 1, ...levels[0] };
-}
-
-/* ================= COUPONS ================= */
-const allCouponMilestones = [
-  { at: 100,  cost: 80,   code: 'TRAIL10',   discount: '10% OFF',   brand: 'MakeMyTrip',       icon: '✈️',  color: '#3b82f6',  desc: 'Flights' },
-  { at: 150,  cost: 120,  code: 'FOOD15',    discount: '15% OFF',   brand: 'Zomato',           icon: '🍔',  color: '#ef4444',  desc: 'Food' },
-  { at: 250,  cost: 200,  code: 'HIDDEN25',  discount: '25% OFF',   brand: 'Goibibo',          icon: '🏨',  color: '#f59e0b',  desc: 'Hotels' },
-
-  { at: 350,  cost: 280,  code: 'CAFE35',    discount: '₹350 OFF',  brand: 'Starbucks',        icon: '☕',  color: '#059669',  desc: 'Drinks' },
-  { at: 400,  cost: 350,  code: 'EXPLORE40', discount: '₹400 OFF',  brand: 'IRCTC',            icon: '🚂',  color: '#6366f1',  desc: 'Train tickets' },
-  { at: 500,  cost: 420,  code: 'SHOP50',    discount: '₹500 OFF',  brand: 'Amazon',           icon: '📦',  color: '#f97316',  desc: 'Shopping' },
-
-  { at: 600,  cost: 500,  code: 'WANDER50',  discount: '50% OFF',   brand: 'Zostel',           icon: '🏕️',  color: '#8b5cf6',  desc: 'Hostels' },
-  { at: 800,  cost: 700,  code: 'EPIC80',    discount: '₹800 OFF',  brand: 'Cleartrip',        icon: '🛫',  color: '#ec4899',  desc: 'Flights' },
-  { at: 1000, cost: 900,  code: 'LEGEND',    discount: '₹1500 OFF', brand: 'Booking.com',      icon: '🌍',  color: '#0ea5e9',  desc: 'Hotels' }
-];
+let currentUser = null;
+let redeeming = false;
 
 /* ================= RENDER ALL ================= */
 async function renderAll() {
-  const userData = await readUser();
+  try {
+    const [rewards, coupons, challenges] = await Promise.all([
+      api(`/rewards/${currentUser.uid}`),
+      api("/coupons"),
+      api(`/photo-challenges/${currentUser.uid}`).catch(() => null),
+    ]);
 
-  renderPoints(userData);
-  renderCouponStore(userData);
-  renderCoupons(userData);
-  renderBadges(userData);
-  updateChallengeBadge(userData);
-}
-
-/* ================= POINTS ================= */
-function renderPoints(userData) {
-  const pts = userData.rewardPoints || 0;
-
-  const lvl = getLevel(pts);
-  const progress = Math.min(100, ((pts - lvl.min) / (lvl.max - lvl.min)) * 100);
-
-  document.getElementById('pointsDisplay').textContent = pts;
-  document.getElementById('levelLabel').textContent = `Level ${lvl.level}: ${lvl.name}`;
-  document.getElementById('progressLabel').textContent =
-    lvl.level >= levels.length ? 'MAX LEVEL!' : `${Math.round(progress)}% to Level ${lvl.level + 1}`;
-
-  document.getElementById('progressBar').style.width = progress + '%';
-
-  const remaining = lvl.max - pts;
-  document.getElementById('statusMsg').textContent =
-    remaining > 0
-      ? `Earn ${remaining} more points to reach next level`
-      : '🎉 Max level reached!';
-}
-
-/* ================= STORE ================= */
-
-function renderCoupons(userData) {
-  const coupons = userData.coupons || [];
-  const grid = document.getElementById('couponGrid');
-  const emptyMsg = document.getElementById('noCoupons');
-
-  grid.innerHTML = '';
-
-  if (coupons.length === 0) {
-    emptyMsg.classList.remove('hidden');
-    return;
+    renderPoints(rewards);
+    renderCouponStore(coupons);
+    renderCoupons(coupons.redeemed || []);
+    renderBadges(rewards);
+    updateChallengeBadge(challenges);
+  } catch (err) {
+    console.error("Rewards load error:", err);
+    document.getElementById("statusMsg").textContent = "Could not load rewards. Is the backend running?";
   }
-
-  emptyMsg.classList.add('hidden');
-
-  coupons.forEach(c => {
-    grid.innerHTML += `
-      <div class="coupon-card p-6">
-        <h4 class="font-bold text-lg">${c.brand}</h4>
-        <p class="text-sm text-gray-500 mb-2">${c.discount}</p>
-
-        <div class="coupon-code px-4 py-2 text-center text-sm font-bold mt-3">
-          ${c.code}
-        </div>
-      </div>
-    `;
-  });
 }
 
-/* ================= REDEEM ================= */
-window.redeemCoupon = async function(code) {
-  const userData = await readUser();
-  const pts = userData.rewardPoints || 0;
-  const coupons = userData.coupons || [];
+/* ================= POINTS & LEVEL ================= */
+function renderPoints({ points, level, progress }) {
+  const isMax = !level.max; // Infinity is serialised as null
+  document.getElementById("pointsDisplay").textContent = points;
+  document.getElementById("levelLabel").textContent = `Level ${level.level}: ${level.name}`;
+  document.getElementById("progressLabel").textContent =
+    isMax ? "MAX LEVEL!" : `${progress.percentage}% to Level ${level.level + 1}`;
+  document.getElementById("progressBar").style.width = progress.percentage + "%";
+  document.getElementById("statusMsg").textContent =
+    isMax ? "🎉 Max level reached!" : `Earn ${progress.pointsToNext} more points to reach ${progress.nextLevelName}`;
+}
 
-  const m = allCouponMilestones.find(c => c.code === code);
-  if (!m || pts < m.cost) return;
+/* ================= COUPON STORE ================= */
+function renderCouponStore({ points, catalog }) {
+  const grid = document.getElementById("storeGrid");
+  grid.innerHTML = catalog.map((m) => {
+    const progress = Math.min(100, (points / m.cost) * 100);
+    const action = m.redeemed
+      ? `<span class="text-green-500 text-xs font-bold"><i class="fa-solid fa-check"></i> Redeemed</span>`
+      : m.affordable
+        ? `<button class="redeem-btn" data-code="${escapeHtml(m.code)}">Redeem</button>`
+        : `<button class="redeem-btn" disabled>Need ${m.cost - points} pts</button>`;
 
-  if (!coupons.find(c => c.code === code)) {
-    coupons.push(m);
-  }
-
-  await updateDoc(doc(db, 'users', currentUserId), {
-    rewardPoints: pts - m.cost,
-    coupons: coupons
-  });
-
-  await renderAll();
-};
-
-/* ================= COUPONS ================= */
-function renderCouponStore(userData) {
-  const pts = userData.rewardPoints || 0;
-  const coupons = userData.coupons || [];
-  const grid = document.getElementById('storeGrid');
-  grid.innerHTML = '';
-
-  allCouponMilestones.forEach(m => {
-    const isRedeemed = coupons.find(c => c.code === m.code);
-    const progress = Math.min(100, (pts / m.at) * 100);
-
-    grid.innerHTML += `
-      <div class="store-card ${isRedeemed ? '' : 'locked'}">
-        
-        <div class="brand-strip" style="background:${m.color}"></div>
-
+    return `
+      <div class="store-card ${m.redeemed || m.affordable ? "" : "locked"}">
+        <div class="brand-strip" style="background:${escapeHtml(m.color)}"></div>
         <div class="p-5">
-
           <div class="flex items-center gap-3 mb-3">
-            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl"
-                 style="background:${m.color}20">
-              ${m.icon}
-            </div>
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center text-2xl" style="background:${escapeHtml(m.color)}20">${escapeHtml(m.icon)}</div>
             <div>
-              <p class="font-bold text-gray-800">${m.brand}</p>
-              <p class="text-xs text-gray-400">${m.desc}</p>
+              <p class="font-bold text-gray-800">${escapeHtml(m.brand)}</p>
+              <p class="text-xs text-gray-400">${escapeHtml(m.desc)}</p>
             </div>
           </div>
-
           <div class="flex justify-between items-center mb-3">
-            <span class="text-lg font-black" style="color:${m.color}">
-              ${m.discount}
-            </span>
+            <span class="text-lg font-black" style="color:${escapeHtml(m.color)}">${escapeHtml(m.discount)}</span>
             <span class="text-xs text-gray-400">${m.cost} pts</span>
           </div>
-
           <div class="text-xs text-gray-400 mb-1 flex justify-between">
-            <span>Unlocks at ${m.at} pts</span>
+            <span>Costs ${m.cost} pts</span>
             <span>${Math.round(progress)}%</span>
           </div>
-
           <div class="progress-mini mb-3">
-            <div class="progress-mini-fill"
-                 style="width:${progress}%; background:${m.color}">
-            </div>
+            <div class="progress-mini-fill" style="width:${progress}%; background:${escapeHtml(m.color)}"></div>
           </div>
-
-          <div class="text-center">
-            ${
-              isRedeemed
-                ? `<span class="text-green-500 text-xs font-bold">
-                    <i class="fa-solid fa-check"></i> Redeemed
-                   </span>`
-                : pts >= m.cost
-                  ? `<button class="redeem-btn"
-                            onclick="redeemCoupon('${m.code}')">
-                        Redeem
-                     </button>`
-                  : `<button class="redeem-btn" disabled>
-                        Need ${m.cost - pts} pts
-                     </button>`
-            }
-          </div>
-
+          <div class="text-center">${action}</div>
         </div>
-      </div>
-    `;
-  });
+      </div>`;
+  }).join("");
+}
+
+document.getElementById("storeGrid").addEventListener("click", async (e) => {
+  const btn = e.target.closest("button[data-code]");
+  if (!btn || redeeming) return;
+  if (!confirm(`Redeem ${btn.dataset.code}? Points will be deducted.`)) return;
+
+  redeeming = true;
+  btn.disabled = true;
+  btn.textContent = "Redeeming...";
+  try {
+    const result = await api("/coupon/redeem", { method: "POST", body: { couponCode: btn.dataset.code } });
+    alert(`✅ ${result.message}`);
+  } catch (err) {
+    alert(`⚠️ ${err.message}`);
+  } finally {
+    redeeming = false;
+    await renderAll();
+  }
+});
+
+/* ================= REDEEMED COUPONS ================= */
+function renderCoupons(coupons) {
+  const grid = document.getElementById("couponGrid");
+  const emptyMsg = document.getElementById("noCoupons");
+
+  emptyMsg.classList.toggle("hidden", coupons.length > 0);
+  grid.innerHTML = coupons.map((c) => `
+    <div class="coupon-card p-6">
+      <h4 class="font-bold text-lg">${escapeHtml(c.icon || "")} ${escapeHtml(c.brand)}</h4>
+      <p class="text-sm text-gray-500 mb-2">${escapeHtml(c.discount)}</p>
+      <div class="coupon-code px-4 py-2 text-center text-sm font-bold mt-3">${escapeHtml(c.code)}</div>
+    </div>`).join("");
 }
 
 /* ================= BADGES ================= */
-function renderBadges(userData) {
-  const pts = userData.rewardPoints || 0;
-  const completed = userData.completedChallenges || [];
-  const grid = document.getElementById('badgeGrid');
-
+function renderBadges({ points, completedChallenges }) {
+  const done = completedChallenges.length;
   const badges = [
-    {
-      name: 'Explorer', desc: 'First trip completed', icon: 'fa-earth-americas',
-      color: 'blue', unlocked: completed.length >= 1
-    },
-    {
-      name: 'Photo Hunter', desc: 'Completed 3 photo challenges', icon: 'fa-camera-retro',
-      color: 'purple', unlocked: completed.length >= 3
-    },
-    {
-      name: 'Sharpshooter', desc: 'Completed all challenges', icon: 'fa-bullseye',
-      color: 'red', unlocked: completed.length >= 6
-    },
-    {
-      name: 'Rising Star', desc: 'Earned 200+ points', icon: 'fa-star',
-      color: 'amber', unlocked: pts >= 200
-    },
-    {
-      name: 'Pro Traveler', desc: 'Reached 1000+ points', icon: 'fa-trophy',
-      color: 'yellow', unlocked: pts >= 1000
-    },
-    {
-      name: 'Legend', desc: 'Reached 2000+ points', icon: 'fa-crown',
-      color: 'orange', unlocked: pts >= 2000
-    }
+    { name: "Explorer",     desc: "Completed your first photo challenge", icon: "fa-earth-americas", color: "blue",   unlocked: done >= 1 },
+    { name: "Photo Hunter", desc: "Completed 3 photo challenges",         icon: "fa-camera-retro",   color: "purple", unlocked: done >= 3 },
+    { name: "Sharpshooter", desc: "Completed 6 photo challenges",         icon: "fa-bullseye",       color: "red",    unlocked: done >= 6 },
+    { name: "Rising Star",  desc: "Earned 200+ points",                   icon: "fa-star",           color: "amber",  unlocked: points >= 200 },
+    { name: "Pro Traveler", desc: "Reached 1000+ points",                 icon: "fa-trophy",         color: "yellow", unlocked: points >= 1000 },
+    { name: "Legend",       desc: "Reached 2000+ points",                 icon: "fa-crown",          color: "orange", unlocked: points >= 2000 },
   ];
 
-  grid.innerHTML = '';
-
-  badges.forEach(b => {
-    grid.innerHTML += `
-      <div class="badge-card p-8 rounded-3xl text-center ${b.unlocked ? '' : 'opacity-50 grayscale'}">
-        <div class="w-20 h-20 mx-auto mb-4 bg-${b.color}-500/20 rounded-full flex items-center justify-center">
-          <i class="fa-solid ${b.icon} text-3xl text-${b.color}-400"></i>
-        </div>
-
-        <h5 class="text-lg font-bold">${b.name}</h5>
-        <p class="text-gray-500 text-xs mt-2">${b.desc}</p>
-
-        <div class="mt-4 inline-block px-3 py-1 ${
-          b.unlocked
-            ? `bg-${b.color}-500/20 text-${b.color}-400`
-            : 'bg-white/10 text-gray-400'
-        } rounded-full text-[10px] font-bold uppercase">
-          ${b.unlocked ? 'Unlocked' : '<i class="fa-solid fa-lock mr-1"></i> Locked'}
-        </div>
+  document.getElementById("badgeGrid").innerHTML = badges.map((b) => `
+    <div class="badge-card p-8 rounded-3xl text-center ${b.unlocked ? "" : "opacity-50 grayscale"}">
+      <div class="w-20 h-20 mx-auto mb-4 bg-${b.color}-500/20 rounded-full flex items-center justify-center">
+        <i class="fa-solid ${b.icon} text-3xl text-${b.color}-400"></i>
       </div>
-    `;
-  });
+      <h5 class="text-lg font-bold">${b.name}</h5>
+      <p class="text-gray-500 text-xs mt-2">${b.desc}</p>
+      <div class="mt-4 inline-block px-3 py-1 ${b.unlocked ? `bg-${b.color}-500/20 text-${b.color}-500` : "bg-gray-100 text-gray-400"} rounded-full text-[10px] font-bold uppercase">
+        ${b.unlocked ? "Unlocked" : '<i class="fa-solid fa-lock mr-1"></i> Locked'}
+      </div>
+    </div>`).join("");
 }
-
 
 /* ================= CHALLENGE COUNT ================= */
-function updateChallengeBadge(userData) {
-  const completed = userData.completedChallenges || [];
-
-  const totalChallenges = 18; // match photo page
-  const remaining = Math.max(0, totalChallenges - completed.length);
-
-  document.getElementById('challengeBadge').textContent =
-    remaining > 0 ? `${remaining} Active` : 'All Done!';
+function updateChallengeBadge(data) {
+  const badge = document.getElementById("challengeBadge");
+  if (!data) { badge.textContent = "View"; return; }
+  const remaining = data.challenges.filter((c) => !data.completed.includes(c.id)).length;
+  badge.textContent = remaining > 0 ? `${remaining} Active` : "All Done!";
 }
 
-/* ================= AUTH ================= */
-onAuthStateChanged(auth, async (user) => {
-  if (user) {
-    currentUserId = user.uid;
-    await renderAll();   // ✅ SYNC FIX
-  }
-});
+/* ================= START ================= */
+currentUser = await requireUser();
+await renderAll();
 </script>
 
 </body>

@@ -72,14 +72,14 @@
 <body class="font-sans text-gray-800">
 
 <nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
+  <a href="dashboard.html" class="flex items-center gap-2">
     <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
+    <span class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</span>
+  </a>
   <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-400 transition">Saved</a>
-    <a href="#" id="logoutBtn" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
+    <a href="dashboard.html" class="hover:text-green-500 transition">Home</a>
+    <a href="saved.html" class="hover:text-green-500 transition">Saved</a>
+    <a href="#" data-logout class="bg-red-500/20 text-red-500 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-500 hover:text-white transition">Logout</a>
   </div>
 </nav>
 
@@ -87,22 +87,12 @@
 
   <aside class="w-72 glass-sidebar p-8 space-y-3">
     <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera-retro"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
-    
+    <a href="dashboard.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-600 rounded-2xl font-bold border border-green-500/30"><i class="fa-solid fa-house"></i> Dashboard</a>
+    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-map-location-dot"></i> Plan Trip</a>
+    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-bookmark"></i> Saved Trips</a>
+    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-camera-retro"></i> Photo Challenge</a>
+    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gift"></i> Rewards</a>
+    <a href="upload-gem.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition"><i class="fa-solid fa-gem"></i> Upload Gem</a>
   </aside>
 
   <main class="flex-1 p-12 overflow-y-auto">
@@ -182,80 +172,65 @@
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  import { api, requireUser, wireLogout, escapeHtml } from "./js/app.js";
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyAVmXdDq2mqxRpn10KomHJxzFA7v-aJnEU",
-    authDomain: "hiddentrails-ai.firebaseapp.com",
-    projectId: "hiddentrails-ai",
-  };
+  wireLogout();
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-
-  // ========== SESSION & USER STATE ==========
-  // Generate a unique session ID for conversation memory (persists per tab)
+  // Unique session ID per browser tab for conversation memory
   const sessionId = sessionStorage.getItem("ht_session") || ("sess_" + Date.now() + "_" + Math.random().toString(36).slice(2));
   sessionStorage.setItem("ht_session", sessionId);
 
-  let currentUserId = null;
-  onAuthStateChanged(auth, (user) => {
-    if (!user) { window.location.href = "auth.html"; return; }
-    currentUserId = user.uid;
-    document.querySelector("header h2").textContent = `Welcome back, ${user.email?.split("@")[0] || "Explorer"}! 👋`;
-  });
-
-  // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "auth.html");
-  });
+  const user = await requireUser();
+  document.querySelector("header h2").textContent =
+    `Welcome back, ${user.displayName || user.email?.split("@")[0] || "Explorer"}! 👋`;
 
   // ========== CHATBOT ==========
+  const msgBox = document.getElementById("messages");
+  const input = document.getElementById("userInput");
+
   window.toggleChat = function () {
     const box = document.getElementById("chatbox");
     box.style.display = box.style.display === "flex" ? "none" : "flex";
+    if (box.style.display === "flex") input.focus();
   };
 
-  document.getElementById("userInput").addEventListener("keypress", (e) => {
+  input.addEventListener("keypress", (e) => {
     if (e.key === "Enter") window.sendMessage();
   });
 
+  // Escape first, then apply the tiny bit of markdown we support (bold)
   function formatReply(text) {
-    return text.replace(/\n/g, "<br>").replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    return escapeHtml(text).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   }
 
+  function addBubble(html, who, extraClass = "") {
+    const wrap = document.createElement("div");
+    wrap.className = who === "user" ? "msg-user" : "msg-ai";
+    wrap.innerHTML = `<div class="bubble ${who === "user" ? "user-bubble" : "ai-bubble"} ${extraClass}">${html}</div>`;
+    msgBox.appendChild(wrap);
+    msgBox.scrollTop = msgBox.scrollHeight;
+    return wrap;
+  }
+
+  let sending = false;
   window.sendMessage = async function () {
+    const message = input.value.trim();
+    if (!message || sending) return;
+    sending = true;
+
+    addBubble(escapeHtml(message), "user");
+    input.value = "";
+    const typing = addBubble("Vibing...", "ai", "italic text-slate-400");
+
     try {
-      const input = document.getElementById("userInput");
-      const message = input.value.trim();
-      if (!message) return;
-
-      const msgBox = document.getElementById("messages");
-      msgBox.insertAdjacentHTML("beforeend", `<div class="msg-user"><div class="bubble user-bubble">${message}</div></div>`);
-      input.value = "";
-      msgBox.scrollTop = msgBox.scrollHeight;
-
-      const typingId = "typing-" + Date.now();
-      msgBox.insertAdjacentHTML("beforeend", `<div id="${typingId}" class="msg-ai"><div class="bubble ai-bubble italic text-slate-400">Vibing...</div></div>`);
-      msgBox.scrollTop = msgBox.scrollHeight;
-
-      // Send sessionId for conversation memory on the backend
-      const res = await fetch("http://localhost:5000/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, sessionId })
-      });
-
-      const data = await res.json();
-      document.getElementById(typingId)?.remove();
-      msgBox.insertAdjacentHTML("beforeend", `<div class="msg-ai"><div class="bubble ai-bubble">${formatReply(data.reply || "No response")}</div></div>`);
-      msgBox.scrollTop = msgBox.scrollHeight;
-
+      const data = await api("/chat", { method: "POST", body: { message, sessionId } });
+      typing.remove();
+      addBubble(formatReply(data.reply || "No response"), "ai");
     } catch (err) {
-      const typers = document.querySelectorAll('.italic');
-      typers.forEach(t => t.parentElement.remove());
-      document.getElementById("messages").insertAdjacentHTML("beforeend", `<div class="msg-ai"><div class="bubble ai-bubble text-red-500">⚠️ Backend is ghosting. Try again!</div></div>`);
+      typing.remove();
+      addBubble(`⚠️ ${escapeHtml(err.status ? err.message : "Backend is ghosting. Is the server running?")}`, "ai", "text-red-500");
+    } finally {
+      sending = false;
     }
   };
 </script>
