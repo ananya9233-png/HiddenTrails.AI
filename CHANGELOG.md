@@ -1,5 +1,11 @@
 # Changelog
 
+## v2.1.0 (November 2026): "field journal" redesign
+- New design system (`css/theme.css`): warm paper and topographic-line background, Fraunces and DM Sans fonts, forest-green and terracotta colors. Coupons look like tickets, badges like passport stamps, and challenges like polaroids.
+- Shared UI kit (`js/ui.js`): sidebar with a mobile drawer, toasts and styled dialogs instead of browser popups, animated counters, confetti, scroll-reveal and skeleton loaders.
+- Every page redesigned. Highlights: a landing page with a photo collage, a split-screen login, a live trip summary while planning, the itinerary as a trail timeline, and a camera viewfinder for photo challenges.
+- Fixed landmark image matching ("Hawa Mahal" no longer returns "Taj Mahal"), and the admin panel now rejects links to web pages as image URLs.
+
 ## v2.0.0 (November 2026): security and architecture overhaul
 
 ### Security
