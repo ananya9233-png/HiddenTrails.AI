@@ -1,8 +1,10 @@
 /**
  * Reward Service
  * ----------------
- * Manages reward points: awarding, cap enforcement, level updates.
- * Supports both photo challenge rewards and trip-based rewards.
+ * The backend is the ONLY writer of reward points. The frontend just reads
+ * them (Firestore rules block clients from changing rewardPoints).
+ *
+ * Supports photo challenge rewards and GPS-validated trip rewards.
  */
 
 import {
@@ -12,76 +14,128 @@ import {
 } from "../utils/rewardCalculator.js";
 import { getLevel, calculateProgress } from "../utils/levelCalculator.js";
 import { validateTrip } from "./gpsService.js";
-import { PHOTO_CHALLENGE } from "../config/constants.js";
+import { REWARDS } from "../config/constants.js";
 
 /**
- * Award points for a successful photo challenge completion.
- * Updates user's total points, level, and logs the reward history.
+ * Award points for a photo challenge — at most once per challenge per user.
+ * Runs in a transaction so double-submits can't award twice.
  *
  * @param {string} userId
- * @param {string} challengeId - e.g., "tajmahal", "indiagate"
- * @param {number} points      - Points to award
+ * @param {string} challengeId
+ * @param {number} points
  * @param {{ landmarkMatchScore: number, livenessScore: number }} verificationResult
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<{ success: boolean, totalPoints: number, level: object }>}
+ * @returns {Promise<{ awarded: boolean, alreadyCompleted: boolean, totalPoints: number, level: object }>}
  */
-export async function awardPhotoPoints(
-  userId,
-  challengeId,
-  points,
-  verificationResult,
-  db
-) {
-  // Save the completed challenge record
-  await db.collection("photoChallenges").add({
-    userId,
-    challengeId,
-    pointsAwarded: points,
-    landmarkMatchScore: verificationResult.landmarkMatchScore,
-    livenessScore: verificationResult.livenessScore,
-    completedAt: new Date(),
+export async function awardPhotoPoints(userId, challengeId, points, verificationResult, db) {
+  const userRef = db.collection("users").doc(userId);
+
+  const result = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const data = snap.exists ? snap.data() : {};
+    const currentPoints = data.rewardPoints || 0;
+    const completed = Array.isArray(data.completedChallenges) ? data.completedChallenges : [];
+
+    if (completed.includes(challengeId)) {
+      return {
+        awarded: false,
+        alreadyCompleted: true,
+        totalPoints: currentPoints,
+        level: getLevel(currentPoints),
+      };
+    }
+
+    const newTotal = currentPoints + points;
+    const newLevel = getLevel(newTotal);
+
+    tx.set(
+      userRef,
+      {
+        rewardPoints: newTotal,
+        level: newLevel.name,
+        levelNumber: newLevel.level,
+        completedChallenges: [...completed, challengeId],
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+
+    // Completion record (kept separate from challenge definitions)
+    tx.set(userRef.collection("photoCompletions").doc(challengeId), {
+      challengeId,
+      pointsAwarded: points,
+      landmarkMatchScore: verificationResult.landmarkMatchScore,
+      livenessScore: verificationResult.livenessScore,
+      completedAt: new Date(),
+    });
+
+    // Reward history (used for cap checks / audit)
+    tx.set(userRef.collection("rewardHistory").doc(), {
+      type: "photo_challenge",
+      challengeId,
+      points,
+      claimedAt: new Date(),
+    });
+
+    return { awarded: true, alreadyCompleted: false, totalPoints: newTotal, level: newLevel };
   });
 
-  // Update user's total points
-  const userRef = db.collection("users").doc(userId);
-  const userDoc = await userRef.get();
-
-  let currentPoints = 0;
-  if (userDoc.exists) {
-    currentPoints = userDoc.data().rewardPoints || 0;
+  // If this was an itinerary-based challenge, mark its document completed
+  if (result.awarded) {
+    try {
+      const chRef = db.collection("photoChallenges").doc(challengeId);
+      const chSnap = await chRef.get();
+      if (chSnap.exists && chSnap.data().userId === userId) {
+        await chRef.update({ completed: true, completedAt: new Date() });
+      }
+    } catch (err) {
+      console.warn("⚠️ Could not mark challenge completed:", err.message);
+    }
+    console.log(`✅ Photo reward: +${points} pts for ${userId} (${challengeId}) → Total: ${result.totalPoints}`);
   }
 
-  const newTotal = currentPoints + points;
-  const newLevel = getLevel(newTotal);
+  return result;
+}
 
-  // Upsert user document with updated points and level
-  await userRef.set(
-    {
-      rewardPoints: newTotal,
-      level: newLevel.name,
-      levelNumber: newLevel.level,
-      updatedAt: new Date(),
-    },
-    { merge: true }
-  );
+/**
+ * Remove a completed challenge and take its points back.
+ * Used by the "Reset Demo Challenge" dev tool so the demo can be retried.
+ *
+ * @returns {Promise<{ reset: boolean, totalPoints: number }>}
+ */
+export async function revokePhotoChallenge(userId, challengeId, db) {
+  const userRef = db.collection("users").doc(userId);
+  const completionRef = userRef.collection("photoCompletions").doc(challengeId);
 
-  // Log reward history for cap checking
-  await userRef.collection("rewardHistory").add({
-    type: "photo_challenge",
-    challengeId,
-    points,
-    claimedAt: new Date(),
+  return db.runTransaction(async (tx) => {
+    const [userSnap, completionSnap] = await Promise.all([tx.get(userRef), tx.get(completionRef)]);
+    const data = userSnap.exists ? userSnap.data() : {};
+    const completed = Array.isArray(data.completedChallenges) ? data.completedChallenges : [];
+    const currentPoints = data.rewardPoints || 0;
+
+    if (!completed.includes(challengeId)) {
+      return { reset: false, totalPoints: currentPoints };
+    }
+
+    const refund = completionSnap.exists ? completionSnap.data().pointsAwarded || 0 : 0;
+    const newTotal = Math.max(0, currentPoints - refund);
+    const newLevel = getLevel(newTotal);
+
+    tx.set(
+      userRef,
+      {
+        rewardPoints: newTotal,
+        level: newLevel.name,
+        levelNumber: newLevel.level,
+        completedChallenges: completed.filter((id) => id !== challengeId),
+        updatedAt: new Date(),
+      },
+      { merge: true }
+    );
+    tx.delete(completionRef);
+
+    return { reset: true, totalPoints: newTotal };
   });
-
-  console.log(
-    `✅ Photo reward: +${points} pts for ${userId} (${challengeId}) → Total: ${newTotal}`
-  );
-
-  return {
-    success: true,
-    totalPoints: newTotal,
-    level: newLevel,
-  };
 }
 
 /**
@@ -91,86 +145,60 @@ export async function awardPhotoPoints(
  * @param {string} userId
  * @param {{ gpsPoints: Array, visitedPOIs: Array }} tripData
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<{ success: boolean, points: number, totalPoints: number, level: object, errors?: string[] }>}
  */
 export async function awardTripReward(userId, tripData, db) {
   // Step 1: Validate the trip meets minimum criteria
   const tripValidation = validateTrip(tripData);
   if (!tripValidation.valid) {
-    return {
-      success: false,
-      points: 0,
-      errors: tripValidation.errors,
-    };
+    return { success: false, points: 0, errors: tripValidation.errors };
   }
 
   // Step 2: Check daily cap
   const dailyCheck = await checkDailyCap(userId, db);
   if (!dailyCheck.allowed) {
-    return {
-      success: false,
-      points: 0,
-      errors: [dailyCheck.reason],
-    };
+    return { success: false, points: 0, errors: [dailyCheck.reason] };
   }
 
   // Step 3: Check monthly cap
   const monthlyCheck = await checkMonthlyCap(userId, db);
   if (!monthlyCheck.allowed) {
-    return {
-      success: false,
-      points: 0,
-      errors: [monthlyCheck.reason],
-    };
+    return { success: false, points: 0, errors: [monthlyCheck.reason] };
   }
 
-  // Step 4: Calculate reward points (capped at daily maximum remaining)
+  // Step 4: Calculate reward points (capped at remaining daily/monthly allowance)
   let points = calculateRewardPoints(tripValidation.stats.totalDistanceKm);
-  const dailyRemaining = 200 - dailyCheck.todayPoints;
-  const monthlyRemaining = 1000 - monthlyCheck.monthPoints;
+  const dailyRemaining = REWARDS.MAX_POINTS_PER_DAY - dailyCheck.todayPoints;
+  const monthlyRemaining = REWARDS.MAX_POINTS_PER_MONTH - monthlyCheck.monthPoints;
   points = Math.min(points, dailyRemaining, monthlyRemaining);
 
   if (points <= 0) {
-    return {
-      success: false,
-      points: 0,
-      errors: ["Points cap reached for the current period"],
-    };
+    return { success: false, points: 0, errors: ["Points cap reached for the current period"] };
   }
 
-  // Step 5: Update user's total points and level
+  // Step 5: Update user's total points and level (transaction-safe increment)
   const userRef = db.collection("users").doc(userId);
-  const userDoc = await userRef.get();
+  const { newTotal, newLevel } = await db.runTransaction(async (tx) => {
+    const snap = await tx.get(userRef);
+    const currentPoints = snap.exists ? snap.data().rewardPoints || 0 : 0;
+    const total = currentPoints + points;
+    const level = getLevel(total);
 
-  let currentPoints = 0;
-  if (userDoc.exists) {
-    currentPoints = userDoc.data().rewardPoints || 0;
-  }
+    tx.set(
+      userRef,
+      { rewardPoints: total, level: level.name, levelNumber: level.level, updatedAt: new Date() },
+      { merge: true }
+    );
+    tx.set(userRef.collection("rewardHistory").doc(), {
+      type: "trip_reward",
+      points,
+      tripStats: tripValidation.stats,
+      claimedAt: new Date(),
+    });
 
-  const newTotal = currentPoints + points;
-  const newLevel = getLevel(newTotal);
-
-  await userRef.set(
-    {
-      rewardPoints: newTotal,
-      level: newLevel.name,
-      levelNumber: newLevel.level,
-      updatedAt: new Date(),
-    },
-    { merge: true }
-  );
-
-  // Step 6: Log reward history
-  await userRef.collection("rewardHistory").add({
-    type: "trip_reward",
-    points,
-    tripStats: tripValidation.stats,
-    claimedAt: new Date(),
+    return { newTotal: total, newLevel: level };
   });
 
-  console.log(
-    `✅ Trip reward: +${points} pts for ${userId} → Total: ${newTotal}`
-  );
+  console.log(`✅ Trip reward: +${points} pts for ${userId} → Total: ${newTotal}`);
 
   return {
     success: true,
@@ -186,34 +214,16 @@ export async function awardTripReward(userId, tripData, db) {
  *
  * @param {string} userId
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<{ points: number, level: object, progress: object, completedChallenges: string[] }>}
  */
 export async function getUserRewards(userId, db) {
   const userDoc = await db.collection("users").doc(userId).get();
-
-  let points = 0;
-  if (userDoc.exists) {
-    points = userDoc.data().rewardPoints || 0;
-  }
-
-  const level = getLevel(points);
-  const progress = calculateProgress(points);
-
-  // Get list of completed photo challenges
-  const challengeSnap = await db
-    .collection("photoChallenges")
-    .where("userId", "==", userId)
-    .get();
-
-  const completedChallenges = [];
-  challengeSnap.forEach((doc) => {
-    completedChallenges.push(doc.data().challengeId);
-  });
+  const data = userDoc.exists ? userDoc.data() : {};
+  const points = data.rewardPoints || 0;
 
   return {
     points,
-    level,
-    progress,
-    completedChallenges,
+    level: getLevel(points),
+    progress: calculateProgress(points),
+    completedChallenges: Array.isArray(data.completedChallenges) ? data.completedChallenges : [],
   };
 }

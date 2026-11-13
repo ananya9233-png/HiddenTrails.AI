@@ -2,287 +2,323 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Plan Your Trip | HiddenTrails.AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plan a trip · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#FBFBF9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    /* ✅ WHITE BACKGROUND */
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-    }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
 
-    /* ✅ FORM CONTAINER */
-    .glass-form {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 32px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
-    }
+    /* Numbered form sections separated by rules */
+    #tripForm > section { display: grid; gap: 16px; padding-block: 32px; border-top: 1px solid var(--line); }
+    #tripForm > section:first-child { border-top: 0; padding-top: 0; }
+    @media (min-width: 768px) { #tripForm > section { grid-template-columns: 180px minmax(0, 1fr); gap: 32px; } }
+    .q { margin: 0; font-family: var(--font-display); font-size: 1.35rem; line-height: 1.2; }
+    .q .n { display: block; font-size: .95rem; color: var(--accent); margin-bottom: 4px; }
+    .q small { display: block; margin-top: 4px; font: 400 .85rem/1.4 var(--font-sans); color: var(--muted); }
+    #destination { font-size: 1.15rem; }
 
-    /* ✅ INPUT STYLING */
-    .custom-input {
-      background: #ffffff !important;
-      border: 1px solid #e2e8f0 !important;
-      color: #1e293b !important;
-      transition: all 0.3s ease;
-    }
-    .custom-input:focus {
-      border-color: #10b981 !important;
-      background: #ffffff !important;
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
-      outline: none;
-    }
-    .custom-input::placeholder { color: #94a3b8; }
+    /* Quick-pick chips: underlined words */
+    .picks { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 16px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
+    .picks .chip { min-height: 0; padding: 0; border: 0; border-radius: 0; background: none; color: var(--ink-2); font-size: .9rem; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+    .picks .chip:hover { color: var(--accent); text-decoration-color: currentColor; }
 
-    /* Custom Date Picker Icon Color */
-    input[type="date"]::-webkit-calendar-picker-indicator {
-      cursor: pointer;
-    }
+    /* Budget slider: thin line, accent fill (script sets --fill) */
+    input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 2px; outline: none; margin: 18px 0 6px;
+      background: linear-gradient(to right, var(--accent) var(--fill, 20%), var(--line-2) var(--fill, 20%)); }
+    input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+    input[type="range"]::-moz-range-thumb { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); border: 3px solid var(--paper); box-shadow: 0 0 0 1px var(--accent); cursor: grab; }
+    input[type="range"]:focus-visible { outline: 2px solid var(--accent); outline-offset: 8px; }
 
-    .glass-sidebar {
-      background: #f8fafc;
-      border-right: 1px solid #e2e8f0;
-    }
+    /* Trip style: a plain radio list */
+    #vibes { display: grid; border-top: 1px solid var(--line); }
+    @media (min-width: 640px) { #vibes { grid-template-columns: 1fr 1fr; column-gap: 32px; } }
+    .vibe { display: grid; align-content: start; grid-template-columns: 18px 1fr; column-gap: 14px; align-items: baseline; padding: 14px 4px 14px 0; border: 0; border-bottom: 1px solid var(--line); background: none; text-align: left; cursor: pointer; color: var(--ink); }
+    .vibe::before { content: ""; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--line-2); transform: translateY(2px); transition: all var(--t); grid-row: span 2; }
+    .vibe .em { display: none; }
+    .vibe b { font-weight: 500; font-size: 1rem; transition: color var(--t); }
+    .vibe small { grid-column: 2; color: var(--muted); font-size: .85rem; }
+    .vibe:hover b { color: var(--accent); }
+    .vibe[aria-checked="true"]::before { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--paper); }
 
-    .btn-primary {
-      background: linear-gradient(135deg, #10b981, #059669);
-      transition: all 0.3s ease;
-    }
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(16, 185, 129, 0.4);
-    }
+    /* Trip slip (live summary) */
+    .summary { position: sticky; top: calc(var(--nav-h) + 32px); }
+    .slip { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 24px; }
+    .stamp-dest { font-family: var(--font-display); font-size: 2rem; font-weight: 300; line-height: 1.05; letter-spacing: -.02em; word-break: break-word; margin: 10px 0 0; }
+    .summary-row { display: flex; justify-content: space-between; gap: 16px; padding: 10px 0; border-top: 1px dashed var(--line-2); font-size: .95rem; }
+    .summary-row span:first-child { color: var(--muted); }
+    .summary-row span:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+
+    /* Generating overlay: a dotted trail slowly drawing itself */
+    .gen-overlay { position: fixed; inset: 0; z-index: 300; display: none; place-items: center; background: rgba(251, 251, 249, .97); }
+    .gen-overlay.active { display: grid; animation: fade-in .3s both; }
+    .trail-anim path { stroke-dasharray: 1 10; stroke-linecap: round; animation: walk 1.6s linear infinite; }
+    @keyframes walk { to { stroke-dashoffset: -44; } }
+    .gen-msg { min-height: 1.6em; transition: opacity .25s; }
   </style>
 </head>
 
-<body class="font-sans text-gray-800">
+<body>
+  <header id="appNav"></header>
 
-<nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
-    <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
-  <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-400 transition">Saved</a>
-    <a href="#" id="logoutBtn" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-600 transition">Logout</a>
-  </div>
-</nav>
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head stagger">
+        <span class="eyebrow">New trip</span>
+        <h1>Plan a trip.</h1>
+        <p>Tell us where, when and how you like to travel. You’ll get a day-by-day plan with real places and local food, plus photo challenges for the landmarks on it.</p>
+      </header>
 
-<div class="flex min-h-[calc(100vh-72px)]">
+      <div class="grid lg:grid-cols-[minmax(0,1fr)_320px] gap-10 lg:gap-16 items-start">
+        <form id="tripForm" class="reveal" novalidate>
 
-  <aside class="w-72 glass-sidebar p-8 space-y-3">
-    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera-retro"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
-  </aside>
+          <!-- Destination -->
+          <section>
+            <label class="q" for="destination"><span class="n">01</span>Where to?</label>
+            <div>
+              <input id="destination" type="text" class="input" placeholder="A city, valley, coast or village" maxlength="100" autocomplete="off" required />
+              <div class="picks" id="destChips">
+                <span>Or try</span>
+                <button type="button" class="chip">Jaisalmer</button>
+                <button type="button" class="chip">Varkala</button>
+                <button type="button" class="chip">Tawang</button>
+                <button type="button" class="chip">Hampi</button>
+                <button type="button" class="chip">Coorg</button>
+              </div>
+            </div>
+          </section>
 
-  <main class="flex-1 p-12 overflow-y-auto flex justify-center items-start">
-    <div class="max-w-3xl w-full glass-form p-10 mt-4">
-      
-      <div class="text-center mb-10">
-        <h2 class="text-3xl font-black tracking-tight mb-2 text-gray-800">Plan Your Next Move ✈️</h2>
-        <p class="text-gray-500 text-sm">Our AI will scout the best hidden gems for you.</p>
+          <!-- Dates -->
+          <section>
+            <p class="q"><span class="n">02</span>When?<small>Up to 10 days.</small></p>
+            <div class="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label class="label" for="arrivalDate">Arrive</label>
+                <input id="arrivalDate" type="date" class="input" required />
+              </div>
+              <div>
+                <label class="label" for="returnDate">Return</label>
+                <input id="returnDate" type="date" class="input" required />
+              </div>
+            </div>
+          </section>
+
+          <!-- Budget -->
+          <section>
+            <label class="q" for="budget"><span class="n">03</span>Total budget<small>For the whole trip, in rupees.</small></label>
+            <div>
+              <div class="input-icon max-w-[220px]">
+                <i class="fa-solid fa-indian-rupee-sign"></i>
+                <input id="budget" type="number" min="1000" max="10000000" step="500" value="30000" class="input" required />
+              </div>
+              <input id="budgetRange" type="range" min="1000" max="200000" step="1000" value="30000" aria-label="Budget slider" />
+              <div class="picks" id="budgetChips">
+                <button type="button" class="chip" data-v="10000">Shoestring, ₹10k</button>
+                <button type="button" class="chip" data-v="25000">Comfortable, ₹25k</button>
+                <button type="button" class="chip" data-v="50000">A treat, ₹50k</button>
+                <button type="button" class="chip" data-v="100000">Splurge, ₹1L</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Trip style -->
+          <section>
+            <p class="q"><span class="n">04</span>What kind of trip?</p>
+            <div>
+              <input type="hidden" id="preference" value="Adventure" />
+              <div role="radiogroup" aria-label="Trip style" id="vibes">
+                <button type="button" class="vibe" role="radio" aria-checked="true" data-v="Adventure"><span class="em"></span><b>Adventure</b><small>Treks, rafting, long days outside</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Relaxation"><span class="em"></span><b>Relaxation</b><small>Slow mornings, sea air</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Culture"><span class="em"></span><b>Culture</b><small>Forts, food, festivals</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Nature"><span class="em"></span><b>Nature</b><small>Forests, lakes, wildlife</small></button>
+                <button type="button" class="vibe" role="radio" aria-checked="false" data-v="Luxury"><span class="em"></span><b>Luxury</b><small>Heritage stays, good dinners</small></button>
+              </div>
+            </div>
+          </section>
+
+          <section class="!block">
+            <button type="submit" id="generateBtn" class="btn btn-primary btn-lg w-full sm:w-auto">Plan my trip</button>
+            <p class="caption mt-3 mb-0">Takes about ten seconds.</p>
+          </section>
+        </form>
+
+        <!-- Live summary -->
+        <aside class="summary reveal" aria-label="Trip summary">
+          <div class="slip">
+            <span class="eyebrow">Your trip</span>
+            <p class="stamp-dest" id="sumDest">Somewhere new</p>
+            <p class="caption mt-1 mb-4" id="sumDates">Pick your dates</p>
+            <div class="summary-row"><span>Duration</span><span id="sumDays">—</span></div>
+            <div class="summary-row"><span>Budget</span><span id="sumBudget">₹30,000</span></div>
+            <div class="summary-row"><span>Per day</span><span id="sumPerDay">—</span></div>
+            <div class="summary-row"><span>Style</span><span id="sumVibe">Adventure</span></div>
+          </div>
+          <p class="caption mt-4">Trains and local homestays usually make a trip cheaper and lower-carbon.</p>
+        </aside>
       </div>
-
-      <form id="tripForm" class="space-y-6">
-        <div class="space-y-2">
-          <label class="text-sm font-bold text-green-400 uppercase tracking-wider ml-1">Where to?</label>
-          <input id="destination" type="text" placeholder="Goa, Delhi, Kolkata..." class="w-full p-4 rounded-2xl custom-input" required />
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label class="text-sm font-bold text-green-400 uppercase tracking-wider ml-1">Arrival Date</label>
-            <input id="arrivalDate" type="date" class="w-full p-4 rounded-2xl custom-input" required />
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-bold text-green-400 uppercase tracking-wider ml-1">Return Date</label>
-            <input id="returnDate" type="date" class="w-full p-4 rounded-2xl custom-input" required />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div class="space-y-2">
-            <label class="text-sm font-bold text-green-400 uppercase tracking-wider ml-1">Budget (₹)</label>
-            <input id="budget" type="number" placeholder="30000" class="w-full p-4 rounded-2xl custom-input" required />
-          </div>
-          <div class="space-y-2">
-            <label class="text-sm font-bold text-green-400 uppercase tracking-wider ml-1">Vibe / Preference</label>
-            <select id="preference" class="w-full p-4 rounded-2xl custom-input appearance-none">
-              <option class="text-slate-900">Adventure</option>
-              <option class="text-slate-900">Relaxation</option>
-              <option class="text-slate-900">Culture</option>
-              <option class="text-slate-900">Nature</option>
-              <option class="text-slate-900">Luxury</option>
-            </select>
-          </div>
-        </div>
-
-        <button type="submit" id="generateBtn" class="w-full py-5 rounded-2xl btn-primary text-xl font-black uppercase tracking-widest mt-4">
-          Generate Itinerary <i class="fa-solid fa-wand-magic-sparkles ml-2"></i>
-        </button>
-      </form>
     </div>
   </main>
+
+<!-- Generating overlay -->
+<div class="gen-overlay" id="genOverlay" aria-live="polite">
+  <div class="px-6 max-w-md">
+    <svg class="trail-anim" width="220" height="60" viewBox="0 0 220 60" aria-hidden="true">
+      <path d="M4 50 C 50 50, 60 10, 110 22 S 170 54, 216 8" fill="none" stroke="#B5502D" stroke-width="2.5"/>
+    </svg>
+    <p class="font-display text-3xl font-light mt-6 mb-2">Planning your trip…</p>
+    <p class="gen-msg ink-2" id="genMsg">Reading old maps</p>
+  </div>
 </div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+  import { api, requireUser } from "./js/app.js";
+  import { mountShell, toast, revealOnScroll, stagger } from "./js/ui.js";
 
-  const firebaseConfig = {
-    apiKey: "your_firebase_api_key",
-    authDomain: "hiddentrails-ai.firebaseapp.com",
-    projectId: "hiddentrails-ai",
-  };
+  const shell = mountShell("plantrips.html");
+  stagger(document.querySelector(".page-head"));
+  revealOnScroll();
 
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const MAX_DAYS = 10;
+  const $ = (id) => document.getElementById(id);
+  const form = $("tripForm");
+  const btn = $("generateBtn");
+  const destInput = $("destination");
+  const arrivalInput = $("arrivalDate");
+  const returnInput = $("returnDate");
+  const budgetInput = $("budget");
+  const budgetRange = $("budgetRange");
+  const prefInput = $("preference");
+  const inr = (n) => "₹" + Math.round(n).toLocaleString("en-IN");
 
-  let currentUserId = null;
-  onAuthStateChanged(auth, (user) => {
-    if (!user) { window.location.href = "auth.html"; return; }
-    currentUserId = user.uid;
+  function localISODate(d = new Date()) {
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  }
+  const today = localISODate();
+  arrivalInput.min = today;
+  returnInput.min = today;
+
+  // Prefill destination from ?dest=
+  const preset = new URLSearchParams(location.search).get("dest");
+  if (preset) destInput.value = preset.slice(0, 100);
+
+  // ── Live summary ──
+  function tripDays() {
+    if (!arrivalInput.value || !returnInput.value || returnInput.value < arrivalInput.value) return null;
+    return Math.round((new Date(returnInput.value) - new Date(arrivalInput.value)) / 86400000) + 1;
+  }
+  function fmtDate(v) {
+    return new Date(v + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+  }
+  function updateSummary() {
+    const days = tripDays();
+    const budget = Number(budgetInput.value) || 0;
+    $("sumDest").textContent = destInput.value.trim() || "Somewhere wonderful";
+    $("sumDates").textContent = days ? `${fmtDate(arrivalInput.value)} → ${fmtDate(returnInput.value)}` : "Pick your dates";
+    $("sumDays").textContent = days ? `${days} day${days > 1 ? "s" : ""}${days > MAX_DAYS ? " (too long)" : ""}` : "—";
+    $("sumDays").style.color = days > MAX_DAYS ? "var(--danger)" : "";
+    $("sumBudget").textContent = inr(budget);
+    $("sumPerDay").textContent = days ? inr(budget / days) : "—";
+    const v = document.querySelector('.vibe[aria-checked="true"]');
+    $("sumVibe").textContent = `${v.querySelector(".em").textContent} ${v.dataset.v}`;
+    const pct = Math.min(100, ((Math.min(budget, 200000) - 1000) / 199000) * 100);
+    budgetRange.style.setProperty("--fill", pct + "%");
+  }
+
+  destInput.addEventListener("input", updateSummary);
+  arrivalInput.addEventListener("change", () => {
+    returnInput.min = arrivalInput.value || today;
+    if (returnInput.value && returnInput.value < arrivalInput.value) returnInput.value = arrivalInput.value;
+    updateSummary();
+  });
+  returnInput.addEventListener("change", updateSummary);
+
+  $("destChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    destInput.value = chip.textContent.replace(/^\S+\s/, "");
+    updateSummary();
   });
 
-  // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "auth.html");
+  budgetRange.addEventListener("input", () => { budgetInput.value = budgetRange.value; updateSummary(); });
+  budgetInput.addEventListener("input", () => { budgetRange.value = budgetInput.value; updateSummary(); });
+  $("budgetChips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    budgetInput.value = budgetRange.value = chip.dataset.v;
+    updateSummary();
   });
 
-  const form = document.getElementById("tripForm");
-  const btn = document.getElementById("generateBtn");
+  $("vibes").addEventListener("click", (e) => {
+    const card = e.target.closest(".vibe");
+    if (!card) return;
+    document.querySelectorAll(".vibe").forEach((v) => v.setAttribute("aria-checked", String(v === card)));
+    prefInput.value = card.dataset.v;
+    updateSummary();
+  });
+  updateSummary();
 
-  // Prevent selecting past dates
-const today = new Date().toISOString().split("T")[0];
-document.getElementById("arrivalDate").min = today;
-document.getElementById("returnDate").min = today;
+  // ── Generating overlay messages ──
+  const MESSAGES = ["Reading old maps", "Asking the locals", "Finding the quiet viewpoints", "Checking chai stalls", "Skipping the tourist traps", "Packing eco tips", "Drawing your trail"];
+  let msgTimer;
+  function showOverlay(show) {
+    $("genOverlay").classList.toggle("active", show);
+    clearInterval(msgTimer);
+    if (show) {
+      let i = 0;
+      msgTimer = setInterval(() => {
+        const el = $("genMsg");
+        el.style.opacity = 0;
+        setTimeout(() => { el.textContent = MESSAGES[++i % MESSAGES.length]; el.style.opacity = 1; }, 250);
+      }, 1800);
+    }
+  }
 
-// Ensure return date can't be before arrival
-document.getElementById("arrivalDate").addEventListener("change", () => {
-  document.getElementById("returnDate").min =
-    document.getElementById("arrivalDate").value;
-});
+  await requireUser().then((u) => shell.setUser(u));
 
-  form.addEventListener("submit", async function (e) {
+  form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
-    const destination = document.getElementById("destination").value.trim();
-    const budget = parseInt(document.getElementById("budget").value);
-    if (!budget || budget < 1000) {
-         alert("Minimum budget must be ₹1000.");
-         return;
-    }
-    if (budget > 10000000) {
-         alert("Budget seems unrealistic. Please enter a valid amount.");
-         return;
-    }
-    const preference = document.getElementById("preference").value;
-    const arrivalDate = document.getElementById("arrivalDate").value;
-    const returnDate = document.getElementById("returnDate").value;
-    const todayDate = new Date();
-    todayDate.setHours(0,0,0,0);
+    const destination = destInput.value.trim();
+    const budget = parseInt(budgetInput.value, 10);
+    const preference = prefInput.value;
+    const arrivalDate = arrivalInput.value;
+    const returnDate = returnInput.value;
+    const days = tripDays();
 
-    const arrival = new Date(arrivalDate);
-    const ret = new Date(returnDate);
-
-    if (arrival < todayDate) {
-  alert("Arrival date cannot be in the past.");
-  return;
-}
-
-   if (ret < arrival) {
-  alert("Return date must be after arrival date.");
-  return;
-}
-
-    const diffTime = new Date(returnDate) - new Date(arrivalDate);
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-
-    if (days <= 0) {
-      alert("Return date must be after arrival date.");
-      return;
-    }
+    if (!destination) { toast("Where are we going? Add a destination.", "error"); destInput.focus(); return; }
+    if (!arrivalDate || !returnDate) { toast("Pick your arrival and return dates.", "error"); return; }
+    if (arrivalDate < today) { toast("Arrival date can't be in the past.", "error"); return; }
+    if (!days) { toast("Return date must be after arrival.", "error"); return; }
+    if (days > MAX_DAYS) { toast(`Trips can be at most ${MAX_DAYS} days long.`, "error"); return; }
+    if (!budget || budget < 1000) { toast("Minimum budget is ₹1,000.", "error"); budgetInput.focus(); return; }
+    if (budget > 10000000) { toast("That budget looks unrealistic.", "error"); return; }
 
     btn.disabled = true;
-    btn.innerHTML = `Generating... <i class="fa-solid fa-spinner fa-spin ml-2"></i>`;
+    showOverlay(true);
 
     try {
-      // Send userId so backend saves the trip to Firestore for us
-      const response = await fetch("http://localhost:5000/generate-itinerary", {
+      const data = await api("/generate-itinerary", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          destination, days, preference, budget,
-          userId: currentUserId,
-          arrivalDate, returnDate
-        })
+        body: { destination, days, preference, budget, arrivalDate, returnDate },
       });
-
-      if (!response.ok) {
-        const errData = await response.json();
-        alert("Backend error: " + errData.error);
-        return;
-      }
-
-      const data = await response.json();
-
-      if (!data || !Array.isArray(data.days)) {
-        alert("AI failed to generate itinerary");
-        return;
-      }
-
-      // If backend saved the trip and returned a tripId, use it directly
-      let tripId = data.tripId;
-
-      // Fallback: save from frontend if backend didn't save (no userId case)
-      if (!tripId) {
-        const docRef = await addDoc(collection(db, "trips"), {
-          destination,
-          daysCount: days,
-          budget,
-          preference,
-          arrivalDate,
-          returnDate,
-          total_estimated_cost: data.total_estimated_cost,
-          days: data.days,
-          createdAt: new Date()
-        });
-        tripId = docRef.id;
-      }
-
-      window.location.href = `itinerary.html?id=${tripId}`;
-
+      if (!data.tripId) throw new Error("Trip could not be saved");
+      window.location.href = `itinerary.html?id=${encodeURIComponent(data.tripId)}&new=1`;
     } catch (err) {
       console.error(err);
-      alert("Something went wrong. Check if your backend server is running.");
-    } finally {
+      showOverlay(false);
       btn.disabled = false;
-      btn.innerText = "Generate Itinerary";
+      toast(err.status ? err.message : "Something went wrong. Is the backend running?", "error");
     }
   });
 </script>
-
 </body>
 </html>

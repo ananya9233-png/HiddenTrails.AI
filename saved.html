@@ -2,301 +2,230 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Saved Journeys | HiddenTrails.AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My journeys · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#FBFBF9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    body {
-      background: #ffffff;
-      min-height: 100vh;
-    }
+    .page-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.4rem, 1.5rem + 3.6vw, 4rem); line-height: 1.02; letter-spacing: -.03em; }
 
-    .trip-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-      display: block;
-    }
-    .trip-card:hover {
-      transform: translateY(-6px);
-      background: #f1f5f9;
-      border-color: #10b981;
-      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-    }
+    /* Toolbar: search + sort on one thin rule */
+    #toolbar .input { background: transparent; }
 
-    .glass-sidebar {
-      background: #f8fafc;
-      border-right: 1px solid #e2e8f0;
-    }
-
-    .status-badge {
-      background: rgba(16, 185, 129, 0.15);
-      color: #10b981;
-      border: 1px solid rgba(16, 185, 129, 0.3);
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    /* Trip entries (cards come from the page script) */
+    .trip-card { display: flex; flex-direction: column; background: transparent; border: 0; border-radius: 0; }
+    .trip-card .frame { height: 220px; border-radius: var(--r-sm); }
+    .trip-card .date-badge { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--surface) 95%, transparent); line-height: 1.1; font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+    .trip-card .date-badge b { font: inherit; margin-right: 4px; }
+    .trip-card .date-badge small { font: inherit; color: var(--accent); }
+    .trip-card .del { position: absolute; right: 10px; top: 10px; z-index: 2; width: 34px; height: 34px; min-height: 0; border-radius: 4px; border-color: transparent; background: color-mix(in srgb, var(--surface) 95%, transparent); color: var(--ink-2); opacity: 0; transition: opacity var(--t), color var(--t); }
+    .trip-card .del:hover { color: var(--err); background: color-mix(in srgb, var(--surface) 95%, transparent); }
+    .trip-card:hover .del, .trip-card .del:focus-visible { opacity: 1; }
+    @media (hover: none) { .trip-card .del { opacity: 1; } }
+    .trip-card > a.p-5 { padding: 14px 0 0 !important; }
+    .trip-card .h3 { font-size: 1.5rem; transition: color var(--t); }
+    .trip-card:hover .h3 { color: var(--accent); }
+    .trip-card .muted i { display: none; }
+    .trip-card span.mt-auto { color: var(--ink) !important; font-weight: 500; text-decoration: underline; text-decoration-color: var(--line-2); text-underline-offset: 4px; }
+    .trip-card span.mt-auto i { display: none; }
+    /* The script waits for this animation to end before re-rendering. Keep it. */
+    .trip-card.removing { animation: removing .3s var(--ease) forwards; }
+    @keyframes removing { to { opacity: 0; } }
   </style>
 </head>
 
-<body class="font-sans text-gray-800">
+<body>
+  <header id="appNav"></header>
 
-<nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
-    <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
-  <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="text-green-400">Saved</a>
-    <a href="#" id="logoutBtn" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-600 hover:text-white transition">Logout</a>
-  </div>
-</nav>
-
-<div class="flex min-h-[calc(100vh-72px)]">
-
-  <aside class="w-72 glass-sidebar p-8 space-y-3">
-    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
-    
-  </aside>
-
-  <main class="flex-1 p-12 overflow-y-auto">
-    <div class="max-w-6xl mx-auto">
-      <header class="mb-12 flex items-center justify-between">
+  <main class="main">
+    <div class="page-wrap">
+      <header class="page-head flex flex-wrap items-end justify-between gap-6">
         <div>
-          <h2 class="text-3xl font-black tracking-tight text-gray-800">Saved Journeys 🔖</h2>
-          <p class="text-gray-500 mt-2 text-sm">Pick up where you left off on your hidden adventures.</p>
+          <span class="eyebrow">Travel journal</span>
+          <h1>My journeys</h1>
+          <p id="countLine">Every trip you’ve planned, in one place.</p>
         </div>
-        <a href="plantrips.html" class="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition-all transform hover:scale-105">
-          <i class="fa-solid fa-plus mr-2"></i> New Trip
-        </a>
+        <a href="plantrips.html" class="btn btn-primary">Plan a new trip</a>
       </header>
 
-      <div id="tripsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        <div class="col-span-full text-center p-20">
-          <i class="fa-solid fa-spinner fa-spin text-4xl text-green-400 mb-4"></i>
-          <p class="text-gray-400">Loading your saved trips...</p>
+      <div class="flex flex-col sm:flex-row gap-3 mb-10" id="toolbar" hidden>
+        <div class="input-icon flex-1">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input id="search" class="input" placeholder="Search by place or trip style" autocomplete="off" />
         </div>
+        <select id="sort" class="input sm:w-56" aria-label="Sort trips">
+          <option value="new">Newest first</option>
+          <option value="old">Oldest first</option>
+          <option value="soon">Upcoming dates</option>
+          <option value="budget">Highest budget</option>
+        </select>
+      </div>
+
+      <div id="tripsContainer" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-12">
+        <div class="skeleton h-80"></div><div class="skeleton h-80"></div><div class="skeleton h-80 hidden xl:block"></div>
       </div>
     </div>
   </main>
-</div>
 
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-  import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-  import { getFirestore, collection, getDocs, deleteDoc, doc, orderBy, query, where, updateDoc } from
+  import { api, db, requireUser, escapeHtml, FALLBACK_IMAGE } from "./js/app.js";
+  import { mountShell, toast, confirmDialog, stagger, smoothImage } from "./js/ui.js";
+  import { collection, getDocs, deleteDoc, doc, query, where, updateDoc } from
     "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "your_firebase_api_key",
-    authDomain: "hiddentrails-ai.firebaseapp.com",
-    projectId: "hiddentrails-ai"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const auth = getAuth(app);
-  const db = getFirestore(app);
+  const shell = mountShell("saved.html");
   const container = document.getElementById("tripsContainer");
+  const searchInput = document.getElementById("search");
+  const sortSelect = document.getElementById("sort");
+  let currentUser = null;
+  let trips = [];
 
-  // Logout
-  document.getElementById("logoutBtn").addEventListener("click", () => {
-    signOut(auth).then(() => window.location.href = "auth.html");
-  });
+  const inr = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
 
-  // Delete trip function — also removes associated photo challenges
-  window.deleteTrip = async function(tripId, el) {
-    if (!confirm("Delete this trip? This will also remove associated photo challenges.")) return;
-    try {
-      // First, get the trip data to know the destination
-      const { getDoc } = await import("https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js");
-      const tripDoc = await getDoc(doc(db, "trips", tripId));
-      const tripData = tripDoc.exists() ? tripDoc.data() : null;
+  const EMPTY_STATE = `<div class="empty-state sm:col-span-2 xl:col-span-3">
+    <div class="emoji">🧭</div>
+    <p class="font-display text-2xl mb-1">No journeys yet</p>
+    <p class="muted mb-5">Your first adventure is one form away.</p>
+    <a href="plantrips.html" class="btn btn-primary">Plan a trip <i class="fa-solid fa-arrow-right"></i></a>
+  </div>`;
 
-      // Delete the trip from Firestore
-      await deleteDoc(doc(db, "trips", tripId));
+  function dateBadge(t) {
+    if (!t.arrivalDate) return "";
+    const d = new Date(t.arrivalDate + "T00:00:00");
+    return `<span class="date-badge"><b>${d.getDate()}</b><small>${d.toLocaleDateString("en-IN", { month: "short" })}</small></span>`;
+  }
 
-      // Also delete associated photo challenges via backend
-      if (tripData && tripData.destination && tripData.userId) {
-        try {
-          await fetch(
-            `http://localhost:5000/photo-challenges/${tripData.userId}/${encodeURIComponent(tripData.destination)}`,
-            { method: "DELETE" }
-          );
-          console.log(`🗑️ Deleted photo challenges for ${tripData.destination}`);
-        } catch (chalErr) {
-          console.warn("⚠️ Could not delete photo challenges (server may be offline):", chalErr.message);
-        }
-      }
-
-      el.closest(".trip-card").remove();
-      // Check if container is now empty
-      if (container.children.length === 0) {
-        container.innerHTML = `<div class="col-span-full text-center p-20 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
-          <div class="text-6xl mb-4">🧭</div>
-          <p class="text-gray-400 text-lg mb-4">No trips saved. Plan your first adventure!</p>
-          <a href="plantrips.html" class="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition">Plan a Trip <i class="fa-solid fa-arrow-right ml-2"></i></a>
-        </div>`;
-      }
-    } catch (err) {
-      console.error("Delete error:", err);
-      alert("Failed to delete trip.");
-    }
-  };
-
-  // Auth guard + load trips
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      window.location.href = "auth.html";
-      return;
-    }
-
-    await loadTrips(user.uid);
-  });
-
-  async function loadTrips(uid) {
-    try {
-      // Try user-scoped query with ordering (requires composite index)
-      const q = query(
-        collection(db, "trips"),
-        where("userId", "==", uid),
-        orderBy("createdAt", "desc")
-      );
-      const snapshot = await getDocs(q);
-      renderTrips(snapshot);
-    } catch (err) {
-      console.warn("Composite index not ready, using simple query...", err);
-      // Fallback: query by userId only (no ordering) — still user-scoped!
-      try {
-        const simpleQ = query(
-          collection(db, "trips"),
-          where("userId", "==", uid)
-        );
-        const snapshot = await getDocs(simpleQ);
-        renderTrips(snapshot);
-      } catch (err2) {
-        console.error("Failed to load trips:", err2);
-        container.innerHTML = `<p class="text-center text-red-400 p-10">Failed to load trips. Please try again.</p>`;
-      }
+  function sortedFiltered() {
+    const q = searchInput.value.trim().toLowerCase();
+    const list = trips.filter((t) => !q || `${t.destination} ${t.preference || ""}`.toLowerCase().includes(q));
+    const ts = (t) => t.createdAt?.seconds || 0;
+    switch (sortSelect.value) {
+      case "old": return list.sort((a, b) => ts(a) - ts(b));
+      case "soon": return list.sort((a, b) => (a.arrivalDate || "9999").localeCompare(b.arrivalDate || "9999"));
+      case "budget": return list.sort((a, b) => (b.budget || 0) - (a.budget || 0));
+      default: return list.sort((a, b) => ts(b) - ts(a));
     }
   }
 
-  function renderTrips(snapshot) {
-    if (snapshot.empty) {
-      container.innerHTML = `<div class="col-span-full text-center p-20 bg-gray-50 rounded-3xl border border-dashed border-gray-300">
-        <div class="text-6xl mb-4">🧭</div>
-        <p class="text-gray-400 text-lg mb-4">No trips saved yet. Time to plan one!</p>
-        <a href="plantrips.html" class="inline-block bg-green-500 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition">Plan a Trip <i class="fa-solid fa-arrow-right ml-2"></i></a>
-      </div>`;
+  function render() {
+    if (!trips.length) { container.innerHTML = EMPTY_STATE; return; }
+    const list = sortedFiltered();
+    if (!list.length) {
+      container.innerHTML = `<div class="empty-state sm:col-span-2 xl:col-span-3"><div class="emoji">🔎</div><p class="font-display text-xl">Nothing matches “${escapeHtml(searchInput.value)}”</p></div>`;
       return;
     }
 
-    // Known fallback URLs — if hero_image matches any of these, re-fetch a real image
-    const FALLBACK_URLS = [
-      "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b",
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
-    ];
-
-    function isFallbackImage(url) {
-      if (!url) return true;
-      return FALLBACK_URLS.some(fb => url.includes(fb.split("?")[0]));
-    }
-
-    container.innerHTML = "";
-    snapshot.forEach(async (docSnap) => {
-      const t = docSnap.data();
-      const daysCount = t.days?.length || 0;
-      const style = t.preference || "Custom";
-
-      // Determine the image — if it's a fallback, fetch a real one
-      let heroImage = t.hero_image || "";
-      const needsFetch = isFallbackImage(heroImage);
-
-      const card = document.createElement("div");
-      card.className = "trip-card group";
-
-      const imgId = `img-${docSnap.id}`;
-
-      card.innerHTML = `
-        <a href="itinerary.html?id=${docSnap.id}" class="block">
-          <div class="relative h-52 overflow-hidden">
-            <img id="${imgId}" src="${needsFetch ? '' : heroImage}"
-                 class="w-full h-full object-cover transition duration-500 group-hover:scale-110"
-                 style="${needsFetch ? 'background:#e2e8f0;' : ''}">
-            <div class="absolute top-4 right-4 status-badge px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider">
-              ${style}
-            </div>
-          </div>
-
-          <div class="p-6">
-            <h3 class="text-xl font-bold mb-2 group-hover:text-green-400 transition">${t.destination}</h3>
-
-            <div class="flex items-center gap-4 text-xs text-gray-400 mb-4 font-medium">
-              <span><i class="fa-solid fa-calendar-day mr-1 text-green-400"></i> ${daysCount} Days</span>
-              <span><i class="fa-solid fa-wallet mr-1 text-green-400"></i> ₹${t.total_estimated_cost || t.budget || "-"}</span>
-            </div>
-
-            ${t.arrivalDate ? `<p class="text-xs text-gray-500 mb-4"><i class="fa-solid fa-plane-departure mr-1"></i> ${t.arrivalDate} → ${t.returnDate}</p>` : ''}
-
-            <div class="flex items-center justify-between p-3 bg-gray-50 rounded-xl mb-4">
-              <span class="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Hidden Score</span>
-              <span class="text-green-400 font-black">${t.hidden_score || "8.2"} <small class="text-[10px] opacity-60">/ 10</small></span>
-            </div>
-
-            <div class="w-full text-center py-3 rounded-xl bg-green-500 group-hover:bg-green-600 text-white text-sm font-bold transition">
-              View Itinerary <i class="fa-solid fa-arrow-right ml-2 text-xs"></i>
-            </div>
+    container.innerHTML = list.map((t) => `
+      <article class="card card-hover trip-card relative" data-id="${escapeHtml(t.id)}">
+        <a href="itinerary.html?id=${encodeURIComponent(t.id)}" class="block">
+          <div class="frame">
+            ${dateBadge(t)}
+            <img src="${escapeHtml(t.hero_image || FALLBACK_IMAGE)}" alt="${escapeHtml(t.destination)}">
           </div>
         </a>
+        <button class="btn btn-danger btn-icon del" data-delete="${escapeHtml(t.id)}" aria-label="Delete ${escapeHtml(t.destination)}" title="Delete trip">
+          <i class="fa-regular fa-trash-can"></i>
+        </button>
+        <a href="itinerary.html?id=${encodeURIComponent(t.id)}" class="p-5 flex-1 flex flex-col">
+          <div class="flex items-start justify-between gap-3">
+            <h3 class="h3">${escapeHtml(t.destination)}</h3>
+            <span class="tag tag-moss flex-none">${escapeHtml(t.preference || "Custom")}</span>
+          </div>
+          <div class="flex flex-wrap gap-x-4 gap-y-1 text-sm muted mt-2">
+            <span><i class="fa-regular fa-calendar mr-1"></i>${t.days?.length || 0} days</span>
+            <span><i class="fa-solid fa-wallet mr-1"></i>${inr(t.total_estimated_cost || t.budget)}</span>
+          </div>
+          <p class="text-sm ink-2 mt-3 line-clamp-2">${escapeHtml(t.days?.[0]?.title ? `Starts with: ${t.days[0].title}` : "")}</p>
+          <span class="mt-auto pt-4 font-semibold text-sm" style="color:var(--moss)">Open itinerary <i class="fa-solid fa-arrow-right ml-1"></i></span>
+        </a>
+      </article>`).join("");
 
-        <div class="px-6 pb-4">
-          <button onclick="deleteTrip('${docSnap.id}', this)"
-            class="w-full text-center py-2 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold transition border border-red-500/20">
-            <i class="fa-solid fa-trash mr-1"></i> Delete Trip
-          </button>
-        </div>
-      `;
+    container.classList.add("stagger");
+    stagger(container);
+    container.querySelectorAll("img").forEach((img) => smoothImage(img, FALLBACK_IMAGE));
+    fillMissingHeroImages(list);
+  }
 
-      container.appendChild(card);
-
-      // If this trip has a stale/fallback image, fetch a real one from the API
-      if (needsFetch && t.destination) {
-        try {
-          const res = await fetch(`http://localhost:5000/get-destination-image?query=${encodeURIComponent(t.destination)}`);
-          if (res.ok) {
-            const data = await res.json();
-            if (data.image) {
-              document.getElementById(imgId).src = data.image;
-              // Save it back to Firebase so next load is instant
-              await updateDoc(doc(db, "trips", docSnap.id), { hero_image: data.image });
-            }
-          }
-        } catch (e) {
-          console.warn("Failed to fetch hero image for", t.destination);
-        }
-      }
+  // Fetch & cache a hero image for trips that don't have one yet
+  function fillMissingHeroImages(list) {
+    list.filter((t) => !t.hero_image && t.destination && !t._fetching).forEach((t) => {
+      t._fetching = true;
+      api(`/get-destination-image?query=${encodeURIComponent(t.destination)}`, { auth: false })
+        .then((data) => {
+          if (!data.image) return;
+          t.hero_image = data.image;
+          const img = container.querySelector(`[data-id="${CSS.escape(t.id)}"] img`);
+          if (img) img.src = data.image;
+          return updateDoc(doc(db, "trips", t.id), { hero_image: data.image });
+        })
+        .catch(() => {});
     });
   }
-</script>
 
+  container.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-delete]");
+    if (!btn) return;
+    e.preventDefault();
+    const trip = trips.find((t) => t.id === btn.dataset.delete);
+    if (!trip) return;
+
+    const ok = await confirmDialog({
+      title: `Delete ${trip.destination}?`,
+      body: "This removes the itinerary and its photo challenges. It can't be undone.",
+      confirmText: "Delete trip",
+      danger: true,
+      icon: "fa-trash-can",
+    });
+    if (!ok) return;
+
+    try {
+      await deleteDoc(doc(db, "trips", trip.id));
+      api(`/photo-challenges/${currentUser.uid}/${encodeURIComponent(trip.destination)}`, { method: "DELETE" })
+        .catch((err) => console.warn("Could not delete photo challenges:", err.message));
+
+      const card = btn.closest(".trip-card");
+      card.classList.add("removing");
+      card.addEventListener("animationend", () => {
+        trips = trips.filter((t) => t.id !== trip.id);
+        updateCount();
+        render();
+      }, { once: true });
+      toast(`${trip.destination} removed from your journal.`, "success");
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast("Couldn't delete that trip.", "error");
+    }
+  });
+
+  function updateCount() {
+    document.getElementById("countLine").textContent = trips.length
+      ? `${trips.length} journey${trips.length > 1 ? "s" : ""} planned so far.`
+      : "Every trail you've planned, in one place.";
+    document.getElementById("toolbar").hidden = trips.length < 2;
+  }
+
+  searchInput.addEventListener("input", render);
+  sortSelect.addEventListener("change", render);
+
+  currentUser = await requireUser();
+  shell.setUser(currentUser);
+  try {
+    const snap = await getDocs(query(collection(db, "trips"), where("userId", "==", currentUser.uid)));
+    trips = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    updateCount();
+    render();
+  } catch (err) {
+    console.error("Failed to load trips:", err);
+    container.innerHTML = `<div class="empty-state sm:col-span-2 xl:col-span-3"><div class="emoji">⚠️</div><p class="font-display text-xl">Couldn't load your journeys.</p><p class="muted">Please refresh and try again.</p></div>`;
+  }
+</script>
 </body>
 </html>

@@ -6,16 +6,17 @@
   <title>Admin Panel | HiddenTrails.AI</title>
   <meta name="description" content="Admin panel for managing tourist places, images, and descriptions for HiddenTrails.AI" />
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
-    * { font-family: 'Inter', sans-serif; }
-    body { background: #f8fafc; min-height: 100vh; }
+    * { font-family: 'Inter', system-ui, sans-serif; }
+    h1, h2, h3 { font-family: 'Fraunces', Georgia, serif !important; letter-spacing: -.01em; }
+    body { background: #f5f0e6; min-height: 100vh; color: #1d2925; }
 
     /* Login overlay */
     .login-overlay {
       position: fixed; inset: 0; z-index: 200;
-      background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+      background: linear-gradient(135deg, #1f4a37 0%, #1d2925 60%, #18211e 100%);
       display: flex; align-items: center; justify-content: center;
       transition: opacity 0.5s, visibility 0.5s;
     }
@@ -122,6 +123,68 @@
       animation: slideUp 0.3s ease-out;
     }
   </style>
+
+  <style id="journal-overrides">
+    /* Journal palette: paper, ink, one terracotta accent. Remaps the Tailwind
+       utilities this page uses; markup and script are unchanged. */
+    :root { --paper:#FBFBF9; --paper-2:#F2F2EF; --surface:#FFFFFF; --ink:#1A1A1A; --ink-2:#44443F; --muted:#6B6B66; --line:#E6E6E1; --line-2:#D4D4CE; --accent:#B5502D; --accent-ink:#923F22; }
+    body { background: var(--paper) !important; color: var(--ink); font-size: 15.5px; }
+    h1, h2, h3 { font-weight: 400 !important; }
+    .font-black { font-weight: 500 !important; }
+    h1.font-black, h2.font-black, h3.font-black, p.text-2xl.font-black { font-family: 'Fraunces', Georgia, serif !important; font-weight: 400 !important; }
+
+    /* Login gate: paper instead of a dark gradient */
+    .login-overlay { background: var(--paper) !important; }
+    .login-card { background: var(--surface) !important; border: 1px solid var(--line) !important; backdrop-filter: none !important; border-radius: 10px !important; text-align: left !important; }
+    .login-card h2 { color: var(--ink) !important; font-size: 2rem !important; }
+    .login-card .text-gray-400 { color: var(--muted) !important; }
+    .login-card input { background: #fff !important; border: 1px solid var(--line-2) !important; color: var(--ink) !important; text-align: left !important; letter-spacing: .08em !important; border-radius: 6px !important; }
+    .login-card input::placeholder { color: #9C9C95 !important; letter-spacing: 0; }
+
+    /* Gradient buttons -> flat accent */
+    .bg-gradient-to-r { background: var(--accent) !important; box-shadow: none !important; border-radius: 6px !important; transform: none !important; font-weight: 500 !important; }
+    .bg-gradient-to-r:hover { background: var(--accent-ink) !important; }
+    .bg-emerald-500, .bg-emerald-400 { background: var(--accent) !important; }
+    .bg-emerald-50, .bg-emerald-500\/10 { background: var(--paper-2) !important; }
+    .text-emerald-500, .text-emerald-600 { color: var(--accent) !important; }
+    .border-emerald-400 { border-color: var(--accent) !important; }
+    .shadow-lg, .shadow-sm, .shadow-emerald-500\/20 { box-shadow: none !important; }
+    .hover\:scale-105:hover, .hover\:scale-\[1\.02\]:hover { transform: none !important; }
+
+    /* Neutrals */
+    .bg-white { background: var(--surface) !important; }
+    .bg-gray-50, .bg-gray-100 { background: var(--paper-2) !important; }
+    .bg-gray-200 { background: var(--line) !important; }
+    .text-gray-800, .text-gray-700 { color: var(--ink) !important; }
+    .text-gray-600, .text-gray-500 { color: var(--ink-2) !important; }
+    .text-gray-400, .text-gray-300 { color: var(--muted) !important; }
+    .border-gray-100, .border-gray-200 { border-color: var(--line) !important; }
+    .text-blue-500, .text-amber-500 { color: var(--ink-2) !important; }
+    .bg-blue-50 { background: var(--paper-2) !important; }
+
+    /* Page components */
+    .glass-card, .stat-card { background: var(--surface) !important; border: 1px solid var(--line) !important; border-radius: 10px !important; box-shadow: none !important; }
+    .stat-icon { display: none !important; }
+    .place-row { border-bottom-color: var(--line) !important; }
+    .place-row:hover { background: var(--paper) !important; }
+    .thumb { border-radius: 6px !important; border: 1px solid var(--line) !important; }
+    .form-input { background: #fff !important; border: 1px solid var(--line-2) !important; border-radius: 6px !important; }
+    .form-input:focus { border-color: var(--ink) !important; box-shadow: 0 0 0 3px rgba(30,27,22,.08) !important; }
+    .img-preview { border-radius: 6px !important; border: 1px dashed var(--line-2) !important; background: var(--paper) !important; }
+    .img-preview.loaded { border-style: solid !important; border-color: var(--line-2) !important; }
+    .modal-overlay { background: rgba(22,19,15,.5) !important; backdrop-filter: none !important; }
+    .modal-panel, .confirm-panel { background: var(--surface) !important; border: 1px solid var(--line); border-radius: 10px !important; box-shadow: 0 12px 32px -14px rgba(30,27,22,.28) !important; animation: none !important; }
+    .badge { border-radius: 4px !important; background: transparent !important; border: 1px solid currentColor; font-weight: 600 !important; letter-spacing: .06em !important; }
+    .badge-easy { color: #2F5439 !important; } .badge-medium { color: #6B5119 !important; } .badge-hard { color: #7E231F !important; } .badge-db { color: var(--ink-2) !important; }
+    .toast { border-radius: 8px !important; animation: none !important; }
+    .toast.success { background: var(--ink) !important; }
+    .toast.error { background: #4A1C18 !important; }
+    ::-webkit-scrollbar-track { background: var(--paper) !important; }
+    ::-webkit-scrollbar-thumb { background: var(--line-2) !important; }
+    .bg-red-500 { background: #A3302A !important; }
+    .bg-red-50 { background: #F5DFDB !important; }
+    .text-red-500, .text-red-400 { color: #A3302A !important; }
+  </style>
 </head>
 
 <body>
@@ -129,7 +192,6 @@
 <!-- ═══════════════ LOGIN GATE ═══════════════ -->
 <div class="login-overlay" id="loginOverlay">
   <div class="login-card text-center">
-    <div class="text-5xl mb-4">🔐</div>
     <h2 class="text-2xl font-black text-white mb-2">Admin Access</h2>
     <p class="text-gray-400 text-sm mb-8">Enter your admin key to manage tourist places</p>
     <input
@@ -249,7 +311,6 @@
 
   <!-- Empty state -->
   <div id="emptyState" class="hidden text-center py-16">
-    <div class="text-6xl mb-4">🏔️</div>
     <h3 class="text-xl font-bold text-gray-600 mb-2">No Tourist Places Yet</h3>
     <p class="text-gray-400 mb-6 max-w-md mx-auto">
       Start adding tourist places with images and descriptions. They'll appear automatically in itineraries and photo challenges.
@@ -356,7 +417,6 @@
 <!-- ═══════════════ DELETE CONFIRM ═══════════════ -->
 <div class="modal-overlay" id="deleteModal">
   <div class="confirm-panel">
-    <div class="text-5xl mb-4">🗑️</div>
     <h3 class="text-xl font-bold text-gray-800 mb-2">Delete Place?</h3>
     <p class="text-gray-500 text-sm mb-6">
       Are you sure you want to delete <strong id="deleteName"></strong>?
@@ -380,7 +440,13 @@
   let allPlaces = [];
   let deleteTargetId = null;
   let deleteTargetName = "";
-  const API_BASE = "http://localhost:5000";
+  const API_BASE = window.location.port === "5000" ? "" : "http://localhost:5000";
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
 
   // ═══════════════ AUTH ═══════════════
   // Auto-login if key is saved
@@ -472,26 +538,26 @@
         <div class="grid grid-cols-12 gap-3 px-6 py-4 items-center place-row">
           <div class="col-span-2">
             ${p.imageUrl
-              ? `<img src="${p.imageUrl}" class="thumb" alt="${p.name}" onerror="this.src='https://placehold.co/96x72/f1f5f9/94a3b8?text=No+Img'" />`
+              ? `<img src="${escapeHtml(p.imageUrl)}" class="thumb" alt="${escapeHtml(p.name)}" onerror="this.src='https://placehold.co/96x72/f1f5f9/94a3b8?text=No+Img'" />`
               : `<div class="thumb bg-gray-100 flex items-center justify-center text-gray-400"><i class="fa-solid fa-image"></i></div>`
             }
           </div>
           <div class="col-span-2">
-            <p class="font-bold text-gray-800 text-sm">${p.name}</p>
+            <p class="font-bold text-gray-800 text-sm">${escapeHtml(p.name)}</p>
             ${p.tags && p.tags.length > 0
-              ? `<div class="flex flex-wrap gap-1 mt-1">${p.tags.slice(0, 3).map(t => `<span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">${t}</span>`).join("")}</div>`
+              ? `<div class="flex flex-wrap gap-1 mt-1">${p.tags.slice(0, 3).map(t => `<span class="text-[9px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">${escapeHtml(t)}</span>`).join("")}</div>`
               : ""
             }
           </div>
-          <div class="col-span-2 text-sm text-gray-500">${p.location || "—"}</div>
-          <div class="col-span-2 text-xs text-gray-400">${truncDesc}</div>
-          <div class="col-span-1"><span class="badge ${diffClass}">${p.difficulty || "Medium"}</span></div>
-          <div class="col-span-1 font-bold text-emerald-600 text-sm">${p.points || 100}</div>
+          <div class="col-span-2 text-sm text-gray-500">${escapeHtml(p.location || "—")}</div>
+          <div class="col-span-2 text-xs text-gray-400">${escapeHtml(truncDesc)}</div>
+          <div class="col-span-1"><span class="badge ${diffClass}">${escapeHtml(p.difficulty || "Medium")}</span></div>
+          <div class="col-span-1 font-bold text-emerald-600 text-sm">${escapeHtml(p.points || 100)}</div>
           <div class="col-span-2 flex items-center justify-end gap-2">
-            <button onclick="openEditModal('${p.id}')" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition flex items-center justify-center" title="Edit">
+            <button data-edit="${escapeHtml(p.id)}" class="w-8 h-8 bg-blue-50 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition flex items-center justify-center" title="Edit">
               <i class="fa-solid fa-pen-to-square text-xs"></i>
             </button>
-            <button onclick="openDeleteModal('${p.id}', '${p.name.replace(/'/g, "\\'")}')" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center justify-center" title="Delete">
+            <button data-delete="${escapeHtml(p.id)}" class="w-8 h-8 bg-red-50 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition flex items-center justify-center" title="Delete">
               <i class="fa-solid fa-trash text-xs"></i>
             </button>
           </div>
@@ -499,6 +565,17 @@
       `;
     }).join("");
   }
+
+  // Edit / delete buttons (event delegation — no inline handlers with user data)
+  document.getElementById("placesBody").addEventListener("click", (e) => {
+    const editBtn = e.target.closest("[data-edit]");
+    const delBtn = e.target.closest("[data-delete]");
+    if (editBtn) openEditModal(editBtn.dataset.edit);
+    if (delBtn) {
+      const place = allPlaces.find(p => p.id === delBtn.dataset.delete);
+      if (place) openDeleteModal(place.id, place.name);
+    }
+  });
 
   // ═══════════════ STATS ═══════════════
   function updateStats() {
@@ -609,7 +686,7 @@
 
     try {
       const url = id
-        ? `${API_BASE}/admin/places/${id}`
+        ? `${API_BASE}/admin/places/${encodeURIComponent(id)}`
         : `${API_BASE}/admin/places`;
       const method = id ? "PUT" : "POST";
 
@@ -652,7 +729,7 @@
     if (!deleteTargetId) return;
 
     try {
-      const res = await fetch(`${API_BASE}/admin/places/${deleteTargetId}`, {
+      const res = await fetch(`${API_BASE}/admin/places/${encodeURIComponent(deleteTargetId)}`, {
         method: "DELETE",
         headers: apiHeaders(),
       });

@@ -2,6 +2,7 @@
  * Reward Controller
  * -------------------
  * Handles HTTP request/response for rewards and trip-based point claims.
+ * The user is always the authenticated caller (req.user.uid).
  */
 
 import { getUserRewards, awardTripReward } from "../services/rewardService.js";
@@ -9,19 +10,11 @@ import { db } from "../config/firebase.js";
 
 /**
  * GET /rewards/:userId
- *
  * Returns the user's current points, level, progress, and completed challenges.
  */
 export async function handleGetRewards(req, res) {
   try {
-    const { userId } = req.params;
-
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
-    }
-
-    const rewards = await getUserRewards(userId, db);
-
+    const rewards = await getUserRewards(req.user.uid, db);
     res.json(rewards);
   } catch (error) {
     console.error("❌ Get rewards error:", error);
@@ -32,37 +25,25 @@ export async function handleGetRewards(req, res) {
 /**
  * POST /rewards/claim-trip
  *
- * Validates a completed trip and awards reward points.
- * Enforces daily and monthly caps.
- *
- * Expected body:
+ * Body:
  * {
- *   userId: string,
  *   gpsPoints: [{ latitude, longitude, timestamp }],
  *   visitedPOIs: [{ poiId, arrivalTime, departureTime }]
  * }
  */
 export async function handleClaimTripReward(req, res) {
   try {
-    const { userId, gpsPoints, visitedPOIs } = req.body;
+    const { gpsPoints, visitedPOIs } = req.body;
 
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
-    }
-
-    if (!gpsPoints || !Array.isArray(gpsPoints) || gpsPoints.length < 2) {
+    if (!Array.isArray(gpsPoints) || gpsPoints.length < 2) {
       return res.status(400).json({ error: "Valid GPS data is required" });
     }
 
-    if (!visitedPOIs || !Array.isArray(visitedPOIs)) {
+    if (!Array.isArray(visitedPOIs)) {
       return res.status(400).json({ error: "Visited POIs data is required" });
     }
 
-    const result = await awardTripReward(
-      userId,
-      { gpsPoints, visitedPOIs },
-      db
-    );
+    const result = await awardTripReward(req.user.uid, { gpsPoints, visitedPOIs }, db);
 
     if (result.success) {
       res.json({
@@ -73,10 +54,7 @@ export async function handleClaimTripReward(req, res) {
         tripStats: result.tripStats,
       });
     } else {
-      res.status(400).json({
-        success: false,
-        errors: result.errors,
-      });
+      res.status(400).json({ success: false, errors: result.errors });
     }
   } catch (error) {
     console.error("❌ Trip reward error:", error);

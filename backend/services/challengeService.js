@@ -12,7 +12,6 @@ import {
   getGroqHeaders,
   LLAMA_TEXT_MODEL,
 } from "../config/groq.js";
-import { db as firestoreDb } from "../config/firebase.js";
 
 /**
  * Generate photo challenges for a destination's landmarks.
@@ -166,58 +165,48 @@ Rules:
     }
 
     // ======= SAVE NEW CHALLENGES =======
-    // Check admin database for curated place data before saving
+    // Prefer admin-curated data from touristPlaces (loaded once, not per challenge)
+    let curatedPlaces = [];
+    try {
+      const placesSnapshot = await db.collection("touristPlaces").get();
+      curatedPlaces = placesSnapshot.docs.map((doc) => doc.data());
+    } catch (dbErr) {
+      console.warn("⚠️ Could not check touristPlaces database:", dbErr.message);
+    }
+
+    const validChallenges = parsed.challenges
+      .filter((c) => c && typeof c.name === "string" && c.name.trim())
+      .slice(0, 6);
+
     const batch = db.batch();
-    for (const challenge of parsed.challenges) {
-      // Try to find this place in the admin-curated touristPlaces collection
-      let dbImage = null;
-      let dbDescription = challenge.description || `Photograph ${challenge.name}`;
-      let dbLatitude = challenge.latitude || null;
-      let dbLongitude = challenge.longitude || null;
-      let dbDifficulty = challenge.difficulty || "Medium";
-      let dbPoints = challenge.points || 100;
+    for (const challenge of validChallenges) {
+      const nameLower = challenge.name.trim().toLowerCase();
+      const place = curatedPlaces.find((p) => {
+        const placeName = (p.name || "").toLowerCase();
+        return placeName && (placeName.includes(nameLower) || nameLower.includes(placeName));
+      });
+      if (place) console.log(`🗄️ Found database match for challenge "${challenge.name}" → "${place.name}"`);
 
-      try {
-        const placesSnapshot = await firestoreDb.collection("touristPlaces").get();
-        const challengeNameLower = challenge.name.toLowerCase();
+      const lat = Number(place?.latitude ?? challenge.latitude);
+      const lng = Number(place?.longitude ?? challenge.longitude);
 
-        placesSnapshot.forEach(doc => {
-          const placeData = doc.data();
-          const placeNameLower = (placeData.name || "").toLowerCase();
-
-          // Match if names are similar
-          if (placeNameLower.includes(challengeNameLower) || challengeNameLower.includes(placeNameLower)) {
-            console.log(`🗄️ Found database match for challenge "${challenge.name}" → "${placeData.name}"`);
-            dbImage = placeData.imageUrl || null;
-            if (placeData.description) dbDescription = placeData.description;
-            if (placeData.latitude) dbLatitude = placeData.latitude;
-            if (placeData.longitude) dbLongitude = placeData.longitude;
-            if (placeData.difficulty) dbDifficulty = placeData.difficulty;
-            if (placeData.points) dbPoints = placeData.points;
-          }
-        });
-      } catch (dbErr) {
-        console.warn("⚠️ Could not check touristPlaces database:", dbErr.message);
-      }
-
-      const docRef = db.collection("photoChallenges").doc();
-      batch.set(docRef, {
+      batch.set(db.collection("photoChallenges").doc(), {
         userId,
         destination,
-        name: challenge.name,
-        description: dbDescription,
-        difficulty: dbDifficulty,
-        points: dbPoints,
-        latitude: dbLatitude,
-        longitude: dbLongitude,
+        name: challenge.name.trim(),
+        description: place?.description || challenge.description || `Photograph ${challenge.name}`,
+        difficulty: place?.difficulty || challenge.difficulty || "Medium",
+        points: Number(place?.points || challenge.points) || 100,
+        latitude: Number.isFinite(lat) ? lat : null,
+        longitude: Number.isFinite(lng) ? lng : null,
         completed: false,
-        image: dbImage, // Uses database image if available, null otherwise (fetched on frontend)
+        image: place?.imageUrl || null, // null → fetched on demand from the image API
         createdAt: new Date(),
       });
     }
 
     await batch.commit();
-    console.log(`📸 Generated ${parsed.challenges.length} photo challenges for ${destination}`);
+    console.log(`📸 Generated ${validChallenges.length} photo challenges for ${destination}`);
 
   } catch (err) {
     // Don't crash itinerary generation if challenges fail

@@ -2,182 +2,164 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Sign Up | HiddenTrails.AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign up · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#0F3D3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
 </head>
-<body class="m-0 p-0 font-sans flex items-center justify-center min-h-screen relative">
 
-  <!-- 🔥 Background Image -->
-  <div 
-    class="absolute inset-0 bg-cover bg-center"
-    style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');">
-  </div>
-
-  <!-- 🔥 Overlay (same as index page, slightly transparent) -->
-  <div class="absolute inset-0 bg-black/60"></div>
-
-  <!-- NAV -->
-  <nav class="absolute top-0 w-full flex items-center justify-between px-10 py-5 z-50">
-    <a href="index.html" class="text-xl font-black text-white tracking-tight">
-      HiddenTrails.AI
-    </a>
-  </nav>
-
-  <!-- MAIN CARD -->
-  <div class="relative z-10 w-full max-w-md p-8 mx-4 bg-gray-50/90 backdrop-blur-md border border-gray-200 rounded-3xl shadow-xl">
-
-    <div class="text-center mb-8">
-      <h2 class="text-2xl font-bold text-gray-800 mb-2">Create Account</h2>
-      <p class="text-gray-500 text-sm">Join the hidden trails community</p>
-    </div>
-
-    <!-- NAME -->
-    <div class="relative mb-5">
-      <label class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Full Name</label>
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-          <i class="fa-solid fa-user text-sm"></i>
-        </span>
-        <input id="fullName" type="text" placeholder="Your name"
-          class="w-full bg-white border border-gray-300 p-3 pl-10 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition" />
-      </div>
-    </div>
-
-    <!-- EMAIL -->
-    <div class="relative mb-5">
-      <label class="block text-xs font-bold text-gray-200 uppercase tracking-widest mb-2 ml-1">Email</label>
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-300">
-          <i class="fa-solid fa-envelope text-sm"></i>
-        </span>
-        <input id="email" type="email" placeholder="you@example.com"
-          class="w-full bg-white border border-gray-300 p-3 pl-10 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition" />
-      </div>
-    </div>
-
-    <!-- PASSWORD -->
-    <div class="relative mb-5">
-      <label class="block text-xs font-bold text-gray-200 uppercase tracking-widest mb-2 ml-1">Password</label>
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-300">
-          <i class="fa-solid fa-lock text-sm"></i>
-        </span>
-        <input id="password" type="password" placeholder="••••••••"
-          class="w-full bg-white border border-gray-300 p-3 pl-10 pr-10 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition" />
-        <span id="togglePassword"
-          class="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-400 hover:text-gray-800 transition select-none">
-          <i class="fa-solid fa-eye"></i>
-        </span>
-      </div>
-    </div>
-
-    <!-- CONFIRM PASSWORD -->
-    <div class="relative mb-6">
-      <label class="block text-xs font-bold text-gray-600 uppercase tracking-widest mb-2 ml-1">Confirm Password</label>
-      <div class="relative">
-        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-          <i class="fa-solid fa-shield-halved text-sm"></i>
-        </span>
-        <input id="confirmPassword" type="password" placeholder="••••••••"
-          class="w-full bg-white border border-gray-300 p-3 pl-10 rounded-xl text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-green-400 outline-none transition" />
-      </div>
-    </div>
-
-    <button id="signupBtn"
-      class="w-full bg-green-600 text-white py-3.5 rounded-xl font-bold text-lg hover:bg-green-700 shadow-lg shadow-green-900/20 transform transition active:scale-95">
-      Create Account
-    </button>
-
-    <p class="text-center text-gray-500 mt-8 text-sm">
-      Already have an account?
-      <a href="auth.html" class="text-green-600 font-bold hover:text-green-700 transition underline-offset-4 hover:underline">
-        Login
+<body>
+<div class="auth-split">
+  <!-- Photo side -->
+  <aside class="auth-photo grain">
+    <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Dzukou_Valley.jpg?width=1600" alt="Rolling green hills of Dzükou Valley, Nagaland, under low clouds" />
+    <div class="auth-photo-inner">
+      <a href="index.html" class="brand on-dark" aria-label="HiddenTrails.AI home">
+        <span class="brand-mark"><i data-lucide="mountain-snow"></i></span>
+        <span class="brand-name">HiddenTrails<em>.ai</em></span>
       </a>
-    </p>
+      <div class="auth-quote">
+        <blockquote>Some of India's best places don't have a signboard. Go find them.</blockquote>
+        <p class="auth-place mt-5"><i data-lucide="map-pin" class="ico-sm"></i> Dzükou Valley · Nagaland</p>
+        <div class="grid gap-2 mt-8">
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="map"></i></span>Day-by-day plans that fit your budget</div>
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="camera"></i></span>Photo challenges at real landmarks</div>
+          <div class="auth-perk"><span class="p-ico"><i data-lucide="ticket"></i></span>Points you can trade for travel perks</div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
-  </div>
+  <!-- Form side -->
+  <main class="auth-form-side">
+    <div class="auth-theme"><button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i data-lucide="sun" class="ico-sun"></i><i data-lucide="coffee" class="ico-brown"></i><i data-lucide="moon" class="ico-moon"></i></button></div>
+    <div class="auth-card stagger" id="card">
+      <span class="eyebrow">Sign up</span>
+      <h1 class="h1 mt-3">Start your <span class="accent-italic">journal</span>.</h1>
+      <p class="muted mt-2 mb-8">Free. Plan trips, photograph landmarks, collect rewards.</p>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword } from
-      "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from
-      "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+      <form id="signupForm" class="space-y-4" novalidate>
+        <div class="float-field has-icon">
+          <i data-lucide="user-round" class="field-ico"></i>
+          <input id="fullName" type="text" autocomplete="name" placeholder=" " class="input" maxlength="80" />
+          <label for="fullName">Your name</label>
+        </div>
 
-    const firebaseConfig = {
-      apiKey: "your_firebase_api_key",
-      authDomain: "hiddentrails-ai.firebaseapp.com",
-      projectId: "hiddentrails-ai",
-      storageBucket: "hiddentrails-ai.firebasestorage.app",
-      messagingSenderId: "739490816318",
-      appId: "1:739490816318:web:3d1adc77b25cf1dfb70c6f"
-    };
+        <div class="float-field has-icon">
+          <i data-lucide="mail" class="field-ico"></i>
+          <input id="email" type="email" autocomplete="email" placeholder=" " class="input" />
+          <label for="email">Email address</label>
+        </div>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+        <div>
+          <div class="float-field has-icon">
+            <i data-lucide="lock-keyhole" class="field-ico"></i>
+            <input id="password" type="password" autocomplete="new-password" placeholder=" " class="input !pr-14" aria-describedby="rules" />
+            <label for="password">Create a password</label>
+            <button type="button" id="togglePassword" class="field-action btn btn-ghost btn-sm btn-icon" aria-label="Show password"><i data-lucide="eye"></i></button>
+          </div>
+          <div class="meter" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+          <ul class="rules" id="rules" aria-label="Password requirements">
+            <li data-r="len">8+ characters</li>
+            <li data-r="case">Upper &amp; lower case</li>
+            <li data-r="num">A number</li>
+            <li data-r="sym">A symbol</li>
+          </ul>
+        </div>
 
-    const togglePassword = document.getElementById("togglePassword");
-    const passwordInput = document.getElementById("password");
+        <div class="float-field has-icon">
+          <i data-lucide="shield-check" class="field-ico"></i>
+          <input id="confirmPassword" type="password" autocomplete="new-password" placeholder=" " class="input" />
+          <label for="confirmPassword">Confirm password</label>
+        </div>
 
-    togglePassword.addEventListener("click", () => {
-      const isHidden = passwordInput.type === "password";
-      passwordInput.type = isHidden ? "text" : "password";
-      togglePassword.innerHTML = isHidden ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+        <button id="signupBtn" type="submit" class="btn btn-accent btn-lg btn-block !mt-6">Create account <i data-lucide="arrow-right" class="arrow"></i></button>
+      </form>
+
+      <p class="divider-text mt-8">Already exploring?</p>
+      <a href="auth.html" class="btn btn-secondary btn-block mt-4">Log in</a>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+  import { auth, db } from "./js/app.js";
+  import { toast, busy, stagger } from "./js/ui.js";
+  import { createUserWithEmailAndPassword, updateProfile } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+  import { doc, setDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+
+  stagger(document.getElementById("card"));
+  const $ = (id) => document.getElementById(id);
+  const passwordInput = $("password");
+
+  $("togglePassword").addEventListener("click", () => {
+    const hidden = passwordInput.type === "password";
+    passwordInput.type = hidden ? "text" : "password";
+    $("togglePassword").innerHTML = `<i data-lucide="${hidden ? "eye-off" : "eye"}"></i>`;
+  });
+
+  // ── Live password strength ──
+  const CHECKS = {
+    len: (p) => p.length >= 8,
+    case: (p) => /[a-z]/.test(p) && /[A-Z]/.test(p),
+    num: (p) => /\d/.test(p),
+    sym: (p) => /[^A-Za-z0-9]/.test(p),
+  };
+  const COLORS = ["var(--terracotta)", "var(--saffron)", "var(--gold)", "var(--leaf)"];
+  function strength(p) {
+    let score = 0;
+    for (const [key, test] of Object.entries(CHECKS)) {
+      const ok = test(p);
+      if (ok) score++;
+      const li = document.querySelector(`#rules [data-r="${key}"]`);
+      li.classList.toggle("ok", ok);
+    }
+    document.querySelectorAll(".meter span").forEach((bar, i) => {
+      bar.style.background = i < score ? COLORS[score - 1] : "";
     });
+    return score;
+  }
+  passwordInput.addEventListener("input", () => strength(passwordInput.value));
 
-    document.getElementById("signupBtn").addEventListener("click", async () => {
-      const fullName = document.getElementById("fullName").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = passwordInput.value.trim();
-      const confirmPassword = document.getElementById("confirmPassword").value.trim();
+  $("signupForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const fullName = $("fullName").value.trim();
+    const email = $("email").value.trim();
+    const password = passwordInput.value;
+    const confirmPassword = $("confirmPassword").value;
 
-      if (!fullName || !email || !password || !confirmPassword) {
-        alert("All fields are required");
-        return;
-      }
+    if (!fullName || !email || !password || !confirmPassword) { toast("All fields are required.", "error"); return; }
+    if (strength(password) < 4) { toast("Make the password stronger: tick all four boxes.", "error"); return; }
+    if (password !== confirmPassword) { toast("Passwords don't match.", "error"); $("confirmPassword").focus(); return; }
 
-      // 🔥 STRONG PASSWORD VALIDATION (ADDED)
-      const strongRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$/;
-
-      if (!strongRegex.test(password)) {
-        alert("Password must be 8+ chars with Uppercase, Lowercase, Number & Special Character");
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        alert("Passwords do not match");
-        return;
-      }
-
-      const btn = document.getElementById("signupBtn");
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Creating...';
-
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        await setDoc(doc(db, "users", user.uid), {
-          name: fullName,
-          email: user.email,
-          rewardPoints: 0,
-          level: "Rookie",
-          completedChallenges: [],
-          createdAt: new Date().toISOString()
-        });
-
-        alert("Account created successfully! 🎉");
-        window.location.href = "dashboard.html";
-      } catch (err) {
-        alert("Error: " + err.message);
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Create Account";
-      }
-    });
-  </script>
-
+    const restore = busy($("signupBtn"), "Creating your journal…");
+    try {
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(user, { displayName: fullName.slice(0, 80) }).catch(() => {});
+      await setDoc(doc(db, "users", user.uid), {
+        name: fullName.slice(0, 80),
+        email: user.email,
+        rewardPoints: 0,
+        level: "Rookie",
+        completedChallenges: [],
+        createdAt: new Date().toISOString(),
+      });
+      toast("Welcome aboard! 🎉", "success");
+      setTimeout(() => (window.location.href = "dashboard.html"), 700);
+    } catch (err) {
+      restore();
+      const msg = err.code === "auth/email-already-in-use" ? "That email already has an account. Try logging in."
+                : err.code === "auth/invalid-email" ? "That email doesn't look right."
+                : err.message;
+      toast(msg, "error");
+    }
+  });
+</script>
 </body>
 </html>

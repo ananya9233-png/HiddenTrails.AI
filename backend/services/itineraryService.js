@@ -49,34 +49,30 @@ Rules:
 - Include travel tips and eco-friendly suggestions where possible
 - Return ONLY valid JSON, no extra text or markdown`;
 
-const response = await fetch(GROQ_BASE_URL, {
-  method: "POST",
-  headers: getGroqHeaders(),
-  body: JSON.stringify({
-    model: LLAMA_TEXT_MODEL,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are a travel itinerary API. You ONLY output valid JSON. Never include markdown, explanations, or extra text. Only raw JSON.",
-      },
-      { role: "user", content: prompt },
-    ],
-    max_tokens: ITINERARY.MAX_TOKENS,
-    temperature: ITINERARY.TEMPERATURE,
-  }),
-});
+  const response = await fetch(GROQ_BASE_URL, {
+    method: "POST",
+    headers: getGroqHeaders(),
+    body: JSON.stringify({
+      model: LLAMA_TEXT_MODEL,
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a travel itinerary API. You ONLY output valid JSON. Never include markdown, explanations, or extra text. Only raw JSON.",
+        },
+        { role: "user", content: prompt },
+      ],
+      max_tokens: ITINERARY.MAX_TOKENS,
+      temperature: ITINERARY.TEMPERATURE,
+    }),
+  });
 
-console.log("Groq HTTP status:", response.status);
+  const data = await response.json();
+  if (!response.ok) {
+    console.error("❌ Groq API error:", response.status, JSON.stringify(data?.error || data));
+  }
 
-const data = await response.json();
-console.log("FULL GROQ RESPONSE:", JSON.stringify(data, null, 2));
-
-const rawText =
-  data?.choices?.[0]?.message?.content ||
-  data?.choices?.[0]?.text ||
-  null;
-  console.log("📝 Raw itinerary text:", rawText?.substring(0, 300));
+  const rawText = data?.choices?.[0]?.message?.content || null;
 
   if (!rawText) {
     throw new Error("No itinerary generated from AI model");
@@ -97,31 +93,30 @@ const rawText =
  * @returns {{ days: Array, total_estimated_cost: number }}
  */
 function parseItineraryResponse(rawText, numDays, destination, budget) {
+  const maxPerDay = Math.round(budget / numDays);
+
   try {
     // Extract JSON object from potentially messy AI output
     const jsonMatch = rawText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      if (parsed.days && Array.isArray(parsed.days)) {
+    if (!jsonMatch) throw new Error("No JSON object found in response");
 
-  // Ensure estimated costs do not exceed budget
-  const maxPerDay = Math.round(budget / numDays);
-
-  parsed.days = parsed.days.map(day => ({
-    ...day,
-    estimated_cost: Math.min(day.estimated_cost || maxPerDay, maxPerDay)
-  }));
-
-  parsed.total_estimated_cost = parsed.days.reduce(
-    (sum, d) => sum + (d.estimated_cost || 0),
-    0
-  );
-
-  return parsed;
-}
-      
+    const parsed = JSON.parse(jsonMatch[0]);
+    if (!Array.isArray(parsed.days) || parsed.days.length === 0) {
+      throw new Error("Response has no days array");
     }
-    throw new Error("No valid JSON structure found in response");
+
+    // Normalise each day and keep estimated costs within budget
+    parsed.days = parsed.days.slice(0, numDays).map((day, i) => ({
+      day: i + 1,
+      title: String(day.title || `Day ${i + 1} in ${destination}`),
+      morning: String(day.morning || ""),
+      afternoon: String(day.afternoon || ""),
+      evening: String(day.evening || ""),
+      estimated_cost: Math.min(Number(day.estimated_cost) || maxPerDay, maxPerDay),
+    }));
+
+    parsed.total_estimated_cost = parsed.days.reduce((sum, d) => sum + d.estimated_cost, 0);
+    return { days: parsed.days, total_estimated_cost: parsed.total_estimated_cost };
   } catch (parseErr) {
     console.error("❌ Itinerary JSON parse error:", parseErr.message);
 
@@ -133,9 +128,9 @@ function parseItineraryResponse(rawText, numDays, destination, budget) {
         morning: `Start your morning exploring the local area of ${destination}. Visit nearby attractions and enjoy breakfast at a popular cafe.`,
         afternoon: `After lunch at a local restaurant, continue sightseeing around ${destination}. Explore markets and cultural spots.`,
         evening: `Wind down with dinner at a well-known restaurant in ${destination}. Enjoy the local nightlife or relax at your hotel.`,
-        estimated_cost: Math.round(budget / numDays),
+        estimated_cost: maxPerDay,
       })),
-      total_estimated_cost: budget,
+      total_estimated_cost: maxPerDay * numDays,
     };
   }
 }
@@ -168,23 +163,27 @@ export async function saveItineraryToFirestore(userId, tripMeta, itinerary, db) 
 }
 
 /**
- * Regenerate the itinerary for an existing trip.
+ * Regenerate the itinerary for an existing trip owned by userId.
  * Fetches the trip from Firestore, regenerates via AI, and updates the document.
  *
  * @param {string} tripId - Firestore document ID of the trip
+ * @param {string} userId - The caller (must own the trip)
  * @param {admin.firestore.Firestore} db
- * @returns {Promise<{ days: Array, total_estimated_cost: number }>}
+ * @returns {Promise<{ itinerary?: object, destination?: string, error?: string, status?: number }>}
  */
-export async function regenerateItinerary(tripId, db) {
-  const tripDoc = await db.collection("trips").doc(tripId).get();
+export async function regenerateItinerary(tripId, userId, db) {
+  const tripRef = db.collection("trips").doc(tripId);
+  const tripDoc = await tripRef.get();
 
   if (!tripDoc.exists) {
-    throw new Error(`Trip not found: ${tripId}`);
+    return { error: "Trip not found", status: 404 };
   }
 
   const trip = tripDoc.data();
+  if (trip.userId !== userId) {
+    return { error: "You can only regenerate your own trips", status: 403 };
+  }
 
-  // Regenerate using the same parameters
   const newItinerary = await generateItinerary({
     destination: trip.destination,
     days: trip.daysCount || trip.days?.length || 3,
@@ -192,13 +191,12 @@ export async function regenerateItinerary(tripId, db) {
     budget: trip.budget,
   });
 
-  // Update the Firestore document with the new itinerary
-  await db.collection("trips").doc(tripId).update({
+  await tripRef.update({
     days: newItinerary.days,
     total_estimated_cost: newItinerary.total_estimated_cost,
     regeneratedAt: new Date(),
   });
 
   console.log(`✅ Trip regenerated: ${tripId}`);
-  return newItinerary;
+  return { itinerary: newItinerary, destination: trip.destination };
 }

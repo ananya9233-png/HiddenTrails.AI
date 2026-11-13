@@ -52,6 +52,8 @@ export async function checkDailyCap(userId, db) {
 
   snapshot.forEach((doc) => {
     const data = doc.data();
+    // Caps apply to trip rewards only — photo challenges have their own rules
+    if (data.type !== "trip_reward") return;
     todayPoints += data.points || 0;
     todayClaims++;
   });
@@ -106,7 +108,9 @@ export async function checkMonthlyCap(userId, db) {
   let monthPoints = 0;
 
   snapshot.forEach((doc) => {
-    monthPoints += doc.data().points || 0;
+    const data = doc.data();
+    if (data.type !== "trip_reward") return;
+    monthPoints += data.points || 0;
   });
 
   if (monthPoints >= REWARDS.MAX_POINTS_PER_MONTH) {

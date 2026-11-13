@@ -1,51 +1,331 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HiddenTrails.AI | Explore the Smart Way</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HiddenTrails.AI · The India your guidebook skipped</title>
+  <meta name="description" content="Plan a trip around quiet villages, local food and places with no queues. Snap a photo when you get there and earn rewards." />
+  <meta name="theme-color" content="#FBFBF9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <link rel="stylesheet" href="css/styles.css" />
+  <style>
+    /* Nav: plain paper bar; gains a rule once you scroll (#topnav.scrolled) */
+    .site-nav { position: sticky; top: 0; z-index: 100; height: var(--nav-h); background: var(--paper); border-bottom: 1px solid transparent; transition: border-color var(--t); }
+    .site-nav.scrolled { border-bottom-color: var(--line); }
+    .site-nav .wrap { height: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .pub-link { font-size: .92rem; color: var(--ink-2); transition: color var(--t); }
+    .pub-link:hover { color: var(--accent); }
+
+    /* Hero: text left, tall photo right with a caption under it */
+    .hero { display: grid; gap: 40px; padding-block: 40px 72px; }
+    @media (min-width: 900px) { .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: 64px; align-items: end; padding-block: 72px 112px; } }
+    .hero h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.7rem, 1.4rem + 5vw, 5.4rem); line-height: .98; letter-spacing: -.03em; margin: 0; }
+    .hero h1 em { font-style: italic; font-weight: 300; color: var(--accent); }
+    .hero-photo img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: var(--r-sm); }
+    @media (min-width: 900px) { .hero-photo { margin-top: -24px; } .hero-photo img { aspect-ratio: 4 / 4.6; } }
+    figcaption { margin-top: 10px; font-size: .8rem; color: var(--muted); display: flex; justify-content: space-between; gap: 12px; }
+    figcaption b { font-weight: 500; color: var(--ink-2); }
+
+    /* Numbered steps */
+    .steps li { display: grid; grid-template-columns: 56px 1fr; gap: 8px 20px; padding-block: 26px; border-top: 1px solid var(--line); }
+    .steps li:last-child { border-bottom: 1px solid var(--line); }
+    @media (min-width: 768px) { .steps li { grid-template-columns: 72px minmax(0, 1fr) minmax(0, 1.3fr); align-items: baseline; } }
+    .steps .n { font-family: var(--font-display); font-size: 1.05rem; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .steps h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.55rem; line-height: 1.2; margin: 0; }
+    .steps p { margin: 0; color: var(--ink-2); grid-column: 2; }
+    @media (min-width: 768px) { .steps p { grid-column: 3; } }
+
+    /* Full-bleed band */
+    .band img { width: 100%; height: clamp(280px, 52vw, 620px); object-fit: cover; }
+
+    /* Places */
+    .place { display: block; }
+    .place img { width: 100%; object-fit: cover; border-radius: var(--r-sm); transition: opacity var(--t); }
+    .place:hover img { opacity: .9; }
+    .place h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.6rem; line-height: 1.15; margin: 14px 0 6px; transition: color var(--t); }
+    .place:hover h3 { color: var(--accent); }
+    .place p { margin: 0; color: var(--ink-2); font-size: .96rem; }
+    .more li a { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: baseline; padding-block: 16px; border-top: 1px solid var(--line); }
+    .more li:last-child a { border-bottom: 1px solid var(--line); }
+    .more li a span:first-child { font-family: var(--font-display); font-size: 1.3rem; transition: color var(--t); }
+    .more li a:hover span:first-child { color: var(--accent); }
+
+    /* Passport page */
+    .passport { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 28px 24px; }
+    @media (min-width: 768px) { .passport { padding: 36px 40px; } }
+    .stamps { display: grid; grid-template-columns: repeat(4, 92px); justify-content: space-between; }
+    @media (max-width: 519px) {
+      .stamps { grid-template-columns: repeat(4, 66px); }
+      .stamps .stamp { width: 66px; height: 66px; font-size: .5rem; letter-spacing: .08em; outline-offset: -5px; }
+      .stamps .stamp b { font-size: .85rem; }
+      ol.levels li { font-size: .66rem; }
+    }
+    .stamps .stamp:nth-child(2) { transform: rotate(6deg); color: var(--ink-2); }
+    .stamps .stamp:nth-child(3) { transform: rotate(-3deg); }
+    .levels { position: relative; display: grid; grid-template-columns: repeat(5, 1fr); margin-top: 8px; }
+    .levels::before { content: ""; position: absolute; left: 0; right: 0; top: 5px; border-top: 1px solid var(--line-2); }
+    .levels::after { content: ""; position: absolute; left: 0; width: 30%; top: 4px; border-top: 3px solid var(--accent); }
+    .levels li { position: relative; padding-top: 22px; font-size: .78rem; line-height: 1.3; color: var(--muted); }
+    .levels li::before { content: ""; position: absolute; left: 0; top: 0; width: 11px; height: 11px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line-2); }
+    .levels li.on { color: var(--ink); }
+    .levels li.on::before { background: var(--accent); border-color: var(--accent); }
+    .levels b { display: block; font-weight: 500; color: inherit; }
+    .perks li { display: flex; justify-content: space-between; gap: 16px; padding-block: 12px; border-top: 1px dashed var(--line-2); font-size: .95rem; }
+    .perks li span:last-child { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+
+    /* Verification receipt */
+    .receipt { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 26px 24px; font-size: .95rem; }
+    .receipt dl { margin: 18px 0 0; }
+    .receipt dl div { display: flex; align-items: baseline; gap: 10px; padding-block: 9px; }
+    .receipt dt { color: var(--ink-2); }
+    .receipt dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .receipt dl div::after { content: ""; order: 1; flex: 1; border-bottom: 1px dotted var(--line-2); transform: translateY(-4px); }
+    .receipt dd { order: 2; }
+    .receipt .stamp { position: absolute; right: 18px; top: -26px; background: var(--surface); }
+  </style>
 </head>
-<body class="m-0 p-0 font-sans">
-    
-    <nav class="absolute top-0 w-full flex items-center justify-between px-10 py-5 z-50">
-    
-    <div class="w-24 hidden md:block"></div> 
 
-    <h1 class="text-3xl font-extrabold text-white tracking-tight">
-        HiddenTrails.AI
-    </h1>
+<body>
+  <a href="#main" class="skip-link">Skip to content</a>
 
-    <a href="auth.html" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-full font-bold transition duration-300 shadow-md">
-        Login
-    </a>
-</nav>
-<header 
-  class="h-[100vh] flex items-center justify-center text-center bg-cover bg-center relative"
-  style="background-image: url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80');"
->
+  <header class="site-nav" id="topnav">
+    <div class="wrap">
+      <a href="index.html" class="brand" aria-label="HiddenTrails.AI home">
+        <span class="brand-mark"><i data-lucide="mountain"></i></span>
+        <span class="brand-name">HiddenTrails<em>.ai</em></span>
+      </a>
+      <nav class="hidden md:flex items-center gap-8" aria-label="Sections">
+        <a href="#how" class="pub-link">How it works</a>
+        <a href="#places" class="pub-link">Places</a>
+        <a href="#rewards" class="pub-link">Rewards</a>
+      </nav>
+      <div class="flex items-center gap-3">
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i data-lucide="sun" class="ico-sun"></i><i data-lucide="coffee" class="ico-brown"></i><i data-lucide="moon" class="ico-moon"></i></button>
+      <div class="flex items-center gap-2" id="navActions">
+        <a href="auth.html" class="btn btn-ghost btn-sm">Log in</a>
+        <a href="signup.html" class="btn btn-primary btn-sm">Sign up</a>
+      </div>
+      </div>
+    </div>
+  </header>
 
-  <!-- overlay -->
-  <div class="absolute inset-0 bg-black/60"></div>
+  <main id="main">
+    <!-- Hero -->
+    <section class="wrap hero" aria-labelledby="heroTitle">
+      <div class="stagger" id="heroText">
+        <span class="eyebrow">A travel planner for India</span>
+        <h1 id="heroTitle" class="mt-5">The India your guidebook <em>skipped.</em></h1>
+        <p class="lead mt-6 max-w-md">Plan a trip around quiet villages, local food and places with no queues. Snap a photo when you get there and earn rewards.</p>
+        <div class="flex flex-wrap items-center gap-6 mt-8">
+          <a href="signup.html" class="btn btn-primary btn-lg" id="heroCta">Plan a trip</a>
+          <a href="#how" class="btn-text">How it works</a>
+        </div>
+      </div>
+      <figure class="hero-photo m-0">
+        <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Key_Monastery_Spiti.jpg?width=1400"
+             alt="Key Monastery, a cluster of white buildings on a brown hillside in Spiti Valley" fetchpriority="high" />
+        <figcaption><span><b>Key Monastery</b>, Spiti Valley</span><span>Himachal Pradesh</span></figcaption>
+      </figure>
+    </section>
 
-  <div class="px-6 relative z-10">
-    <h1 class="text-4xl md:text-6xl font-extrabold mb-6 leading-tight text-white">
-      Explore Travel the <br><span class="text-green-400">Smart Way</span>
-    </h1>
-    <p class="text-lg md:text-xl text-gray-200 mb-10 max-w-3xl mx-auto font-medium">
-      AI-powered eco travel planner that helps you discover hidden gems and earn rewards.
-    </p>
-    <a href="auth.html" class="bg-green-600 hover:bg-green-700 text-white px-10 py-4 rounded-xl text-lg font-bold transition-all transform hover:scale-105 inline-block shadow-lg">
-      Get Started
-    </a>
-  </div>
+    <!-- How it works: a numbered list, not cards -->
+    <section id="how" class="wrap section !pt-0 scroll-mt-20" aria-labelledby="howTitle">
+      <div class="grid lg:grid-cols-[minmax(0,.8fr)_minmax(0,2fr)] gap-10 lg:gap-16">
+        <div class="reveal">
+          <span class="eyebrow">How it works</span>
+          <h2 id="howTitle" class="h1 mt-4">From “where to?” to “I was there.”</h2>
+        </div>
+        <ol class="steps m-0 p-0 list-none reveal">
+          <li><span class="n">01</span><h3>Tell it where and when</h3><p>A place, your dates, a budget in rupees and the kind of trip you like. You get a day-by-day plan with real spots and rough costs.</p></li>
+          <li><span class="n">02</span><h3>Go</h3><p>Each day comes with a Google Maps link. Stuck somewhere? Ask the travel guide in the app.</p></li>
+          <li><span class="n">03</span><h3>Take the photo</h3><p>At a landmark on your plan, take a picture. We check your location is within 150 m and that the photo really shows the place.</p></li>
+          <li><span class="n">04</span><h3>Collect the stamp</h3><p>Verified photos earn points. Points move you up from Rookie to Legend and pay for discounts on stays, trains and food.</p></li>
+        </ol>
+      </div>
+    </section>
 
-</header>
+    <!-- Full-bleed photo band -->
+    <figure class="band m-0 reveal">
+      <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Dzukou_Valley.jpg?width=2000" alt="Green rolling hills of Dzükou Valley under low clouds" loading="lazy" />
+      <figcaption class="wrap"><span><b>Dzükou Valley</b>, a two-hour walk from the nearest road</span><span>Nagaland</span></figcaption>
+    </figure>
 
-    
+    <!-- Places -->
+    <section id="places" class="wrap section scroll-mt-20" aria-labelledby="placesTitle">
+      <div class="max-w-2xl reveal">
+        <span class="eyebrow">Worth the detour</span>
+        <h2 id="placesTitle" class="h1 mt-4">Places your group chat hasn’t heard of.</h2>
+        <p class="lead mt-4">Pick one and the planner fills in the days, the food and the route.</p>
+      </div>
 
-    
+      <div class="grid md:grid-cols-12 gap-x-8 gap-y-14 mt-14">
+        <a href="plantrips.html?dest=Ziro%20Valley" class="place md:col-span-7 reveal">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Ziro_valley.jpg?width=1200" alt="Paddy fields and pine-covered hills in Ziro Valley" loading="lazy" style="aspect-ratio:4/3">
+          <span class="eyebrow mt-4 block">Arunachal Pradesh</span>
+          <h3>Ziro Valley</h3>
+          <p>Pine hills, rice fields and Apatani villages. Go in late September for the music festival.</p>
+        </a>
+        <div class="md:col-span-5 grid gap-14 md:pt-24">
+          <a href="plantrips.html?dest=Chandratal%20Lake" class="place reveal">
+            <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Chandratal_Lake.jpg?width=900" alt="Turquoise Chandratal Lake ringed by bare mountains" loading="lazy" style="aspect-ratio:3/2">
+            <span class="eyebrow mt-4 block">Himachal Pradesh</span>
+            <h3>Chandratal Lake</h3>
+            <p>A crescent of blue water at 4,300 m. Camp nearby for a sky full of stars.</p>
+          </a>
+        </div>
+        <a href="plantrips.html?dest=Hampi" class="place md:col-span-5 md:col-start-2 reveal">
+          <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Hampi.jpg?width=900" alt="Stone temple ruins among granite boulders in Hampi" loading="lazy" style="aspect-ratio:1/1">
+          <span class="eyebrow mt-4 block">Karnataka</span>
+          <h3>Hampi</h3>
+          <p>The ruins of Vijayanagara, scattered across a landscape of giant boulders. Rent a bicycle.</p>
+        </a>
+        <div class="md:col-span-5 md:col-start-8 self-end reveal">
+          <span class="eyebrow">Also on the list</span>
+          <ul class="more list-none p-0 mt-4 mb-0">
+            <li><a href="plantrips.html?dest=Mawlynnong"><span>Mawlynnong</span><span class="caption">Meghalaya</span></a></li>
+            <li><a href="plantrips.html?dest=Majuli"><span>Majuli</span><span class="caption">Assam</span></a></li>
+            <li><a href="plantrips.html?dest=Gurez%20Valley"><span>Gurez Valley</span><span class="caption">Jammu &amp; Kashmir</span></a></li>
+            <li><a href="plantrips.html?dest=Chettinad"><span>Chettinad</span><span class="caption">Tamil Nadu</span></a></li>
+          </ul>
+        </div>
+      </div>
+    </section>
 
+    <!-- Rewards: a passport page -->
+    <section id="rewards" class="section scroll-mt-20" style="background:var(--paper-2)" aria-labelledby="rewardsTitle">
+      <div class="wrap grid lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] gap-12 lg:gap-20 items-start">
+        <div class="reveal lg:sticky lg:top-28">
+          <span class="eyebrow">Rewards</span>
+          <h2 id="rewardsTitle" class="h1 mt-4">Every place you reach leaves a stamp.</h2>
+          <p class="lead mt-5">A verified photo earns points, usually 100 to 150. Save them up and spend them on things that make the next trip cheaper.</p>
+          <ul class="perks list-none p-0 mt-8 mb-0">
+            <li><span>50% off a hostel stay</span><span>500 pts</span></li>
+            <li><span>₹400 off train tickets</span><span>350 pts</span></li>
+          </ul>
+        </div>
 
+        <div class="passport reveal" aria-label="Example passport page">
+          <div class="flex items-baseline justify-between gap-4">
+            <span class="eyebrow">Passport · page 1</span>
+            <span class="caption">Example</span>
+          </div>
+          <div class="stamps mt-8" aria-label="Stamps collected">
+            <span class="stamp">Hampi<b>+150</b>Mar 26</span>
+            <span class="stamp">Spiti<b>+130</b>Jun 26</span>
+            <span class="stamp">Ziro<b>+100</b>Sep 26</span>
+            <span class="stamp is-empty">Next<b>?</b>stamp</span>
+          </div>
+
+          <hr class="rule my-9">
+          <div class="flex items-baseline justify-between gap-4">
+            <p class="m-0"><span class="font-display text-2xl">380</span> <span class="muted">points</span></p>
+            <p class="m-0 caption">120 more to Adventurer</p>
+          </div>
+          <ol class="levels list-none p-0 mb-0 mt-5" aria-label="Levels">
+            <li class="on"><b>Rookie</b>0</li>
+            <li class="on"><b>Explorer</b>200</li>
+            <li><b>Adventurer</b>500</li>
+            <li><b>Pro</b>1,000</li>
+            <li><b>Legend</b>2,000</li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <!-- Fair play + light footprint -->
+    <section class="wrap section" aria-labelledby="trustTitle">
+      <div class="grid lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] gap-14 lg:gap-20 items-center">
+        <div class="reveal">
+          <span class="eyebrow">Fair play</span>
+          <h2 id="trustTitle" class="h1 mt-4">No screenshots. You have to be there.</h2>
+          <p class="lead mt-5">Every photo is checked twice. Your phone’s location has to be within 150 m of the landmark, and the picture has to show that landmark, taken just now.</p>
+          <h3 class="eyebrow mt-12 mb-0">And go lightly</h3>
+          <ul class="list-none p-0 mt-4 mb-0 grid gap-3 ink-2">
+            <li>The travel guide suggests trains over flights when the route allows.</li>
+            <li>Homestays and dhabas over chains, so the money stays local.</li>
+            <li>Take only photos. Leave only footprints.</li>
+          </ul>
+        </div>
+
+        <div class="receipt reveal" id="verifyDemo">
+          <span class="stamp" aria-hidden="true">Verified<b>✓</b>+150</span>
+          <span class="eyebrow">Photo check</span>
+          <p class="font-display text-2xl m-0 mt-2">Gateway of India</p>
+          <p class="caption m-0 mt-1">Mumbai, Maharashtra</p>
+          <dl>
+            <div><dt>Distance from landmark</dt><dd>38 m</dd></div>
+            <div><dt>Landmark match</dt><dd>92%</dd></div>
+            <div><dt>Taken live</dt><dd>Yes</dd></div>
+            <div><dt>Speed and location checks</dt><dd>Clean</dd></div>
+            <div><dt>Points</dt><dd>150</dd></div>
+          </dl>
+        </div>
+      </div>
+    </section>
+
+    <!-- Closing -->
+    <section class="wrap pb-20 md:pb-28">
+      <hr class="rule mb-14 md:mb-20">
+      <div class="grid md:grid-cols-[minmax(0,1.6fr)_auto] gap-8 items-end reveal">
+        <h2 class="h1 m-0 max-w-3xl">Your next favourite place isn’t on the main road.</h2>
+        <a href="signup.html" class="btn btn-primary btn-lg justify-self-start" id="ctaBottom">Plan a trip</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap py-12 grid gap-10 md:grid-cols-[1.6fr_1fr_1fr]">
+      <div>
+        <a href="index.html" class="brand"><span class="brand-mark"><i data-lucide="mountain"></i></span><span class="brand-name">HiddenTrails<em>.ai</em></span></a>
+        <p class="mt-4 max-w-sm text-sm">A trip planner for the quieter parts of India. Built as a student project, still growing.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul class="grid gap-2 text-sm list-none p-0 m-0">
+          <li><a href="#how">How it works</a></li>
+          <li><a href="#places">Places</a></li>
+          <li><a href="#rewards">Rewards</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Account</h4>
+        <ul class="grid gap-2 text-sm list-none p-0 m-0">
+          <li><a href="signup.html">Sign up</a></li>
+          <li><a href="auth.html">Log in</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="wrap py-6 flex flex-wrap items-center justify-between gap-3 text-xs muted" style="border-top:1px solid var(--line)">
+      <p class="m-0">© <span id="year"></span> HiddenTrails.AI · Made in India</p>
+      <p class="m-0">Photos: Wikimedia Commons contributors (CC BY-SA)</p>
+    </div>
+  </footer>
+
+<script type="module">
+  import { auth } from "./js/app.js";
+  import { revealOnScroll, stagger } from "./js/ui.js";
+  import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
+
+  stagger(document.getElementById("heroText"));
+  revealOnScroll();
+  document.getElementById("year").textContent = new Date().getFullYear();
+
+  const nav = document.getElementById("topnav");
+  const onScroll = () => nav.classList.toggle("scrolled", window.scrollY > 10);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+
+  // Signed-in visitors go straight to the app
+  onAuthStateChanged(auth, (user) => {
+    if (!user) return;
+    document.getElementById("navActions").innerHTML = `<a href="dashboard.html" class="btn btn-primary">Open my journal <i data-lucide="arrow-right" class="arrow"></i></a>`;
+    ["heroCta", "ctaBottom"].forEach((id) => { document.getElementById(id).href = "plantrips.html"; });
+  });
+</script>
 </body>
 </html>

@@ -31,11 +31,11 @@ export function errorHandler(err, req, res, next) {
   const statusCode = err.statusCode || err.status || 500;
 
   // Return a structured JSON error response
-  // In production, don't expose internal error details
-  const isProduction = process.env.NODE_ENV === "production";
+  // Stack traces are only included when explicitly running in development
+  const isProduction = process.env.NODE_ENV !== "development";
 
   res.status(statusCode).json({
-    error: err.message || "Internal server error",
+    error: statusCode < 500 ? err.message : "Internal server error",
     ...(isProduction ? {} : { stack: err.stack }),
     statusCode,
     timestamp: new Date().toISOString(),

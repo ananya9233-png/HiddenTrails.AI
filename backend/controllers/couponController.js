@@ -1,36 +1,21 @@
 /**
  * Coupon Controller
  * -------------------
- * Handles HTTP request/response for coupon operations.
+ * Handles HTTP request/response for the coupon store.
+ * The user is always the authenticated caller (req.user.uid).
  */
 
-import {
-  getAvailableCoupons,
-  redeemCoupon,
-  getUserCoupons,
-} from "../services/couponService.js";
+import { getCouponsForUser, redeemCoupon } from "../services/couponService.js";
 import { db } from "../config/firebase.js";
 
 /**
  * GET /coupons
- *
- * Returns all available (unredeemed, non-expired) coupons.
- * Optionally filters by userId to return user-specific coupons.
+ * Returns the coupon catalog, the caller's points, and their redeemed coupons.
  */
-
 export async function handleGetCoupons(req, res) {
   try {
-    const { userId } = req.query;
-
-    // If userId is provided, return their redeemed coupons
-    if (userId) {
-      const userCoupons = await getUserCoupons(userId, db);
-      return res.json({ coupons: userCoupons });
-    }
-
-    // Otherwise return all available coupons
-    const coupons = await getAvailableCoupons(db);
-    res.json({ coupons });
+    const result = await getCouponsForUser(req.user.uid, db);
+    res.json(result);
   } catch (error) {
     console.error("❌ Get coupons error:", error);
     res.status(500).json({ error: "Failed to retrieve coupons" });
@@ -39,36 +24,18 @@ export async function handleGetCoupons(req, res) {
 
 /**
  * POST /coupon/redeem
- *
- * Redeems a coupon code for the authenticated user.
- * Deducts points and marks the coupon as used.
- *
- * Expected body:
- * {
- *   userId: string,
- *   couponCode: string
- * }
+ * Body: { couponCode: string }
  */
-
 export async function handleRedeemCoupon(req, res) {
   try {
-    const { userId, couponCode } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "User ID is required" });
-    }
+    const { couponCode } = req.body;
 
     if (!couponCode) {
       return res.status(400).json({ error: "Coupon code is required" });
     }
 
-    const result = await redeemCoupon(userId, couponCode, db);
-
-    if (result.success) {
-      res.json(result);
-    } else {
-      res.status(400).json(result);
-    }
+    const result = await redeemCoupon(req.user.uid, couponCode, db);
+    res.status(result.success ? 200 : 400).json(result);
   } catch (error) {
     console.error("❌ Redeem coupon error:", error);
     res.status(500).json({ error: "Failed to redeem coupon" });

@@ -1,193 +1,279 @@
 /**
  * Photo Challenge Controller
+ * ----------------------------
+ * - Lists a user's challenges (built-in + itinerary-based)
+ * - Verifies a challenge photo (GPS + AI vision) and awards points
+ * - Deletes itinerary-based challenges, resets the demo challenge
+ *
+ * Everything security-relevant (who the user is, which reference image,
+ * how many points) is decided here on the server, not by the client.
  */
 
 import { verifyPhoto } from "../services/photoVerificationService.js";
 import { validateGPSForChallenge, logGPSEntry } from "../services/gpsService.js";
-import { awardPhotoPoints } from "../services/rewardService.js";
+import { awardPhotoPoints, revokePhotoChallenge } from "../services/rewardService.js";
+import { getDestinationImage } from "../services/imageService.js";
 import { db } from "../config/firebase.js";
-import { PHOTO_CHALLENGE } from "../config/constants.js";
+import { DEFAULT_CHALLENGES, PHOTO_CHALLENGE } from "../config/constants.js";
 
-const POI_COORDINATES = {
-  tajmahal:     { latitude: 27.1751, longitude: 78.0421 },
-  indiagate:    { latitude: 28.6129, longitude: 77.2295 },
-  gateway:      { latitude: 18.9220, longitude: 72.8347 },
-  hawamahal:    { latitude: 26.9239, longitude: 75.8267 },
-  mysorepalace: { latitude: 12.3052, longitude: 76.6552 },
-  goldentemple: { latitude: 31.6200, longitude: 74.8765 },
-  // banasthali intentionally omitted — demo challenge skips GPS
-};
+const MAX_IMAGE_BASE64_LENGTH = 9 * 1024 * 1024; // ~6.5 MB image
 
+/** Query used to find an image for an itinerary-based challenge (shared with the frontend). */
+export function challengeImageQuery(name, destination) {
+  return destination ? `${name}, ${destination}` : name;
+}
+
+/**
+ * Resolve a challenge by id: built-in first, then the user's own
+ * itinerary-based challenges. Returns null if not found / not owned.
+ */
+async function findChallenge(challengeId, userId) {
+  const builtIn = DEFAULT_CHALLENGES.find((c) => c.id === challengeId);
+  if (builtIn) return { ...builtIn, landmark: builtIn.landmark || builtIn.name };
+
+  const snap = await db.collection("photoChallenges").doc(challengeId).get();
+  if (!snap.exists) return null;
+  const data = snap.data();
+  if (data.userId !== userId || !data.name) return null;
+
+  return {
+    id: snap.id,
+    name: data.name,
+    landmark: `${data.name} in ${data.destination || "India"}`,
+    destination: data.destination,
+    latitude: data.latitude || null,
+    longitude: data.longitude || null,
+    points: data.points || 100,
+    image: data.image || null,
+    isDemo: false,
+  };
+}
+
+/**
+ * GET /photo-challenges/:userId
+ * Returns built-in + itinerary-based challenges and which ones are completed.
+ */
+export async function handleListChallenges(req, res) {
+  const userId = req.user.uid;
+  try {
+    let snapshot;
+    try {
+      snapshot = await db.collection("photoChallenges")
+        .where("userId", "==", userId)
+        .orderBy("createdAt", "desc")
+        .get();
+    } catch {
+      // Composite index missing — fall back to an unordered query
+      snapshot = await db.collection("photoChallenges").where("userId", "==", userId).get();
+    }
+
+    const dynamic = [];
+    snapshot.forEach((doc) => {
+      const d = doc.data();
+      if (!d.name) return; // skip legacy completion records stored in this collection
+      dynamic.push({
+        id: doc.id,
+        name: d.name,
+        location: d.destination || "India",
+        destination: d.destination || null,
+        latitude: d.latitude || null,
+        longitude: d.longitude || null,
+        points: d.points || 100,
+        difficulty: d.difficulty || "Medium",
+        image: d.image || null,
+        imageQuery: challengeImageQuery(d.name, d.destination),
+        description: d.description || `Photograph ${d.name}`,
+        isDemo: false,
+      });
+    });
+
+    const userDoc = await db.collection("users").doc(userId).get();
+    const user = userDoc.exists ? userDoc.data() : {};
+
+    res.json({
+      challenges: [...dynamic, ...DEFAULT_CHALLENGES],
+      completed: Array.isArray(user.completedChallenges) ? user.completedChallenges : [],
+      points: user.rewardPoints || 0,
+    });
+  } catch (err) {
+    console.error("❌ Fetch challenges error:", err);
+    res.status(500).json({ error: "Failed to fetch challenges", challenges: [] });
+  }
+}
+
+/**
+ * DELETE /photo-challenges/:userId/:destination
+ * Deletes the user's itinerary-based challenges for a destination.
+ */
+export async function handleDeleteChallenges(req, res) {
+  try {
+    const userId = req.user.uid;
+    const destination = req.params.destination;
+
+    const snapshot = await db.collection("photoChallenges")
+      .where("userId", "==", userId)
+      .where("destination", "==", destination)
+      .get();
+
+    if (snapshot.empty) {
+      return res.json({ deleted: 0, message: "No challenges found for this destination" });
+    }
+
+    const batch = db.batch();
+    snapshot.forEach((doc) => batch.delete(doc.ref));
+    await batch.commit();
+
+    console.log(`🗑️ Deleted ${snapshot.size} photo challenges for ${destination} (user: ${userId})`);
+    res.json({ deleted: snapshot.size, message: `Deleted ${snapshot.size} challenges for ${destination}` });
+  } catch (err) {
+    console.error("❌ Delete challenges error:", err);
+    res.status(500).json({ error: "Failed to delete challenges" });
+  }
+}
+
+/**
+ * POST /photo/reset-demo
+ * Marks the demo challenge incomplete again and takes its points back.
+ */
+export async function handleResetDemo(req, res) {
+  try {
+    const demo = DEFAULT_CHALLENGES.find((c) => c.isDemo);
+    const result = await revokePhotoChallenge(req.user.uid, demo.id, db);
+    res.json(result);
+  } catch (err) {
+    console.error("❌ Reset demo error:", err);
+    res.status(500).json({ error: "Failed to reset demo challenge" });
+  }
+}
+
+/**
+ * POST /verify-photo  (alias: /photo/verify)
+ *
+ * Body: { userImageBase64, challengeId, latitude?, longitude?, timestamp?,
+ *         isGalleryUpload?, mockLocationFlag? }
+ */
 export async function handleVerifyPhoto(req, res) {
   try {
+    const userId = req.user.uid;
     const {
       userImageBase64,
-      referenceImageUrl,
       challengeId,
-      userId,
       latitude,
       longitude,
       timestamp,
       mockLocationFlag,
       isGalleryUpload,
-      challengeName,
-      demoMode,
-      demoKnownImages,   // ← array of known building image URLs from frontend
     } = req.body;
 
-    const DEMO_MODE = demoMode === true;
-    console.log(
-      "📸 VERIFY PHOTO HIT — Challenge:", challengeId,
-      "| Gallery:", !!isGalleryUpload,
-      "| Demo:", DEMO_MODE,
-      "| Known images:", (demoKnownImages || []).length
-    );
-
-    if (!userImageBase64 || !referenceImageUrl) {
-      return res.status(400).json({ error: "Both images are required" });
+    if (typeof userImageBase64 !== "string" || !userImageBase64.startsWith("data:image/")) {
+      return res.status(400).json({ error: "A photo (data URL) is required" });
+    }
+    if (userImageBase64.length > MAX_IMAGE_BASE64_LENGTH) {
+      return res.status(413).json({ error: "Photo is too large" });
     }
     if (!challengeId) {
       return res.status(400).json({ error: "Challenge ID is required" });
     }
 
-    const landmarkName =
-      PHOTO_CHALLENGE.LANDMARK_NAMES[challengeId] ||
-      challengeName ||
-      "a famous landmark";
+    const challenge = await findChallenge(challengeId, userId);
+    if (!challenge) {
+      return res.status(404).json({ error: "Challenge not found" });
+    }
 
-    // ── GPS Validation (skipped entirely for demo) ────────────────────────
-    let gpsValidation = { valid: true, errors: [] };
+    const userDoc = await db.collection("users").doc(userId).get();
+    const completed = userDoc.exists ? userDoc.data().completedChallenges || [] : [];
+    if (completed.includes(challenge.id)) {
+      return res.json({
+        match: true, points: 0, alreadyCompleted: true, challengeId: challenge.id,
+        message: `You've already completed ${challenge.name}. 🎉`,
+      });
+    }
+
+    const DEMO_MODE = !!challenge.isDemo;
+    const galleryUpload = !!isGalleryUpload;
+    console.log("📸 VERIFY PHOTO —", challenge.id, "| Gallery:", galleryUpload, "| Demo:", DEMO_MODE);
+
+    // ── Reference image (server-side only) ───────────────────────────────
+    const referenceImageUrl =
+      challenge.image || (await getDestinationImage(challengeImageQuery(challenge.name, challenge.destination)));
+
+    // ── GPS Validation (skipped for demo) ────────────────────────────────
     let userWasNearLocation = true;
+    const hasGPS = typeof latitude === "number" && typeof longitude === "number";
 
-    if (!DEMO_MODE && latitude && longitude && userId) {
-      let poiCoords = POI_COORDINATES[challengeId] || null;
-
-      if (!poiCoords) {
-        try {
-          const challengeDoc = await db.collection("photoChallenges").doc(challengeId).get();
-          if (challengeDoc.exists) {
-            const cData = challengeDoc.data();
-            if (cData.latitude && cData.longitude) {
-              poiCoords = { latitude: cData.latitude, longitude: cData.longitude };
-            }
-          }
-        } catch (lookupErr) {
-          console.warn("⚠️ Could not look up dynamic challenge coords:", lookupErr.message);
-        }
-      }
-
-      if (poiCoords) {
-        gpsValidation = await validateGPSForChallenge(
-          {
-            userId, poiId: challengeId, latitude, longitude,
-            timestamp: timestamp || new Date().toISOString(),
-            mockLocationFlag: mockLocationFlag || false,
-          },
-          poiCoords, db
-        );
-        await logGPSEntry(
-          userId,
-          { latitude, longitude, timestamp: timestamp || new Date().toISOString() },
+    if (!DEMO_MODE && hasGPS) {
+      const ts = timestamp || new Date().toISOString();
+      if (challenge.latitude && challenge.longitude) {
+        const gpsValidation = await validateGPSForChallenge(
+          { userId, poiId: challenge.id, latitude, longitude, timestamp: ts, mockLocationFlag: !!mockLocationFlag },
+          { latitude: challenge.latitude, longitude: challenge.longitude },
           db
         );
         userWasNearLocation = gpsValidation.valid;
-        if (!gpsValidation.valid) {
-          console.log("⚠️ GPS failed (continuing to AI):", gpsValidation.errors);
-        }
-      } else {
-        console.log(`ℹ️ No POI coords for '${challengeId}' — AI vision only`);
-        await logGPSEntry(
-          userId,
-          { latitude, longitude, timestamp: timestamp || new Date().toISOString() },
-          db
-        );
+        if (!gpsValidation.valid) console.log("⚠️ GPS failed (continuing to AI):", gpsValidation.errors);
       }
+      await logGPSEntry(userId, { latitude, longitude, timestamp: ts }, db);
     }
 
-    // ── AI Vision Verification ────────────────────────────────────────────
-    // Pass demoMode + demoKnownImages into service so it can:
-    //   • Use strict building-only prompt for demo live photos
-    //   • Do fingerprint-based gallery check for demo gallery uploads
-    const verificationResult = await verifyPhoto(
+    // ── AI Vision Verification ───────────────────────────────────────────
+    const verificationResult = await verifyPhoto({
       userImageBase64,
       referenceImageUrl,
-      landmarkName,
-      !!isGalleryUpload,
-      DEMO_MODE,
-      demoKnownImages || []
-    );
+      landmarkName: challenge.landmark,
+      isGalleryUpload: galleryUpload,
+      demoMode: DEMO_MODE,
+    });
 
-    // ── Points Calculation ────────────────────────────────────────────────
-    const matchValid    = verificationResult.landmarkMatchScore >= PHOTO_CHALLENGE.MIN_LANDMARK_MATCH_SCORE;
-    const livenessValid = verificationResult.livenessScore     >= PHOTO_CHALLENGE.MIN_LIVENESS_SCORE;
+    // ── Points Calculation ───────────────────────────────────────────────
+    const matchValid = verificationResult.landmarkMatchScore >= PHOTO_CHALLENGE.MIN_LANDMARK_MATCH_SCORE;
+    const livenessValid = verificationResult.livenessScore >= PHOTO_CHALLENGE.MIN_LIVENESS_SCORE;
+    const name = challenge.name;
 
-    let points  = 0;
+    let points = 0;
     let message = "";
 
     if (DEMO_MODE) {
-      // ── DEMO: gallery upload ──────────────────────────────────────────
-      if (isGalleryUpload) {
+      if (galleryUpload) {
         if (verificationResult.demoGalleryMatch) {
-          // Known building photo from gallery → give demo points (no liveness bonus)
-          points  = PHOTO_CHALLENGE.POINTS[challengeId] || 50;
-          message = `🎓 Campus verified via gallery! Demo challenge complete. (Gallery photos earn points in demo mode.)`;
-          console.log("✅ Demo gallery: known building matched → points:", points);
+          points = challenge.points;
+          message = "🎓 Campus verified via gallery! Demo challenge complete.";
         } else {
-          points  = 0;
-          message = `🏛️ Wrong photo! Only your saved photos of the dept building are accepted in demo mode.`;
-          console.log("🛡️ Demo gallery: unknown image → 0 pts");
+          message = "🏛️ Wrong photo! Only approved photos of the campus building are accepted in demo mode.";
         }
-
-      // ── DEMO: live photo ──────────────────────────────────────────────
+      } else if (matchValid) {
+        points = challenge.points;
+        message = `🎓 Building detected! Demo challenge complete. ${verificationResult.reason || ""}`.trim();
       } else {
-        if (matchValid) {
-          points  = PHOTO_CHALLENGE.POINTS[challengeId] || 50;
-          message = `🎓 Building detected! Demo challenge complete. Welcome to Banasthali Vidyapeeth! ${verificationResult.reason || ""}`;
-          console.log("✅ Demo live: building matched → points:", points);
-        } else {
-          points  = 0;
-          message = verificationResult.reason
-            ? `🚫 ${verificationResult.reason}`
-            : `🚫 That doesn't look like the dept building. Point your camera at the building facade (not a person or room).`;
-          console.log("🛡️ Demo live: no building detected → 0 pts. Reason:", verificationResult.reason);
-        }
+        message = verificationResult.reason
+          ? `🚫 ${verificationResult.reason}`
+          : "🚫 That doesn't look like the building. Point your camera at the building facade.";
       }
-
+    } else if (matchValid && livenessValid && !galleryUpload) {
+      if (!userWasNearLocation) {
+        points = PHOTO_CHALLENGE.PARTIAL_MATCH_POINTS;
+        message = `📍 Photo verified but you're not at ${name}! Visit in person for full points.`;
+      } else {
+        points = challenge.points;
+        message = `🎉 Amazing! Your live photo of ${name} is verified! ${verificationResult.reason || ""}`.trim();
+      }
+    } else if (galleryUpload && matchValid) {
+      message = `📸 Nice try! This is a gallery image of ${name}. Visit in person to earn points!`;
+    } else if (matchValid && !livenessValid) {
+      message = `🖼️ This looks like a downloaded photo of ${name}. Take a live photo to earn points!`;
     } else {
-      // ── REGULAR challenge logic (unchanged) ──────────────────────────
-      if (matchValid && livenessValid && !isGalleryUpload) {
-        if (!userWasNearLocation && latitude && longitude) {
-          points  = PHOTO_CHALLENGE.PARTIAL_MATCH_POINTS || 30;
-          message = `📍 Photo verified but you're not at ${landmarkName}! Visit in person for full points.`;
-          console.log("🛡️ Anti-exploit: GPS mismatch — partial points only");
-        } else {
-          points  = PHOTO_CHALLENGE.POINTS[challengeId] || 100;
-          message = `🎉 Amazing! Your live photo of ${landmarkName} is verified! ${verificationResult.reason || ""}`;
-        }
-      } else if (isGalleryUpload && matchValid) {
-        points  = 0;
-        message = `📸 Nice try! We detected this is a gallery image of ${landmarkName}. Visit in person to earn points!`;
-        console.log("🛡️ Anti-exploit: gallery upload — 0 pts, challenge incomplete");
-      } else if (matchValid && !livenessValid) {
-        points  = 0;
-        message = `🖼️ This looks like a downloaded photo of ${landmarkName}. Take a live photo to earn points!`;
-        console.log("🛡️ Anti-exploit: low liveness — 0 pts");
-      } else {
-        points  = 0;
-        message = `😕 Your photo doesn't match ${landmarkName}. Try again from a better angle!`;
-      }
+      message = `😕 Your photo doesn't match ${name}. Try again from a better angle!`;
     }
 
-    // ── Award Points ──────────────────────────────────────────────────────
+    // ── Award Points (once per challenge) ────────────────────────────────
     let rewardResult = null;
-    if (userId && points > 0 && !DEMO_MODE) {
-      rewardResult = await awardPhotoPoints(userId, challengeId, points, verificationResult, db);
+    if (points > 0) {
+      rewardResult = await awardPhotoPoints(userId, challenge.id, points, verificationResult, db);
+      if (rewardResult.alreadyCompleted) points = 0;
     }
 
     console.log(
       `✅ Result — Match: ${matchValid} (${verificationResult.landmarkMatchScore}),`,
-      `Live: ${livenessValid} (${verificationResult.livenessScore}),`,
-      `Points: ${points}, Demo: ${DEMO_MODE}`
+      `Live: ${livenessValid} (${verificationResult.livenessScore}), Points: ${points}`
     );
 
     res.json({
@@ -199,14 +285,14 @@ export async function handleVerifyPhoto(req, res) {
       reason: verificationResult.reason,
       points,
       message,
-      challengeId,
-      totalPoints: rewardResult?.totalPoints || null,
-      level: rewardResult?.level || null,
+      challengeId: challenge.id,
+      isGalleryUpload: galleryUpload,
+      totalPoints: rewardResult?.totalPoints ?? null,
+      level: rewardResult?.level ?? null,
       demo: DEMO_MODE,
     });
-
   } catch (error) {
     console.error("❌ Photo verification error:", error);
-    res.status(500).json({ error: "Photo verification failed", details: error.message });
+    res.status(500).json({ error: "Photo verification failed" });
   }
 }

@@ -2,37 +2,34 @@
  * Chatbot Controller
  * --------------------
  * Handles HTTP request/response for the AI travel chatbot.
- * Supports session-based conversation memory.
+ * Conversation memory is keyed by the signed-in user + the browser tab's
+ * sessionId, so users can never read or continue each other's chats.
  */
 
 import { chat, clearHistory } from "../services/chatbotService.js";
+import { CHATBOT } from "../config/constants.js";
+
+function sessionKey(req) {
+  const tab = String(req.body.sessionId || "default").slice(0, 64);
+  return `${req.user.uid}:${tab}`;
+}
 
 /**
  * POST /chat or POST /chatbot
- *
- * Processes a chat message and returns the AI response.
- * Uses sessionId from request body for conversation memory.
- * Falls back to a default session if not provided (backwards compatible).
+ * Body: { message: string, sessionId?: string }
  */
 export async function handleChat(req, res) {
   try {
-    const { message, sessionId } = req.body;
-
-    console.log("🔥 CHAT HIT:", message);
+    const message = typeof req.body.message === "string" ? req.body.message.trim() : "";
 
     if (!message) {
       return res.status(400).json({ error: "Message is required" });
     }
-
-    // Use provided sessionId or fallback to "default" for backwards compatibility
-    const session = sessionId || "default";
-
-    const reply = await chat(session, message);
-
-    if (!reply) {
-      return res.status(500).json({ error: "No AI reply generated" });
+    if (message.length > CHATBOT.MAX_MESSAGE_LENGTH) {
+      return res.status(400).json({ error: `Message is too long (max ${CHATBOT.MAX_MESSAGE_LENGTH} characters)` });
     }
 
+    const reply = await chat(sessionKey(req), message);
     res.json({ reply });
   } catch (error) {
     console.error("❌ Chatbot error:", error);
@@ -42,14 +39,11 @@ export async function handleChat(req, res) {
 
 /**
  * POST /chat/clear
- *
- * Clears the conversation history for a session.
+ * Clears the conversation history for the caller's session.
  */
-
 export async function handleClearChat(req, res) {
   try {
-    const { sessionId } = req.body;
-    clearHistory(sessionId || "default");
+    clearHistory(sessionKey(req));
     res.json({ success: true, message: "Conversation history cleared" });
   } catch (error) {
     console.error("❌ Clear chat error:", error);

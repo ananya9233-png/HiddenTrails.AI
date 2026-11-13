@@ -2,379 +2,352 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Your Itinerary | HiddenTrails.AI</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Your itinerary · HiddenTrails.AI</title>
+  <meta name="theme-color" content="#FBFBF9" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+  <script src="https://unpkg.com/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script src="js/theme.js"></script>
+  <!-- Font Awesome stays loaded: the page script renders a few FA icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
   <style>
-    body {
-      background: #ffffff;
-      min-height: 100vh;
+    /* Header */
+    .trip-head h1 { font-family: var(--font-display); font-weight: 300; font-size: clamp(2.6rem, 1.6rem + 4vw, 4.6rem); line-height: 1; letter-spacing: -.03em; color: var(--ink) !important; }
+    #heroTags { gap: 8px; }
+    .cover { margin: 28px 0 0; }
+    .cover .frame-box { position: relative; aspect-ratio: 21 / 9; overflow: hidden; border-radius: var(--r-sm); background: var(--paper-2); }
+    @media (max-width: 639px) { .cover .frame-box { aspect-ratio: 4 / 3; } }
+    .cover img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: opacity .5s; }
+
+    /* Two columns on desktop: days + a sticky side column */
+    .itin-grid { display: flex; flex-direction: column; gap: 28px; margin-top: 48px; }
+    .itin-side { display: contents; }
+    @media (min-width: 1024px) {
+      .itin-grid { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: 64px; align-items: start; }
+      .itin-side { display: block; grid-column: 2; grid-row: 1; position: sticky; top: calc(var(--nav-h) + 32px); }
+      #daysContainer { grid-column: 1; grid-row: 1; }
     }
 
-    .glass-sidebar {
-      background: #f8fafc;
-      border-right: 1px solid #e2e8f0;
+    /* Summary */
+    .summary dl { margin: 0; }
+    .summary dl div { display: flex; justify-content: space-between; gap: 12px; padding-block: 8px; font-size: .95rem; }
+    .summary dt { color: var(--muted); }
+    .summary dd { margin: 0; font-variant-numeric: tabular-nums; }
+    .budget-meter { position: relative; height: 3px; background: var(--line); margin-top: 14px; }
+    .budget-meter span { position: absolute; inset: 0 auto 0 0; width: 0; background: var(--accent); transition: width .6s var(--ease); }
+
+    /* Day navigator: sticky tabs on phones, a plain list in the side column */
+    .day-nav { position: sticky; top: var(--nav-h); z-index: 20; background: var(--paper); border-bottom: 1px solid var(--line); margin-inline: -16px; padding: 0 16px; }
+    #dayNav { display: flex; gap: 22px; overflow-x: auto; scrollbar-width: none; }
+    #dayNav .chip { flex: none; min-height: 44px; padding: 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: none; color: var(--muted); }
+    #dayNav .chip:hover { color: var(--ink); }
+    #dayNav .chip.is-active { background: none; color: var(--ink); border-bottom-color: var(--accent); }
+    @media (min-width: 1024px) {
+      .day-nav { position: static; margin: 36px 0 0; padding: 0; border: 0; background: none; }
+      #dayNav { flex-direction: column; gap: 0; border-top: 1px solid var(--line); }
+      #dayNav .chip { min-height: 40px; justify-content: space-between; border-bottom: 1px solid var(--line); font-size: .92rem; }
+      #dayNav .chip.is-active { border-bottom-color: var(--line); color: var(--accent); }
+      #dayNav .chip.is-active::after { content: "←"; }
     }
 
-    .glass-card {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 24px;
-      overflow: hidden;
-      transition: all 0.4s ease;
-    }
-    .glass-card:hover {
-      background: #f1f5f9;
-      border-color: rgba(16, 185, 129, 0.3);
-      transform: translateY(-4px);
-    }
-
-    .hero-overlay {
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.1));
-    }
-
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f5f9; }
-    ::-webkit-scrollbar-thumb { background: #10b981; border-radius: 10px; }
+    /* Day entries */
+    .day-card { background: transparent; border: 0; border-radius: 0; overflow: visible !important; }
+    .day-card .frame { height: 300px; border-radius: var(--r-sm); }
+    @media (max-width: 639px) { .day-card .frame { height: 220px; } }
+    .day-card .frame .tag { background: color-mix(in srgb, var(--surface) 95%, transparent) !important; border-color: transparent; }
+    .day-card > div:last-child { padding: 20px 0 0 !important; }
+    .day-card .h2 { font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem); }
+    .day-card .slot-text { color: var(--ink-2); }
+    .day-card b.font-display { color: var(--ink) !important; font-weight: 400; }
+    .day-card .btn-sm i { color: inherit !important; }
   </style>
 </head>
 
-<body class="font-sans text-gray-800">
+<body>
+  <header id="appNav"></header>
 
-<nav class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center sticky top-0 z-50 shadow-sm">
-  <div class="flex items-center gap-2">
-    <i class="fa-solid fa-compass text-green-400 text-2xl"></i>
-    <h1 class="text-xl font-black text-gray-800 tracking-tight">HiddenTrails.AI</h1>
-  </div>
-  <div class="flex items-center space-x-8 font-medium text-gray-600">
-    <a href="dashboard.html" class="hover:text-green-400 transition">Home</a>
-    <a href="saved.html" class="hover:text-green-400 transition">Saved</a>
-    <a href="#" id="logoutBtn" class="bg-red-500/20 text-red-400 px-5 py-2 rounded-xl border border-red-500/50 hover:bg-red-600 hover:text-white transition">Logout</a>
-  </div>
-</nav>
+  <main class="main">
+    <div class="page-wrap">
 
-<div class="flex min-h-[calc(100vh-72px)]">
+      <a href="saved.html" class="link text-sm">← My journeys</a>
 
-  <aside class="w-72 glass-sidebar p-8 space-y-3">
-    <p class="text-xs font-bold text-gray-500 uppercase tracking-widest mb-6">Main Menu</p>
-    <a href="dashboard.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-house"></i> Dashboard
-    </a>
-    <a href="plantrips.html" class="flex items-center gap-3 p-4 bg-green-500/20 text-green-400 rounded-2xl font-bold border border-green-500/30">
-      <i class="fa-solid fa-map-location-dot"></i> Plan Trip
-    </a>
-    <a href="saved.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-bookmark"></i> Saved Trips
-    </a>
-    <a href="photo-challenge.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-camera"></i> Photo Challenge
-    </a>
-    <a href="rewards.html" class="flex items-center gap-3 p-4 text-gray-600 hover:bg-gray-100 rounded-2xl transition">
-      <i class="fa-solid fa-gift"></i> Rewards
-    </a>
-    
-  </aside>
-
-  <main class="flex-1 p-12 overflow-y-auto">
-    <div class="max-w-4xl mx-auto space-y-8">
-
-      <!-- Hero Section -->
-      <div id="heroSection" class="relative h-80 rounded-3xl overflow-hidden glass-card">
-        <img id="heroImage" class="w-full h-full object-cover" alt="Destination">
-        <div class="absolute inset-0 hero-overlay flex flex-col justify-end p-10">
-          <h1 id="tripTitle" class="text-4xl font-black mb-2"></h1>
-          <p id="budgetInfo" class="text-gray-300 font-medium"></p>
+      <!-- Header -->
+      <header class="trip-head mt-8">
+        <span class="eyebrow">Your itinerary</span>
+        <h1 id="tripTitle" class="mt-3">Loading your trip…</h1>
+        <div class="flex flex-wrap items-center gap-x-5 gap-y-3 mt-5">
+          <p id="budgetInfo" class="m-0 ink-2"></p>
+          <div class="flex flex-wrap" id="heroTags"></div>
         </div>
-      </div>
+      </header>
 
-      <div id="hiddenScore" class="text-center text-green-400 font-bold text-lg"></div>
+      <figure class="cover" id="heroSection">
+        <div class="frame-box"><img id="heroImage" alt="Cover photo of the destination" /></div>
+        <figcaption class="caption mt-2">Cover photo via Wikimedia Commons</figcaption>
+      </figure>
 
-      <!-- Days Container -->
-      <div id="daysContainer" class="space-y-8">
-        <div class="text-center p-20">
-          <i class="fa-solid fa-spinner fa-spin text-4xl text-green-400 mb-4"></i>
-          <p class="text-gray-400">Loading your itinerary...</p>
+      <div class="itin-grid">
+        <aside class="itin-side" aria-label="Trip summary">
+          <!-- Budget + actions -->
+          <section class="summary" id="budgetCard" hidden>
+            <span class="eyebrow">Budget</span>
+            <dl class="mt-3">
+              <div><dt>Estimated spend</dt><dd id="estAmount">₹0</dd></div>
+              <div><dt>Your budget</dt><dd id="budgetAmount">₹0</dd></div>
+            </dl>
+            <div class="budget-meter" role="presentation"><span id="budgetBar"></span></div>
+            <p class="caption mt-3 mb-0" id="budgetNote"></p>
+            <div class="flex flex-wrap lg:flex-col gap-3 mt-6">
+              <a href="photo-challenge.html" class="btn btn-primary lg:w-full">Start photo challenges</a>
+              <button id="regenBtn" class="btn btn-secondary lg:w-full">Regenerate plan</button>
+            </div>
+          </section>
+
+          <!-- Day navigator -->
+          <nav class="day-nav" id="dayNavWrap" aria-label="Days" hidden>
+            <span class="eyebrow hidden lg:block mb-3">Days</span>
+            <div id="dayNav"></div>
+          </nav>
+        </aside>
+
+        <!-- Days -->
+        <div id="daysContainer" class="trail">
+          <div class="skeleton h-96 mb-6"></div>
+          <div class="skeleton h-96"></div>
         </div>
-      </div>
-
-      <!-- Actions -->
-      <div class="flex justify-center gap-4 mt-8">
-        <button id="regenBtn"
-          class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-white px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-amber-900/30">
-          <i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Regenerate AI
-        </button>
-
-        <a href="saved.html"
-           class="bg-gray-100 hover:bg-gray-200 border border-gray-200 text-gray-700 px-8 py-4 rounded-2xl font-bold text-lg transition-all transform hover:scale-105">
-          <i class="fa-solid fa-bookmark mr-2"></i> Saved Trips
-        </a>
       </div>
 
     </div>
   </main>
 
-</div>
-
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
-import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-auth.js";
-import {
-  getFirestore,
-  doc,
-  getDoc,
-  updateDoc
-} from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
+import { api, db, requireUser, escapeHtml, FALLBACK_IMAGE } from "./js/app.js";
+import { mountShell, toast, confirmDialog, confetti, revealOnScroll, smoothImage, busy } from "./js/ui.js";
+import { doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "your_firebase_api_key",
-  authDomain: "hiddentrails-ai.firebaseapp.com",
-  projectId: "hiddentrails-ai",
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-// Auth guard
-onAuthStateChanged(auth, (user) => {
-  if (!user) window.location.href = "auth.html";
-});
-
-// Logout
-document.getElementById("logoutBtn").addEventListener("click", () => {
-  signOut(auth).then(() => window.location.href = "auth.html");
-});
-
+const shell = mountShell("saved.html");
 const params = new URLSearchParams(window.location.search);
 const id = params.get("id");
 
-const heroImage = document.getElementById("heroImage");
-const tripTitle = document.getElementById("tripTitle");
-const budgetInfo = document.getElementById("budgetInfo");
-const daysContainer = document.getElementById("daysContainer");
-const regenBtn = document.getElementById("regenBtn");
+const $ = (x) => document.getElementById(x);
+const heroImage = $("heroImage");
+const daysContainer = $("daysContainer");
+const regenBtn = $("regenBtn");
+const inr = (n) => "₹" + Math.round(Number(n) || 0).toLocaleString("en-IN");
+
+smoothImage(heroImage, FALLBACK_IMAGE);
 
 let trip;
 
-async function loadTrip() {
-  try {
-    if (!id) {
-      daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">No trip ID provided.</p>`;
-      return;
+const LANDMARK_SUFFIXES = "Darwaza|Imambara|Imambada|Beach|Fort|Palace|Temple|Church|Museum|Market|Lake|Falls|Waterfall|Point|Park|Garden|Gate|Mahal|Mosque|Masjid|Bridge|Island|Cave|Tower|Bay|Dam|Hill|Mountain|Square|Bazaar|Mandir|Gurudwara|Dargah|Memorial|Zoo|Sanctuary|Reserve|Valley|Harbour|Harbor|Basilica|Cathedral|Monastery|Ruins|Tomb|Stupa|Canyon|Gorge|Forest|Plateau|Lighthouse|Station|Complex|Ashram|Chowk|Residency|Ghat|Stepwell|Haveli|Kothi|Bhawan|Bhavan|Maqbara|Bagh|Kund|Nagar|Sagar|Kila|Qila|Jheel|Minar|Burj|Pol|Sabha|Baoli|Tekri";
+const NOT_A_LANDMARK = /cafe|restaurant|hotel|dhaba|eatery|bistro|bar|lounge|factory/i;
+
+/** Best-effort guess of the main landmark mentioned in a day's plan. */
+function extractLandmark(day) {
+  const dayText = `${day.morning || ""} ${day.afternoon || ""} ${day.evening || ""}`;
+  const patterns = [
+    new RegExp(`(?:visit|explore|head to|go to|reach|arrive at|check out|see|tour)\\s+(?:the\\s+)?(?:iconic\\s+|famous\\s+|renowned\\s+|historic\\s+|popular\\s+|beautiful\\s+|ancient\\s+|magnificent\\s+|stunning\\s+)?([A-Z][A-Za-z\\s'-]+(?:${LANDMARK_SUFFIXES}))`, "i"),
+    /(?:visit|explore|head to)\s+(?:the\s+)?(?:iconic\s+|famous\s+|historic\s+)?([A-Z][A-Za-z\s'-]{3,30}(?=[.,!;]))/i,
+  ];
+  for (const pattern of patterns) {
+    const match = dayText.match(pattern);
+    if (match?.[1]) {
+      const name = match[1].trim().replace(/\s+/g, " ");
+      if (!NOT_A_LANDMARK.test(name)) return name;
     }
-
-    const docRef = doc(db, "trips", id);
-    const snap = await getDoc(docRef);
-
-    if (!snap.exists()) {
-      daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">Trip not found.</p>`;
-      return;
-    }
-
-    trip = snap.data();
-
-    // Hidden score
-    if (trip.hidden_score) {
-      document.getElementById("hiddenScore").innerText =
-        `Hidden Score: ${trip.hidden_score}/10 🔥`;
-    }
-
-    // Hero image
-    heroImage.src = await getDestinationImage(trip.destination);
-
-    const style = trip.trip_style ?? trip.preference ?? "Custom";
-    tripTitle.innerText = `${trip.destination} – ${trip.days.length} Day ${style} Trip`;
-    budgetInfo.innerText = `Budget: ₹${trip.budget} | Estimated: ₹${trip.total_estimated_cost}`;
-
-    daysContainer.innerHTML = "";
-    let imagesUpdated = false;
-
-    for (const day of trip.days) {
-      const card = document.createElement("div");
-      card.className = "glass-card p-8";
-
-      let imageUrl = null; // Always re-fetch images using latest logic (ignore cached)
-      {
-        // Smart landmark extraction from the day's activities
-        const dayText = `${day.morning || ''} ${day.afternoon || ''} ${day.evening || ''}`;
-        
-        // PASS 1: Look for landmark-specific patterns (visit, explore — NOT restaurants/cafes)
-        const landmarkPatterns = [
-          // Match: "visit the iconic Rumi Darwaza" or "explore Bada Imambara"
-          /(?:visit|explore|head to|go to|reach|arrive at|check out|see|tour)\s+(?:the\s+)?(?:iconic|famous|renowned|historic|popular|beautiful|ancient|magnificent|stunning\s+)?([A-Z][A-Za-z\s'-]+(?:Darwaza|Imambara|Imambada|Beach|Fort|Palace|Temple|Church|Museum|Market|Lake|Falls|Waterfall|Point|Park|Garden|Gate|Mahal|Mosque|Masjid|Bridge|Island|Cave|Tower|Bay|Dam|Hill|Mountain|Square|Bazaar|Mandir|Gurudwara|Dargah|Memorial|Zoo|Sanctuary|Reserve|Valley|Harbour|Harbor|Basilica|Cathedral|Monastery|Ruins|Tomb|Stupa|Canyon|Gorge|Forest|Plateau|Lighthouse|Station|Complex|Ashram|Chowk|Residency|Ghat|Stepwell|Haveli|Kothi|Bhawan|Bhavan|Maqbara|Bagh|Kund|Nagar|Sagar|Kila|Qila|Jheel|Minar|Burj|Pol|Sabha|Baoli|Tekri))/i,
-          // Fallback: "visit XYZ" followed by punctuation
-          /(?:visit|explore|head to)\s+(?:the\s+)?(?:iconic|famous|historic\s+)?([A-Z][A-Za-z\s'-]{3,30}(?=[.,!;]))/i,
-        ];
-        
-        let searchQuery = null;
-        
-        for (const pattern of landmarkPatterns) {
-          const match = dayText.match(pattern);
-          if (match && match[1]) {
-            const placeName = match[1].trim().replace(/\s+/g, ' ');
-            // Skip restaurant/cafe names
-            if (!/cafe|restaurant|hotel|dhaba|eatery|bistro|bar|lounge|factory/i.test(placeName)) {
-              searchQuery = `${placeName} ${trip.destination}`;
-              break;
-            }
-          }
-        }
-        
-        // PASS 2: Look for capitalized proper noun phrases (2+ words starting with caps)
-        if (!searchQuery) {
-          const properNouns = dayText.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+/g);
-          if (properNouns) {
-            for (const noun of properNouns) {
-              if (!/Cafe|Restaurant|Hotel|Dhaba|Factory|Start|Then|Try|Have|Enjoy|Take|Visit|Head|Entry|Egg|Morning|Afternoon|Evening/i.test(noun)) {
-                searchQuery = `${noun} ${trip.destination}`;
-                break;
-              }
-            }
-          }
-        }
-        
-        // PASS 3: Fallback to day title (but skip generic words)
-        if (!searchQuery) {
-          const safeTitle = (day.title || `Day ${day.day}`).replace(/Arrival|Beach|Vibes|&/gi, '').trim();
-          searchQuery = `${trip.destination} ${safeTitle || 'landmark'}`;
-        }
-        
-        imageUrl = await getDestinationImage(searchQuery);
-        day.image = imageUrl;
-        imagesUpdated = true;
-      }
-
-      // Extract a location name for Google Maps from the day's data
-      const dayText = `${day.morning || ''} ${day.afternoon || ''}`;
-      let mapQuery = day.title ? `${day.title}, ${trip.destination}` : trip.destination;
-      // Try to extract a specific landmark name
-      const landmarkMatch = dayText.match(/(?:visit|explore|head to|go to|reach|arrive at)\s+(?:the\s+)?(?:iconic|famous|historic\s+)?([A-Z][A-Za-z\s'-]{3,30})/i);
-      if (landmarkMatch && landmarkMatch[1]) {
-        mapQuery = `${landmarkMatch[1].trim()}, ${trip.destination}`;
-      }
-      const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
-
-      card.innerHTML = `
-        <h2 class="text-2xl font-black mb-4 text-gray-800">
-          <span class="text-green-500">Day ${day.day}:</span> ${day.title}
-        </h2>
-
-        <img src="${imageUrl}" class="rounded-2xl mb-6 w-full h-72 object-cover border border-gray-200">
-
-        <div class="space-y-5 text-gray-600 leading-relaxed">
-          <div class="flex gap-4">
-            <div class="w-1 bg-amber-500 rounded-full flex-shrink-0"></div>
-            <div>
-              <span class="text-[10px] uppercase tracking-widest text-amber-400 font-bold">Morning</span>
-              <p class="mt-1">${day.morning}</p>
-            </div>
-          </div>
-
-          <div class="flex gap-4">
-            <div class="w-1 bg-blue-500 rounded-full flex-shrink-0"></div>
-            <div>
-              <span class="text-[10px] uppercase tracking-widest text-blue-400 font-bold">Afternoon</span>
-              <p class="mt-1">${day.afternoon}</p>
-            </div>
-          </div>
-
-          <div class="flex gap-4">
-            <div class="w-1 bg-purple-500 rounded-full flex-shrink-0"></div>
-            <div>
-              <span class="text-[10px] uppercase tracking-widest text-purple-400 font-bold">Evening</span>
-              <p class="mt-1">
-                ${day.evening && day.evening !== "N/A"
-                  ? day.evening
-                  : "Wrap up the day with a relaxed local dinner nearby."}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-6 pt-4 border-t border-gray-200 flex items-center justify-between">
-          <span class="text-green-500 font-black text-lg">₹${day.estimated_cost}</span>
-          <div class="flex items-center gap-3">
-            <span class="text-[10px] text-gray-500 uppercase tracking-widest font-bold">Estimated Cost</span>
-            <a href="${mapsUrl}" target="_blank" rel="noopener"
-               class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white text-xs font-bold rounded-xl transition shadow-sm">
-              <i class="fa-solid fa-location-dot"></i> Open in Maps
-            </a>
-          </div>
-        </div>
-      `;
-
-      daysContainer.appendChild(card);
-    }
-
-    if (imagesUpdated) {
-      await updateDoc(doc(db, "trips", id), { days: trip.days });
-    }
-
-  } catch (err) {
-    console.error("LoadTrip Error:", err);
-    daysContainer.innerHTML = `<p class="text-center text-red-400 p-10">Something went wrong loading this trip.</p>`;
   }
+  const properNouns = dayText.match(/[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+/g) || [];
+  for (const noun of properNouns) {
+    if (!/Cafe|Restaurant|Hotel|Dhaba|Factory|Start|Then|Try|Have|Enjoy|Take|Visit|Head|Entry|Egg|Morning|Afternoon|Evening/i.test(noun)) {
+      return noun;
+    }
+  }
+  return null;
 }
 
 async function getDestinationImage(query) {
   try {
-    const res = await fetch(
-      `http://localhost:5000/get-destination-image?query=${encodeURIComponent(query)}`
-    );
-    if (!res.ok) throw new Error("Image API failed");
-    const data = await res.json();
-    return data.image;
+    const data = await api(`/get-destination-image?query=${encodeURIComponent(query)}`, { auth: false });
+    return data.image || null;
   } catch (err) {
-    console.error("Image fetch failed:", err);
-    return "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=800&q=80";
+    console.warn("Image fetch failed:", err.message);
+    return null;
   }
 }
 
-loadTrip();
+const SLOTS = [
+  { key: "morning",   label: "Morning",   icon: "fa-sun",       color: "#b07a12" },
+  { key: "afternoon", label: "Afternoon", icon: "fa-cloud-sun", color: "var(--sky)" },
+  { key: "evening",   label: "Evening",   icon: "fa-moon",      color: "var(--plum)" },
+];
 
-// Regenerate Button
-regenBtn.addEventListener("click", async () => {
-  if (!confirm("Regenerate itinerary? This will replace the current one.")) return;
+function renderDay(day, imageUrl) {
+  const landmark = extractLandmark(day);
+  const mapQuery = landmark ? `${landmark}, ${trip.destination}` : `${day.title || ""}, ${trip.destination}`;
+  const mapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
+  if (!day.evening || day.evening === "N/A") day.evening = "Wrap up the day with a relaxed local dinner nearby.";
 
-  regenBtn.disabled = true;
-  regenBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Regenerating...`;
+  const stop = document.createElement("article");
+  stop.className = "trail-stop reveal";
+  stop.id = `day-${day.day}`;
+  stop.innerHTML = `
+    <span class="trail-marker">${escapeHtml(day.day)}</span>
+    <div class="card day-card overflow-hidden card-hover">
+      <div class="frame">
+        <img src="${escapeHtml(imageUrl || FALLBACK_IMAGE)}" alt="${escapeHtml(landmark || trip.destination)}">
+        ${landmark ? `<span class="tag absolute left-3 bottom-3" style="background:rgba(255,253,248,.92)"><i class="fa-solid fa-location-dot" style="color:var(--clay)"></i>${escapeHtml(landmark)}</span>` : ""}
+      </div>
+      <div class="p-5 md:p-6">
+        <p class="eyebrow">Day ${escapeHtml(day.day)}</p>
+        <h2 class="h2 mt-1 mb-3">${escapeHtml(day.title)}</h2>
+        ${SLOTS.map((s) => `
+          <div class="slot">
+            <span class="slot-time" style="color:${s.color}"><i class="fa-solid ${s.icon}"></i>${s.label}</span>
+            <p class="slot-text m-0">${escapeHtml(day[s.key])}</p>
+          </div>`).join("")}
+        <hr class="dotted-divider">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <p class="m-0"><span class="muted text-sm">Est. for the day</span> <b class="font-display text-xl ml-1" style="color:var(--moss)">${inr(day.estimated_cost)}</b></p>
+          <a href="${escapeHtml(mapsUrl)}" target="_blank" rel="noopener" class="btn btn-sm"><i class="fa-solid fa-map-location-dot" style="color:var(--sky)"></i> Directions</a>
+        </div>
+      </div>
+    </div>`;
+  smoothImage(stop.querySelector("img"), FALLBACK_IMAGE);
+  return stop;
+}
 
-  try {
-    const res = await fetch("http://localhost:5000/generate-itinerary", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        destination: trip.destination,
-        days: trip.days.length,
-        preference: trip.preference || trip.trip_style || "Adventure",
-        budget: trip.budget
-      })
+function renderBudget(days) {
+  const est = Number(trip.total_estimated_cost) || days.reduce((s, d) => s + (Number(d.estimated_cost) || 0), 0);
+  const budget = Number(trip.budget) || 0;
+  const pct = budget ? Math.min(100, (est / budget) * 100) : 0;
+  $("estAmount").textContent = inr(est);
+  $("budgetAmount").textContent = inr(budget);
+  $("budgetNote").textContent = budget >= est
+    ? `About ${inr(budget - est)} left for souvenirs and surprises.`
+    : `Plan runs ${inr(est - budget)} over budget — try regenerating.`;
+  $("budgetCard").hidden = false;
+  setTimeout(() => { $("budgetBar").style.width = pct + "%"; }, 50);
+}
+
+function renderDayNav(days) {
+  const nav = $("dayNav");
+  nav.innerHTML = days.map((d) => `<a href="#day-${d.day}" class="chip">Day ${escapeHtml(d.day)}</a>`).join("");
+  $("dayNavWrap").hidden = false;
+
+  // Highlight the day currently on screen
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      nav.querySelectorAll(".chip").forEach((c) => c.classList.toggle("is-active", c.getAttribute("href") === `#${en.target.id}`));
     });
+  }, { rootMargin: "-40% 0px -55% 0px" });
+  document.querySelectorAll(".trail-stop").forEach((s) => io.observe(s));
+}
 
-    const newData = await res.json();
-
-    if (!newData.days || !Array.isArray(newData.days)) {
-      alert("AI regeneration failed. Try again!");
+async function loadTrip() {
+  try {
+    if (!id) {
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🗺️</div><p class="font-display text-xl">No trip selected.</p></div>`;
       return;
     }
 
-    await updateDoc(doc(db, "trips", id), {
-      total_estimated_cost: newData.total_estimated_cost,
-      days: newData.days,
-      regeneratedAt: new Date()
-    });
+    const snap = await getDoc(doc(db, "trips", id));
+    if (!snap.exists()) {
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🔍</div><p class="font-display text-xl">Trip not found.</p><a href="saved.html" class="btn btn-primary mt-4">Back to journeys</a></div>`;
+      return;
+    }
 
-    alert("Itinerary regenerated! 🔄");
+    trip = snap.data();
+    const days = Array.isArray(trip.days) ? trip.days : [];
+    const updates = {};
+    document.title = `${trip.destination} · HiddenTrails.AI`;
+
+    // Hero
+    if (!trip.hero_image) {
+      const hero = await getDestinationImage(trip.destination);
+      if (hero) { trip.hero_image = hero; updates.hero_image = hero; }
+    }
+    heroImage.src = trip.hero_image || FALLBACK_IMAGE;
+    const style = trip.trip_style ?? trip.preference ?? "Custom";
+    $("tripTitle").textContent = trip.destination;
+    $("budgetInfo").textContent = trip.arrivalDate
+      ? `${new Date(trip.arrivalDate + "T00:00").toDateString().slice(4, 10)} → ${new Date(trip.returnDate + "T00:00").toDateString().slice(4, 10)}`
+      : `A ${days.length}-day plan`;
+    $("heroTags").innerHTML = `
+      <span class="tag"><i class="fa-regular fa-calendar"></i>${days.length} days</span>
+      <span class="tag"><i class="fa-solid fa-compass"></i>${escapeHtml(style)}</span>
+      <span class="tag"><i class="fa-solid fa-wallet"></i>${inr(trip.budget)}</span>`;
+
+    if (days.length === 0) {
+      daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">🌫️</div><p class="font-display text-xl">This trip has no days yet.</p><p class="muted">Try regenerating it.</p></div>`;
+      $("budgetCard").hidden = false;
+      return;
+    }
+
+    renderBudget(days);
+
+    // Day images: reuse cached ones, fetch missing in parallel
+    let imagesChanged = false;
+    const images = await Promise.all(days.map(async (day) => {
+      if (day.image) return day.image;
+      const landmark = extractLandmark(day);
+      const query = landmark
+        ? `${landmark} ${trip.destination}`
+        : `${trip.destination} ${(day.title || "").replace(/Arrival|Beach|Vibes|&/gi, "").trim() || "landmark"}`;
+      const url = await getDestinationImage(query);
+      if (url) { day.image = url; imagesChanged = true; }
+      return url;
+    }));
+
+    daysContainer.innerHTML = "";
+    days.forEach((day, i) => daysContainer.appendChild(renderDay(day, images[i])));
+    renderDayNav(days);
+    revealOnScroll();
+
+    if (imagesChanged) updates.days = days;
+    if (Object.keys(updates).length) {
+      updateDoc(doc(db, "trips", id), updates).catch((e) => console.warn("Could not cache images:", e.message));
+    }
+
+    if (params.get("new") === "1") {
+      history.replaceState(null, "", `itinerary.html?id=${encodeURIComponent(id)}`);
+      confetti({ count: 90 });
+      toast("Your trail is ready. Photo challenges for it were added too!", "success", 5000);
+    }
+  } catch (err) {
+    console.error("LoadTrip Error:", err);
+    daysContainer.innerHTML = `<div class="empty-state"><div class="emoji">⚠️</div><p class="font-display text-xl">Something went wrong loading this trip.</p></div>`;
+  }
+}
+
+const user = await requireUser();
+shell.setUser(user);
+loadTrip();
+
+regenBtn.addEventListener("click", async () => {
+  if (!trip) return;
+  const ok = await confirmDialog({
+    title: "Regenerate this trip?",
+    body: "The AI will write a fresh plan and replace the current one.",
+    confirmText: "Regenerate",
+    icon: "fa-rotate",
+  });
+  if (!ok) return;
+
+  const restore = busy(regenBtn, "Regenerating…");
+  try {
+    await api("/regenerate-itinerary", { method: "POST", body: { tripId: id } });
     location.reload();
   } catch (err) {
     console.error("Regenerate error:", err);
-    alert("Failed to regenerate. Check if backend is running.");
-  } finally {
-    regenBtn.disabled = false;
-    regenBtn.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles mr-2"></i> Regenerate AI`;
+    toast(err.status ? err.message : "Couldn't regenerate. Is the backend running?", "error");
+    restore();
   }
 });
 </script>
-
 </body>
 </html>

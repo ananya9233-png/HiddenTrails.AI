@@ -11,7 +11,7 @@
  *  3. Photo Challenge with GPS + Vision verification (LLaMA 4 Scout)
  *  4. Trip-based Reward System with daily/monthly caps
  *  5. Leveling System (Rookie → Legend)
- *  6. Coupon Redemption System
+ *  6. Coupon Store (points → coupons)
  *  7. Destination Image API (Wikipedia)
  *
  *  Architecture: Controllers → Services → Utils → Config
@@ -42,7 +42,6 @@ import imageRoutes from "./routes/imageRoutes.js";
 import rewardRoutes from "./routes/rewardRoutes.js";
 import couponRoutes from "./routes/couponRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
-import { seedCoupons } from "./utils/seedCoupons.js";
 
 // ═══════════════ APP SETUP ═══════════════
 
@@ -50,14 +49,26 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // ── Global Middleware ──
-app.use(cors());
+// Allowed origins can be restricted via CORS_ORIGINS="http://a,http://b".
+// API calls are protected by Firebase ID tokens either way.
+const corsOrigins = process.env.CORS_ORIGINS?.split(",").map((o) => o.trim()).filter(Boolean);
+app.use(cors(corsOrigins?.length ? { origin: corsOrigins } : undefined));
 app.use(express.json({ limit: "10mb" })); // Increased limit for base64 images
 app.use(requestLogger);
 
 // ── Serve Frontend Static Files ──
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-app.use(express.static(join(__dirname, "..")));
+// Only the frontend is served — the backend folder (with .env and the
+// service-account key) must never be reachable over HTTP.
+const frontendRoot = join(__dirname, "..");
+app.use((req, res, next) => {
+  if (/^\/(backend|node_modules|\.git|\.vscode)(\/|$)/i.test(req.path)) {
+    return res.status(404).json({ error: "Endpoint not found" });
+  }
+  next();
+});
+app.use(express.static(frontendRoot, { dotfiles: "deny" }));
 
 // ── Health Check ──
 app.get("/health", (req, res) => {
@@ -100,7 +111,7 @@ app.listen(PORT, () => {
   console.log(`  🚀 Server:   http://localhost:${PORT}`);
   console.log(`  ❤️  Health:   http://localhost:${PORT}/health`);
   console.log("  ─────────────────────────────────────────────────────────");
-  console.log("  📍 Endpoints:");
+  console.log("  📍 Endpoints (🔒 = Firebase ID token required, all except images/health/admin):");
   console.log("     POST /generate-itinerary      — AI Itinerary");
   console.log("     POST /regenerate-itinerary     — Regenerate Trip");
   console.log("     POST /chat                     — AI Chatbot");
@@ -109,16 +120,15 @@ app.listen(PORT, () => {
   console.log("     POST /verify-photo             — Photo Challenge");
   console.log("     POST /photo/verify             — Photo Challenge (alias)");
   console.log("     GET  /get-destination-image    — Destination Images");
+  console.log("     GET  /photo-challenges/:userId — Photo Challenges");
+  console.log("     POST /photo/reset-demo         — Reset Demo Challenge");
   console.log("     GET  /rewards/:userId          — User Rewards");
   console.log("     POST /rewards/claim-trip       — Claim Trip Reward");
-  console.log("     GET  /coupons                  — Available Coupons");
+  console.log("     GET  /coupons                  — Coupon Store");
   console.log("     POST /coupon/redeem            — Redeem Coupon");
   console.log("     GET  /health                   — Health Check");
   console.log("     CRUD /admin/places              — Admin Tourist Places");
   console.log("═══════════════════════════════════════════════════════════");
-
-  // Seed sample coupons on first run
-  seedCoupons();
 });
 
 export default app;

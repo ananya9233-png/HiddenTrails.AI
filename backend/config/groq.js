@@ -20,9 +20,15 @@ if (!GROQ_API_KEY) {
   process.exit(1);
 }
 
-// Model identifiers — update these when upgrading to newer models
-export const LLAMA_TEXT_MODEL = "llama-3.1-8b-instant"; // Fast text generation
-export const LLAMA_VISION_MODEL = "meta-llama/llama-4-scout-17b-16e-instruct"; // Multimodal vision
+// Model identifiers. Groq retires models over time, so both can be overridden
+// in .env (GROQ_TEXT_MODEL / GROQ_VISION_MODEL) without a code change.
+// Check what's available: GET https://api.groq.com/openai/v1/models
+// (llama-3.1-8b-instant and llama-4-scout were retired in 2026.)
+// Text uses gpt-oss-120b: on Groq's free tier qwen3.8-27b allows only 1,000
+// output tokens/minute, so a 5-day itinerary right after another AI call got a 429.
+// Vision stays on qwen (gpt-oss can't read images); photo checks only need ~250 tokens.
+export const LLAMA_TEXT_MODEL = process.env.GROQ_TEXT_MODEL || "openai/gpt-oss-120b"; // Text: itineraries, chat, challenges
+export const LLAMA_VISION_MODEL = process.env.GROQ_VISION_MODEL || "qwen/qwen3.8-27b"; // Multimodal vision
 
 /**
  * Helper to build the Authorization header for Groq API calls.
