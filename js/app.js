@@ -28,10 +28,13 @@ export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// When the page is served by the backend itself (port 5000) use relative URLs;
-// otherwise (e.g. VS Code Live Server) talk to the local backend.
+// The backend serves the frontend, so API calls normally go to the same
+// origin (localhost:5000 in development, the Render URL in production).
+// Only a separate local dev server (e.g. VS Code Live Server on :5500)
+// needs to point at the local backend explicitly.
+const isLocalHost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 export const API_BASE =
-  window.location.port === "5000" ? "" : "http://localhost:5000";
+  isLocalHost && window.location.port !== "5000" ? "http://localhost:5000" : "";
 
 /**
  * fetch() wrapper that attaches the signed-in user's Firebase ID token.
