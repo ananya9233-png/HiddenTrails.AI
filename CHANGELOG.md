@@ -8,6 +8,8 @@
 - Page scripts are unchanged: same IDs, API calls and behaviour.
 - Fixed photo-challenge images: a challenge no longer shows its city's photo, lookups no longer overload Wikipedia, and failed lookups are no longer cached.
 - AI models now default to `qwen/qwen3.8-27b`, because Groq retired the Llama models.
+- Themes: light brown (the default), light and dark. The navbar button switches between them and remembers the choice.
+- Itineraries, the chatbot and challenge creation now use `openai/gpt-oss-120b`. Qwen's limit of 1,000 output tokens per minute made "Regenerate" fail. Photo checks still use qwen.
 
 ## v2.1.0 (November 2026): "field journal" redesign
 - New design system (`css/theme.css`): warm paper and topographic-line background, Fraunces and DM Sans fonts, forest-green and terracotta colors. Coupons look like tickets, badges like passport stamps, and challenges like polaroids.

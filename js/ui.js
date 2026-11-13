@@ -119,6 +119,7 @@ function mountTopNav(active) {
       </a>
       <nav class="nav-links" aria-label="Main">${TOP_NAV.map((n) => link(n, "nav-link")).join("")}</nav>
       <div class="nav-right">
+        <button type="button" class="theme-toggle" data-theme-toggle aria-label="Switch colour theme"><i data-lucide="sun" class="ico-sun"></i><i data-lucide="coffee" class="ico-brown"></i><i data-lucide="moon" class="ico-moon"></i></button>
         <a href="rewards.html" class="points-pill" title="Your points and level">
           <span class="coin"><i data-lucide="coins"></i></span>
           <span><span id="shellPoints">—</span><span class="sr-only"> points</span></span>

@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>My journeys · HiddenTrails.AI</title>
-  <meta name="theme-color" content="#F6F1E7" />
+  <meta name="theme-color" content="#FBFBF9" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -23,11 +23,11 @@
     /* Trip entries (cards come from the page script) */
     .trip-card { display: flex; flex-direction: column; background: transparent; border: 0; border-radius: 0; }
     .trip-card .frame { height: 220px; border-radius: var(--r-sm); }
-    .trip-card .date-badge { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 4px 8px; border-radius: 4px; background: rgba(251, 248, 242, .95); line-height: 1.1; font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+    .trip-card .date-badge { position: absolute; left: 10px; top: 10px; z-index: 2; padding: 4px 8px; border-radius: 4px; background: color-mix(in srgb, var(--surface) 95%, transparent); line-height: 1.1; font-size: .7rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
     .trip-card .date-badge b { font: inherit; margin-right: 4px; }
     .trip-card .date-badge small { font: inherit; color: var(--accent); }
-    .trip-card .del { position: absolute; right: 10px; top: 10px; z-index: 2; width: 34px; height: 34px; min-height: 0; border-radius: 4px; border-color: transparent; background: rgba(251, 248, 242, .95); color: var(--ink-2); opacity: 0; transition: opacity var(--t), color var(--t); }
-    .trip-card .del:hover { color: var(--err); background: rgba(251, 248, 242, .95); }
+    .trip-card .del { position: absolute; right: 10px; top: 10px; z-index: 2; width: 34px; height: 34px; min-height: 0; border-radius: 4px; border-color: transparent; background: color-mix(in srgb, var(--surface) 95%, transparent); color: var(--ink-2); opacity: 0; transition: opacity var(--t), color var(--t); }
+    .trip-card .del:hover { color: var(--err); background: color-mix(in srgb, var(--surface) 95%, transparent); }
     .trip-card:hover .del, .trip-card .del:focus-visible { opacity: 1; }
     @media (hover: none) { .trip-card .del { opacity: 1; } }
     .trip-card > a.p-5 { padding: 14px 0 0 !important; }

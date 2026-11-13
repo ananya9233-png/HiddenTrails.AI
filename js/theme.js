@@ -6,6 +6,40 @@
  *   <script src="js/theme.js"></script>
  */
 
+/* 0. Colour theme: light, brown (light-brown default) or dark.
+      Applied before the page paints; the toggle cycles light -> brown -> dark. */
+(function () {
+  var KEY = "ht-theme";
+  var ORDER = ["light", "brown", "dark"];
+  var NAMES = { light: "Light", brown: "Light brown", dark: "Dark" };
+  var root = document.documentElement;
+  var saved = null;
+  try { saved = localStorage.getItem(KEY); } catch (e) { /* storage blocked */ }
+  root.setAttribute("data-theme", ORDER.indexOf(saved) >= 0 ? saved : "brown");
+
+  function current() { return root.getAttribute("data-theme") || "brown"; }
+  function next() { return ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length]; }
+  function label() {
+    var now = current(), then = next();
+    document.querySelectorAll("[data-theme-toggle]").forEach(function (b) {
+      b.setAttribute("aria-label", "Theme: " + NAMES[now] + ". Switch to " + NAMES[then]);
+      b.setAttribute("title", NAMES[now] + " theme (click for " + NAMES[then] + ")");
+    });
+  }
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest && e.target.closest("[data-theme-toggle]");
+    if (!btn) return;
+    var t = next();
+    root.setAttribute("data-theme", t);
+    try { localStorage.setItem(KEY, t); } catch (err) { /* not saved, still switches */ }
+    label();
+  });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", label);
+  else label();
+  // the app navbar is drawn later by js/ui.js
+  new MutationObserver(function () { label(); }).observe(root, { childList: true, subtree: true });
+})();
+
 /* 1. Tailwind tokens: same names as the CSS variables in css/styles.css */
 window.tailwind = window.tailwind || {};
 tailwind.config = {
@@ -14,17 +48,17 @@ tailwind.config = {
       // Travel-journal palette: paper, ink, one accent (terracotta).
       // Old names (forest, saffron, gold, leaf) are aliases so existing markup still works.
       colors: {
-        paper: { DEFAULT: "#F6F1E7", 2: "#EFE8DA" },
-        accent: { DEFAULT: "#B5502D", ink: "#923F22", 50: "#F4E4DA" },
-        line: { DEFAULT: "#E4DCCB", 2: "#D2C6AE" },
-        forest: { DEFAULT: "#1E1B16", 800: "#16130F", 600: "#35302A", 100: "#E6DECE", 50: "#EFE8DA" },
+        paper: { DEFAULT: "var(--paper)", 2: "var(--paper-2)" },
+        accent: { DEFAULT: "var(--accent)", ink: "var(--accent-ink)", 50: "var(--accent-50)" },
+        line: { DEFAULT: "var(--line)", 2: "var(--line-2)" },
+        forest: { DEFAULT: "#1A1A1A", 800: "#141414", 600: "#333330", 100: "#E6E6E1", 50: "#F2F2EF" },
         saffron: { DEFAULT: "#B5502D", 600: "#B5502D", 100: "#F4E4DA" },
         gold: { DEFAULT: "#8A6A22", ink: "#6B5119", 100: "#F1E8D2" },
         leaf: { DEFAULT: "#3E6A4C", ink: "#2F5439", 100: "#E4EBDF" },
         terracotta: { DEFAULT: "#A3302A", ink: "#7E231F", 100: "#F5DFDB" },
-        sand: { DEFAULT: "#F6F1E7", 2: "#EFE8DA" },
-        ink: { DEFAULT: "#1E1B16", 2: "#4A443A" },
-        muted: "#6B6355",
+        sand: { DEFAULT: "#FBFBF9", 2: "#F2F2EF" },
+        ink: { DEFAULT: "var(--ink)", 2: "var(--ink-2)" },
+        muted: "var(--muted)",
       },
       fontFamily: {
         display: ['"Fraunces"', "Georgia", "serif"],
